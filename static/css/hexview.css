@@ -1,0 +1,43 @@
+
+#board {
+  background-color: #FFFFFF;
+  border: none;
+  width: 55%;
+  position: relative;
+  float: left;
+}
+
+#branches {
+  float: right;
+  border: 1px solid;
+  width: 40%;
+  min-height: 50px;
+  margin-top:10px;
+  margin-right:10px;
+  padding: 5px;
+  display: inline;
+}
+
+.branch {
+  margin-bottom: 10px;
+}
+
+.node_link {
+  margin-right: 5px;
+  text-decoration: none;
+}
+
+.node_link.active {
+  background-color: #CCFFCC;
+}
+
+.node_link.red {
+  color: red;
+}
+
+.node_link.blue {
+  color: blue;
+}
+
+img.move {
+}
