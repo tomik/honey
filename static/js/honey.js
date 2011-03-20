@@ -88,6 +88,17 @@ function Node(x, y, color, fatherNode) {
     return "{0}.{1}{2}".format(that.number, _alphabet[that.x], that.y + 1);
   }
 
+  this.getChildIndex = function(node) {
+    for (var i = 0; i < that.children.length; i++)
+      if (that.children[i].id == node.id)
+        return i;
+    return -1;
+  }
+  
+  this.isBranchRepresentative = function() {
+    return that.branch.firstNode.id == that.id;
+  }
+
   return this;
 }
 
@@ -137,7 +148,13 @@ $(document).keydown(function(e) {
       var up = false;
       cycleBranches(game.currNode, up);
       break;
-    default: break;
+    // rm sub tree
+    case 46: 
+      removeSubTree(game.currNode);
+      break;
+    default: 
+      console.log("pressed {0}".format(e.which));
+      break;
   }
 });
 
@@ -173,10 +190,6 @@ function setupEmptyField(coord) {
       e.preventDefault();
       playMove(coord.x, coord.y, game.getColorToMove());
   });
-}
-
-function areInSameBranchs(node1, node1) {
-  // id of each node is at least
 }
 
 function playMove(x, y, color) {
@@ -221,6 +234,16 @@ function putBranchInTree(branch) {
   $("#branches").append(elem);
 }
 
+function removeBranchFromTree(branch) {
+  var elem = $("#branch_{0}".format(branch.bid));
+  elem.remove();
+}
+
+function removeNodeFromTree(node) {
+  var elem = $("#node_{0}".format(node.id));
+  elem.remove();
+}
+
 function putNodeInTree(node) {
   var elemStr = "<a href='' class='node_link active' id='node_{0}'>{1}</a>"
   var elem = $(elemStr.format(node.id, node.getViewLabel()))
@@ -263,22 +286,51 @@ function removeMoveFromBoard(x, y, color) {
   setupEmptyField({x:x, y:y});
 }
 
+function removeNode(node) {
+  // shouldn't happen
+  if (!node.fatherNode)
+    return;
+
+  node.children.forEach(function(child) {
+    removeNode(child);
+    });
+
+  if (node.isBranchRepresentative()) {
+    removeBranchFromTree(node.branch);
+    delete node.branch;
+  }
+
+  removeNodeFromTree(node);
+  delete game.nodeMap[node.id];
+  delete node;
+}
+
+function removeSubTree(node) {
+  if (!node.fatherNode)
+    return;
+
+  jumpToNode(node.fatherNode);
+  removeNode(node);
+
+  // remove node from father children array
+  var i = node.fatherNode.getChildIndex(node);  
+  node.fatherNode.children.splice(i, 1);
+}
+
 function cycleBranches(node, up) {
   if (!node.fatherNode)
     return;
 
   var father = node.fatherNode; 
-  for (var i = 0; i < father.children.length; i++) {
-    console.log("curr node id {0}".format(game.currNode.id));
-    if (father.children[i].id == node.id) {
-      if (up && i > 0)
-        jumpToNode(father.children[i - 1]);
+  var i = node.fatherNode.getChildIndex(node);  
+  if (i == -1) 
+    return;
 
-      if (!up && i < father.children.length - 1)
-        jumpToNode(father.children[i + 1]);
-      return;
-    }
-  }
+  if (up && i > 0)
+    jumpToNode(father.children[i - 1]);
+
+  if (!up && i < father.children.length - 1)
+    jumpToNode(father.children[i + 1]);
 }
 
 function jumpToNode(newNode) {
