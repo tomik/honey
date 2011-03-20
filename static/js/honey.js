@@ -7,7 +7,6 @@ FIELD_RADIUS = 10;
 /*
  * TODO
  * highlight last move
- * buttons to navigate
  * hide/show branches
  */
 
@@ -41,7 +40,7 @@ function CreateGame() {
     return null;
   _gameCreated = true;
 
-  root = {fatherNode: null, children: [], id: 0};
+  root = {fatherNode: null, children: [], id: 0, number: 0};
   trunk = {fatherBranch: null, firstNode: root, bid: 0, depth: 0};
   root.branch = trunk;
   root.getAncestors = function() {return [0];}
@@ -64,6 +63,7 @@ function CreateGame() {
 game = CreateGame();
 
 _nextNodeId = 1;
+_alphabet = ("abcdefghipqrstuvwxyz").split("");
 function Node(x, y, color, fatherNode) {
   var that = this
   this.x = x;
@@ -71,6 +71,7 @@ function Node(x, y, color, fatherNode) {
   this.color = color;
   this.fatherNode = fatherNode;
   this.id = _nextNodeId++;
+  this.number = fatherNode.number + 1;
   this.children = [];
 
   this.getAncestors = function() {
@@ -84,7 +85,7 @@ function Node(x, y, color, fatherNode) {
   }
 
   this.getViewLabel = function() {
-    return "{0}-{1}".format(that.x, that.y);
+    return "{0}.{1}{2}".format(that.number, _alphabet[that.x], that.y + 1);
   }
 
   return this;
@@ -106,7 +107,7 @@ $(document).ready(function() {
   putNodeInTree(game.root);
 
   // give st. to play with
-  for (var i = 0; i < 20; i ++) {
+  for (var i = 0; i < 5; i ++) {
     var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
     var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
     playMove(x, y, game.getColorToMove());
@@ -115,14 +116,26 @@ $(document).ready(function() {
 
 $(document).keydown(function(e) {
   switch (e.which) {
+    // left
     case 37: 
       console.log(game.currNode);
       if (game.currNode.fatherNode)
         jumpToNode(game.currNode.fatherNode);
       break;
+    // right
     case 39: 
       if (game.currNode.children.length)
         jumpToNode(game.currNode.children[0]);
+      break;
+    // up
+    case 38: 
+      var up = true;
+      cycleBranches(game.currNode, up);
+      break;
+    // down
+    case 40: 
+      var up = false;
+      cycleBranches(game.currNode, up);
       break;
     default: break;
   }
@@ -167,21 +180,24 @@ function areInSameBranchs(node1, node1) {
 }
 
 function playMove(x, y, color) {
-  // move shouldn't be present
-  var children = game.currNode.children
-  // just continues in current branchs
-  children.forEach( function(child) {
-    if (child.x == x || child.y == y || child.color == color) {
+  var existingNode = false; 
+  // just continues in current branches
+  game.currNode.children.forEach( function(child) {
+    if (child.x == x && child.y == y && child.color == color) {
       game.currNode = child;
       putMoveOnBoard(x, y, game.currNode.color);
       // TODO switch to branch
-      return;
+      existingNode = true;
     }
   });
+  if (existingNode)
+    return;
+
+  // console.log("playing new move father id {0}".format(game.currNode.id));
 
   var newNode = new Node(x, y, color, game.currNode);
   var branch
-  if (!children.length)
+  if (!game.currNode.children.length)
     branch = game.currNode.branch;
   else {
     branch = new Branch(game.currNode.branch, newNode);
@@ -211,6 +227,8 @@ function putNodeInTree(node) {
   // not all nodes have color (i.e. start node)
   if (node.color)
     elem.addClass(node.color == Color.RED ? "red" : "blue");
+  //if (node.children.length > 1)
+    //elem.addClass("junction");
   $("#branch_" + node.branch.bid).append(elem).append(" ");
   elem.click(function(e) {
       e.preventDefault();
@@ -245,6 +263,24 @@ function removeMoveFromBoard(x, y, color) {
   setupEmptyField({x:x, y:y});
 }
 
+function cycleBranches(node, up) {
+  if (!node.fatherNode)
+    return;
+
+  var father = node.fatherNode; 
+  for (var i = 0; i < father.children.length; i++) {
+    console.log("curr node id {0}".format(game.currNode.id));
+    if (father.children[i].id == node.id) {
+      if (up && i > 0)
+        jumpToNode(father.children[i - 1]);
+
+      if (!up && i < father.children.length - 1)
+        jumpToNode(father.children[i + 1]);
+      return;
+    }
+  }
+}
+
 function jumpToNode(newNode) {
   if (game.currNode.id == newNode.id)
     return;
@@ -263,8 +299,9 @@ function jumpToNode(newNode) {
 
   var ancCommon = game.nodeMap[ancNew[i - 1]];
 
-  console.log("anc new {0} anc old {1}".format(ancNew, ancOld));
-  console.log("new {0} old {1} common {2}".format(newNode.id, game.currNode.id, ancCommon.id));
+  // console.log("curr node id {0}".format(game.currNode.id));
+  // console.log("anc new {0} anc old {1}".format(ancNew, ancOld));
+  // console.log("new {0} old {1} common {2}".format(newNode.id, game.currNode.id, ancCommon.id));
 
   // backwards currNode -> common
   var node = game.currNode
