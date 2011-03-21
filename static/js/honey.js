@@ -20,9 +20,22 @@ String.prototype.format = function() {
   return s;
 }
 
+_sgfParseHandler = {
+  onGameProperty: sgfOnGameProperty,
+  onMove: sgfOnMove,
+  onBranchStart: sgfOnBranchStart,
+  onBranchStop: sgfOnBranchStop
+}
+
 Color = {
   RED: "red",
   BLUE: "blue"
+}
+
+MoveType = {
+  NORMAL: "normal",
+  SWAP: "swap",
+  RESIGN: "resign"
 }
 
 STONE_IMG = {red: "/static/img/red.gif", blue: "/static/img/blue.gif"}
@@ -63,8 +76,8 @@ function CreateGame() {
 game = CreateGame();
 
 _nextNodeId = 1;
-_alphabet = ("abcdefghipqrstuvwxyz").split("");
-function Node(x, y, color, fatherNode) {
+_alphabet = ("abcdefghijklmnopqrstuvwxyz").split("");
+function Node(x, y, color, fatherNode, moveType) {
   var that = this
   this.x = x;
   this.y = y;
@@ -73,6 +86,7 @@ function Node(x, y, color, fatherNode) {
   this.id = _nextNodeId++;
   this.number = fatherNode.number + 1;
   this.children = [];
+  this.moveType = moveType; 
 
   this.getAncestors = function() {
     var anc = [];
@@ -85,6 +99,8 @@ function Node(x, y, color, fatherNode) {
   }
 
   this.getViewLabel = function() {
+    if (that.moveType == MoveType.SWAP)
+      return "{0}.swap".format(that.number);
     return "{0}.{1}{2}".format(that.number, _alphabet[that.x], that.y + 1);
   }
 
@@ -112,24 +128,28 @@ function Branch(fatherBranch, firstNode) {
 
 // document events
 
+_sgfStr = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[ game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])";
+
 $(document).ready(function() {
   setupEmptyFields();
   putBranchInTree(game.root.branch);
   putNodeInTree(game.root);
 
   // give st. to play with
-  for (var i = 0; i < 5; i ++) {
-    var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
-    var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
-    playMove(x, y, game.getColorToMove());
-  }
+  
+  //for (var i = 0; i < 5; i ++) {
+    //var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
+    //var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
+    //playMove(x, y, game.getColorToMove(), MoveType.NORMAL);
+  //}
+
+  sgfParse(_sgfStr, _sgfParseHandler);
 });
 
 $(document).keydown(function(e) {
   switch (e.which) {
     // left
     case 37: 
-      console.log(game.currNode);
       if (game.currNode.fatherNode)
         jumpToNode(game.currNode.fatherNode);
       break;
@@ -153,7 +173,7 @@ $(document).keydown(function(e) {
       removeSubTree(game.currNode);
       break;
     default: 
-      console.log("pressed {0}".format(e.which));
+      // console.log("pressed {0}".format(e.which));
       break;
   }
 });
@@ -188,17 +208,17 @@ function setupEmptyField(coord) {
   elem.appendTo("#empty_fields");
   elem.click(function(e) {
       e.preventDefault();
-      playMove(coord.x, coord.y, game.getColorToMove());
+      playMove(coord.x, coord.y, game.getColorToMove(), moveType.NORMAL);
   });
 }
 
-function playMove(x, y, color) {
+function playMove(x, y, color, moveType) {
   var existingNode = false; 
   // just continues in current branches
   game.currNode.children.forEach( function(child) {
     if (child.x == x && child.y == y && child.color == color) {
       game.currNode = child;
-      putMoveOnBoard(x, y, game.currNode.color);
+      putNodeOnBoard(game.currNode);
       // TODO switch to branch
       existingNode = true;
     }
@@ -208,7 +228,7 @@ function playMove(x, y, color) {
 
   // console.log("playing new move father id {0}".format(game.currNode.id));
 
-  var newNode = new Node(x, y, color, game.currNode);
+  var newNode = new Node(x, y, color, game.currNode, moveType);
   var branch
   if (!game.currNode.children.length)
     branch = game.currNode.branch;
@@ -223,7 +243,7 @@ function playMove(x, y, color) {
   game.currNode = newNode;
 
   putNodeInTree(game.currNode);
-  putMoveOnBoard(x, y, game.currNode.color);
+  putNodeOnBoard(game.currNode);
 }
 
 function putBranchInTree(branch) {
@@ -267,6 +287,15 @@ function setNodeActive(node, active) {
     elem.removeClass("active");
 }
 
+function putNodeOnBoard(node) {
+  if (node.moveType == MoveType.SWAP) {
+    removeNodeFromBoard(node.fatherNode);
+    putMoveOnBoard(node.fatherNode.y, node.fatherNode.x, node.color);
+  }
+  else 
+    putMoveOnBoard(node.x, node.y, node.color);
+}
+
 function putMoveOnBoard(x, y, color) {
   // remove empty field on that location
   elem = $("#empty_field_" + x + "_" + y)
@@ -279,7 +308,14 @@ function putMoveOnBoard(x, y, color) {
   elem.appendTo("#board");
 }
 
-function removeMoveFromBoard(x, y, color) {
+function removeNodeFromBoard(node) {
+  removeMoveFromBoard(node.x, node.y);
+  // with swap add nodes father
+  if (node.moveType == MoveType.SWAP)
+    putNodeOnBoard(node.fatherNode);
+}
+
+function removeMoveFromBoard(x, y) {
   // remove move
   elem = $("#move_" + x + "_" + y);
   elem.remove();
@@ -359,7 +395,7 @@ function jumpToNode(newNode) {
   var node = game.currNode
   while (node.id != ancCommon.id) {
     setNodeActive(node, false);
-    removeMoveFromBoard(node.x, node.y);
+    removeNodeFromBoard(node);
     node = node.fatherNode;
   }
 
@@ -367,11 +403,52 @@ function jumpToNode(newNode) {
   var node = newNode
   while (node.id != ancCommon.id) {
     setNodeActive(node, true);
-    putMoveOnBoard(node.x, node.y, node.color);
+    putNodeOnBoard(node);
     node = node.fatherNode;
   }
 
   game.currNode = newNode;
+}
+
+// sgf parsing
+
+function sgfOnGameProperty(propName, propValue) {
+  // console.log("sgf on game property name {0} value {1}".format(propName, propValue));
+  if (propName == "FF" && propValue != "4")
+    throw "invalid game type";
+  if (propName == "SZ" && propValue != "13")
+    throw "invalid board size";
+}
+
+function sgfOnMove(who, where) {
+  // console.log("sgf on move who {0} where {1}".format(who, where));
+  color = who == "W" ? Color.RED : Color.BLUE;
+  if (who != "W" && who != "B")
+    throw "invalid move color {0}".format(who)
+
+  if (where == "swap")
+  {
+    playMove(game.currNode.y, game.currNode.x, color, MoveType.SWAP);
+    return;
+  }
+
+  if (where.length > 2)
+    throw "invalid move definition length {0}".format(where)
+
+  var x = _alphabet.indexOf(where[0]);
+  var y = _alphabet.indexOf(where[1]);
+  if (x == -1 || y == -1)
+    throw "invalid move definition {0}".format(where)
+
+  playMove(x, y, color, MoveType.NORMAL);
+}
+
+function sgfOnBranchStart() {
+  throw "not implemented";
+}
+
+function sgfOnBranchStop() {
+  throw "not implemented";
 }
 
 // FORMAT:
