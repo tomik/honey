@@ -38,7 +38,7 @@ MoveType = {
   RESIGN: "resign"
 }
 
-STONE_IMG = {red: "/static/img/red.gif", blue: "/static/img/blue.gif"}
+STONE_IMG = {red: "/static/img/red_small.gif", blue: "/static/img/blue_small.gif"}
 
 function flipColor(color) {
   if (color == Color.RED)
@@ -137,13 +137,16 @@ $(document).ready(function() {
 
   // give st. to play with
   
-  //for (var i = 0; i < 5; i ++) {
-    //var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
-    //var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
-    //playMove(x, y, game.getColorToMove(), MoveType.NORMAL);
-  //}
-
-  sgfParse(_sgfStr, _sgfParseHandler);
+  if (_inputSgf.length) {
+    sgfParse(_inputSgf, _sgfParseHandler);
+  }
+  else {
+    for (var i = 0; i < 5; i ++) {
+      var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
+      var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
+      playMove(x, y, game.getColorToMove(), MoveType.NORMAL);
+    }
+  }
 });
 
 $(document).keydown(function(e) {
@@ -208,7 +211,7 @@ function setupEmptyField(coord) {
   elem.appendTo("#empty_fields");
   elem.click(function(e) {
       e.preventDefault();
-      playMove(coord.x, coord.y, game.getColorToMove(), moveType.NORMAL);
+      playMove(coord.x, coord.y, game.getColorToMove(), MoveType.NORMAL);
   });
 }
 
