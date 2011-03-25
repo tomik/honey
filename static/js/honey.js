@@ -39,6 +39,7 @@ MoveType = {
 }
 
 STONE_IMG = {red: "/static/img/red_small.gif", blue: "/static/img/blue_small.gif"}
+LAST_IMG  = "/static/img/last.gif"
 
 function flipColor(color) {
   if (color == Color.RED)
@@ -299,6 +300,26 @@ function putNodeOnBoard(node) {
     putMoveOnBoard(node.x, node.y, node.color);
 }
 
+
+function putLastMoveMark(x, y) {
+  // update last mark
+  var last = $("#last_stone") 
+  if(!last.length) {
+    last = $("<img alt='' style='z-index: 1; position: absolute; left: " + x + "px ; top : " + y + "px ;' galleryimg='no' id='last_stone' src='" + LAST_IMG + "'>");
+    last.appendTo("#board");
+  }
+  var pos = coordToPosTopLeft({x:x, y:y});
+  last.css("left", pos.x);
+  last.css("top", pos.y);
+  last.show();
+}
+
+function removeLastMoveMark() {
+  last = $("#last_stone") 
+  if(last)
+    last.hide();
+}
+
 function putMoveOnBoard(x, y, color) {
   // remove empty field on that location
   elem = $("#empty_field_" + x + "_" + y)
@@ -309,6 +330,8 @@ function putMoveOnBoard(x, y, color) {
   var imgLocation = color == Color.RED ? STONE_IMG.red : STONE_IMG.blue;
   elem = $("<img alt='' class='move' style='position: absolute; left: " + pos.x + "px ; top : " + pos.y + "px ;' galleryimg='no' id='move_" + x + "_" + y + "' src='" + imgLocation + "'>");
   elem.appendTo("#board");
+
+  putLastMoveMark(x, y);
 }
 
 function removeNodeFromBoard(node) {
@@ -429,6 +452,10 @@ function jumpToNode(newNode) {
     putNodeOnBoard(node);
     node = node.fatherNode;
   }
+  if(newNode.fatherNode)
+    putLastMoveMark(newNode.x, newNode.y);
+  else
+    removeLastMoveMark(newNode.x, newNode.y);
 
   game.currNode = newNode;
 }
