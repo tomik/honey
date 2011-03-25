@@ -345,15 +345,35 @@ function removeNode(node) {
 }
 
 function removeSubTree(node) {
-  if (!node.fatherNode)
+  father = node.fatherNode;
+  if (!father)
     return;
 
-  jumpToNode(node.fatherNode);
+  jumpToNode(father);
   removeNode(node);
 
   // remove node from father children array
-  var i = node.fatherNode.getChildIndex(node);  
-  node.fatherNode.children.splice(i, 1);
+  var i = father.getChildIndex(node);  
+  father.children.splice(i, 1);
+
+  // promote first children variant
+  if (i == 0 && father.children.length > 0)
+  {
+    removeBranchFromTree(node.branch);
+    promoteToNewBranch(father.children[0], father.branch)
+  }
+}
+
+function promoteToNewBranch(node, newBranch) {
+  while (true) {
+    node.branch = newBranch;
+    putNodeInTree(node);
+    setNodeActive(node, false);
+
+    if (!node.children.length)
+      break;
+    node = node.children[0];
+  }
 }
 
 function cycleBranches(node, up) {
