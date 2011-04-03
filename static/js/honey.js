@@ -4,12 +4,6 @@ FIELD_X_DIFF = 25;
 FIELD_Y_DIFF = 21;
 FIELD_RADIUS = 10;
 
-/*
- * TODO
- * highlight last move
- * hide/show branches
- */
-
 String.prototype.format = function() {
   var s = this;
   for (var i = 0; i < arguments.length; i++) {
@@ -223,7 +217,7 @@ function playMove(x, y, color, moveType) {
     if (child.x == x && child.y == y && child.color == color) {
       game.currNode = child;
       putNodeOnBoard(game.currNode);
-      // TODO switch to branch
+      setNodeActive(game.currNode, true);
       existingNode = true;
     }
   });
@@ -294,10 +288,10 @@ function setNodeActive(node, active) {
 function putNodeOnBoard(node) {
   if (node.moveType == MoveType.SWAP) {
     removeNodeFromBoard(node.fatherNode);
-    putMoveOnBoard(node.fatherNode.y, node.fatherNode.x, node.color);
+    putNodeOnBoardNoSwap(node);
   }
   else 
-    putMoveOnBoard(node.x, node.y, node.color);
+    putNodeOnBoardNoSwap(node);
 }
 
 
@@ -320,18 +314,23 @@ function removeLastMoveMark() {
     last.hide();
 }
 
-function putMoveOnBoard(x, y, color) {
+function putNodeOnBoardNoSwap(node) {
   // remove empty field on that location
-  elem = $("#empty_field_" + x + "_" + y)
+  elem = $("#empty_field_" + node.x + "_" + node.y)
   elem.remove();
 
   // add new empty field
-  var pos = coordToPosTopLeft({x:x, y:y});
-  var imgLocation = color == Color.RED ? STONE_IMG.red : STONE_IMG.blue;
-  elem = $("<img alt='' class='move' style='position: absolute; left: " + pos.x + "px ; top : " + pos.y + "px ;' galleryimg='no' id='move_" + x + "_" + y + "' src='" + imgLocation + "'>");
+  var pos = coordToPosTopLeft({x:node.x, y:node.y});
+  var imgLocation = node.color == Color.RED ? STONE_IMG.red : STONE_IMG.blue;
+  elem = $("<img alt='' class='move' style='position: absolute; left: " + pos.x + "px ; top : " + pos.y + "px ;' galleryimg='no' id='move_" + node.x + "_" + node.y + "' src='" + imgLocation + "'>");
   elem.appendTo("#board");
 
-  putLastMoveMark(x, y);
+  elem.click(function(e) {
+      e.preventDefault();
+      jumpToNode(node);
+  });
+
+  putLastMoveMark(node.x, node.y);
 }
 
 function removeNodeFromBoard(node) {
@@ -468,6 +467,11 @@ function sgfOnGameProperty(propName, propValue) {
     throw "invalid game type";
   if (propName == "SZ" && propValue != "13")
     throw "invalid board size";
+  // player names
+  if (propName == "PB")
+    $("#red_player").text(propValue);
+  if (propName == "PW")
+    $("#blue_player").text(propValue);
 }
 
 function sgfOnMove(who, where) {
@@ -500,7 +504,4 @@ function sgfOnBranchStart() {
 function sgfOnBranchStop() {
   throw "not implemented";
 }
-
-// FORMAT:
-// r1-1 swap r7-7 b1-2 ((r4-3 b6-5) (r3-2)) (r5-1)
 

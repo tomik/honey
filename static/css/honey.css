@@ -1,21 +1,48 @@
 
+#honey_title {
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-bottom: 20px;
+  margin-right: 10px;
+  position: relative;
+  float:left;
+}
+
+#honey_image {
+  padding-top: 10px;
+}
+
 #board {
   background-color: #FFFFFF;
   border: none;
-  width: 55%;
+  width: 53%;
   position: relative;
   float: left;
 }
 
-#branches {
+#right_panel {
   float: right;
+  width: 44%;
+}
+
+#branches {
   border: 1px solid;
-  width: 40%;
   min-height: 50px;
   margin-top:10px;
   margin-right:10px;
   padding: 5px;
-  display: inline;
+}
+
+#footbar {
+  margin-top: 5px;
+}
+
+#game_info {
+  margin-right: 10px;
+}
+
+#game_info a {
+  text-decoration: none;
 }
 
 .branch {
@@ -29,16 +56,20 @@
 }
 
 .node_link.active {
-  background-color: #CCFFCC;
+  background-color: #DDDDDD;
 }
 
-.node_link.red {
+.red {
   color: red;
 }
 
-.node_link.blue {
+.blue {
   color: blue;
 }
 
 img.move {
+}
+
+img.move:hover {
+ cursor: pointer;  
 }
