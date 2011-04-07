@@ -28,6 +28,7 @@ Color = {
 
 MoveType = {
   NORMAL: "normal",
+  ROOT: "root",
   SWAP: "swap",
   RESIGN: "resign"
 }
@@ -48,11 +49,9 @@ function CreateGame() {
     return null;
   _gameCreated = true;
 
-  root = {fatherNode: null, children: [], id: 0, number: 0};
+  root = new Node(0, 0, 0, null, MoveType.ROOT)
   trunk = {fatherBranch: null, firstNode: root, bid: 0, depth: 0};
   root.branch = trunk;
-  root.getAncestors = function() {return [0];}
-  root.getViewLabel = function() {return "root"};
 
   game = {
     root: root,
@@ -68,9 +67,11 @@ function CreateGame() {
   return game;
 }
 
+// root will be created first
+_nextNodeId = 0;
+
 game = CreateGame();
 
-_nextNodeId = 1;
 _alphabet = ("abcdefghijklmnopqrstuvwxyz").split("");
 function Node(x, y, color, fatherNode, moveType) {
   var that = this
@@ -79,9 +80,13 @@ function Node(x, y, color, fatherNode, moveType) {
   this.color = color;
   this.fatherNode = fatherNode;
   this.id = _nextNodeId++;
-  this.number = fatherNode.number + 1;
   this.children = [];
   this.moveType = moveType; 
+
+  if (fatherNode)
+    this.number = fatherNode.number + 1;
+  else
+    this.number = 0;
 
   this.getAncestors = function() {
     var anc = [];
@@ -96,6 +101,8 @@ function Node(x, y, color, fatherNode, moveType) {
   this.getViewLabel = function() {
     if (that.moveType == MoveType.SWAP)
       return "{0}.swap".format(that.number);
+    if (that.moveType == MoveType.ROOT)
+      return "root".format(that.number);
     return "{0}.{1}{2}".format(that.number, _alphabet[that.x], that.y + 1);
   }
 
@@ -326,8 +333,8 @@ function putNodeOnBoardNoSwap(node) {
   elem.appendTo("#board");
 
   elem.click(function(e) {
-      e.preventDefault();
-      jumpToNode(node);
+    e.preventDefault();
+    jumpToNode(node);
   });
 
   putLastMoveMark(node.x, node.y);
