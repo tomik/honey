@@ -143,16 +143,34 @@ $(document).ready(function() {
     sgfParse(_inputSgf, _sgfParseHandler);
   }
   else {
-    for (var i = 0; i < 5; i ++) {
+    for (var i = 0; i < 50; i ++) {
       var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
       var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
       playMove(x, y, game.getColorToMove(), MoveType.NORMAL);
     }
   }
+
 });
 
+_lastKey = 0;
+
 $(document).keydown(function(e) {
-  switch (e.which) {
+    keydownHandler(e.which)
+
+    $(document).everyTime("100ms", "keydown_timer", function() {
+        if (_lastKey)
+          keydownHandler(_lastKey);
+        }, 0);
+
+    });
+
+$(document).keyup(function(e) {
+    _lastKey = 0;
+    $(document).stopTime("keydown_timer");
+    });
+
+function keydownHandler(key) {
+  switch (key) {
     // left
     case 37: 
       if (game.currNode.fatherNode)
@@ -181,7 +199,8 @@ $(document).keydown(function(e) {
       // console.log("pressed {0}".format(e.which));
       break;
   }
-});
+  _lastKey = key;
+}
 
 function setupEmptyFields() {
   for (i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
