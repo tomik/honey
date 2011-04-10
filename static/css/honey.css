@@ -59,6 +59,10 @@
   background-color: #DDDDDD;
 }
 
+.node_link.first_son {
+  text-decoration: underline;
+}
+
 .red {
   color: red;
 }

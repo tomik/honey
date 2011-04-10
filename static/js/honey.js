@@ -248,6 +248,7 @@ function playMove(x, y, color, moveType) {
   game.currNode = newNode;
 
   putNodeInTree(game.currNode);
+  updateFirstSonMark(game.currNode.fatherNode);
   putNodeOnBoard(game.currNode);
 }
 
@@ -264,6 +265,19 @@ function removeBranchFromTree(branch) {
   elem.remove();
 }
 
+function updateFirstSonMark(node) {
+  if (!node || !node.children.length)
+    return;
+
+  firstSon = node.children[0]
+  var elem = $("#node_{0}".format(firstSon.id));
+
+  if (node.children.length > 1)
+    elem.addClass("first_son")
+  else
+    elem.removeClass("first_son")
+}
+
 function removeNodeFromTree(node) {
   var elem = $("#node_{0}".format(node.id));
   elem.remove();
@@ -275,8 +289,6 @@ function putNodeInTree(node) {
   // not all nodes have color (i.e. start node)
   if (node.color)
     elem.addClass(node.color == Color.RED ? "red" : "blue");
-  //if (node.children.length > 1)
-    //elem.addClass("junction");
   $("#branch_" + node.branch.bid).append(elem).append(" ");
   elem.click(function(e) {
       e.preventDefault();
@@ -385,6 +397,8 @@ function removeSubTree(node) {
   // remove node from father children array
   var i = father.getChildIndex(node);  
   father.children.splice(i, 1);
+  
+  updateFirstSonMark(father);
 
   // promote first children variant
   if (i == 0 && father.children.length > 0)
@@ -398,6 +412,7 @@ function promoteToNewBranch(node, newBranch) {
   while (true) {
     node.branch = newBranch;
     putNodeInTree(node);
+    updateFirstSonMark(node.fatherNode);
     setNodeActive(node, false);
 
     if (!node.children.length)
