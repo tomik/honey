@@ -157,16 +157,20 @@ _lastKey = 0;
 $(document).keydown(function(e) {
     keydownHandler(e.which)
 
-    $(document).everyTime("100ms", "keydown_timer", function() {
-        if (_lastKey)
-          keydownHandler(_lastKey);
-        }, 0);
+    // wait for a while before first timer is started
+    $(document).oneTime("400ms", "keydown_timer_bootstrap", function() {
+      $(document).everyTime("100ms", "keydown_timer", function() {
+          if (_lastKey)
+            keydownHandler(_lastKey);
+          }, 0);
+      });
 
     });
 
 $(document).keyup(function(e) {
     _lastKey = 0;
     $(document).stopTime("keydown_timer");
+    $(document).stopTime("keydown_timer_bootstrap");
     });
 
 function keydownHandler(key) {
