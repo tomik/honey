@@ -378,6 +378,7 @@ function removeSubTree(node) {
   if (!father)
     return;
 
+  branch = node.branch;
   jumpToNode(father);
   removeNode(node);
 
@@ -388,7 +389,7 @@ function removeSubTree(node) {
   // promote first children variant
   if (i == 0 && father.children.length > 0)
   {
-    removeBranchFromTree(node.branch);
+    removeBranchFromTree(father.children[0].branch);
     promoteToNewBranch(father.children[0], father.branch)
   }
 }
