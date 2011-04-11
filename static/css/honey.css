@@ -60,7 +60,7 @@
 }
 
 .node_link.first_son {
-  text-decoration: underline;
+  font-weight: bold;
 }
 
 .red {

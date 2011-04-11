@@ -241,6 +241,11 @@ function setupEmptyField(coord) {
 }
 
 function playMove(x, y, color, moveType) {
+  // we will move one move ahead
+  // therefore hide the branches now
+  if (game.currNode.fatherNode) 
+    hideChildrenBranches(game.currNode.fatherNode, {}); 
+
   var existingNode = false; 
   // just continues in current branches
   game.currNode.children.forEach( function(child) {
@@ -251,8 +256,10 @@ function playMove(x, y, color, moveType) {
       existingNode = true;
     }
   });
-  if (existingNode)
+  if (existingNode) {
+    showChildrenBranches(game.currNode.fatherNode); 
     return;
+  }
 
   // console.log("playing new move father id {0}".format(game.currNode.id));
 
@@ -273,6 +280,28 @@ function playMove(x, y, color, moveType) {
   putNodeInTree(game.currNode);
   updateFirstSonMark(game.currNode.fatherNode);
   putNodeOnBoard(game.currNode);
+  showChildrenBranches(game.currNode.fatherNode); 
+}
+
+function showChildrenBranches(node) {
+  node.children.forEach(function(child) { 
+    showBranchInTree(child.branch);
+    });
+}
+
+function hideChildrenBranches(node, keepBranches) {
+  node.children.forEach(function(child) { 
+    if (child.isBranchRepresentative() && !keepBranches[child.branch.bid]) 
+      hideBranchInTree(child.branch);
+    });
+}
+
+function showBranchInTree(branch) {
+  $("#branch_{0}".format(branch.bid)).show();
+}
+
+function hideBranchInTree(branch) {
+  $("#branch_{0}".format(branch.bid)).hide();
 }
 
 function putBranchInTree(branch) {
@@ -463,9 +492,6 @@ function cycleBranches(node, up) {
 function jumpToNode(newNode) {
   if (game.currNode.id == newNode.id)
     return;
-  //var newNode = game.nodeMap[id]
-  //if (!newNode)
-    //return;
 
   // get id of closest common junction
   ancNew = newNode.getAncestors();
@@ -482,13 +508,34 @@ function jumpToNode(newNode) {
   // console.log("anc new {0} anc old {1}".format(ancNew, ancOld));
   // console.log("new {0} old {1} common {2}".format(newNode.id, game.currNode.id, ancCommon.id));
 
+  // these branches must be visible after jump
+  var keepBranches = {}
+  keepBranches[root.branch.bid] = true;
+  var node = newNode;
+  var branch = node.branch;
+  while(branch != root.branch)
+  {
+    keepBranches[branch.bid] = true;
+    // add brothers
+    node = node.branch.firstNode.fatherNode;
+    node.children.forEach(function(child) {
+        keepBranches[child.branch.bid] = true;
+        });
+    branch = node.branch;
+  }
+
   // backwards currNode -> common
   var node = game.currNode
+  var oldNode = game.currNode
   while (node.id != ancCommon.id) {
     setNodeActive(node, false);
     removeNodeFromBoard(node);
     node = node.fatherNode;
+    hideChildrenBranches(node, keepBranches);  
   }
+  // for cases when common node has siblings
+  if (node.fatherNode) 
+    hideChildrenBranches(node.fatherNode, keepBranches);  
 
   // backwards newNode -> common
   var node = newNode
@@ -503,6 +550,14 @@ function jumpToNode(newNode) {
     removeLastMoveMark(newNode.x, newNode.y);
 
   game.currNode = newNode;
+
+  var currFather = game.currNode.fatherNode; 
+  // display siblings branches of new node
+  if (currFather) {
+    currFather.children.forEach(function(child) {
+      showBranchInTree(child.branch);
+      });
+  }
 }
 
 // sgf parsing
