@@ -15,34 +15,49 @@
     </script>
     <script src="/static/js/hsgf.js" type="text/javascript"></script>
     <script src="/static/js/honey.js" type="text/javascript"></script>
+
+    <!-- protect my email address -->
+    <script type="text/javascript">
+      myContact = "gmail.com";
+      myContact = "tomas.kozelek" + "@" + myContact;
+      $(document).ready(function() {
+        $("#contact").attr("href", "mailto:" + myContact);
+      });
+    </script>
+
   </head>
   <body>
     <h3 id="honey_title">
       Honey Hex Viewer
     </h3>
+
     <div id="honey_image">
       <img alt="" height="40" width="40"
         src="/static/img/honey.png"/>
     </div>
     <div style="clear: both;"> </div>
+
     <div id='board'>
       <img alt='' class='boardimage' 
       galleryimg='no' id='boardimage' src='/static/img/board.gif' usemap="#empty_fields" border="0"/>
       <map id="empty_fields" name="empty_fields">
       </map>
     </div>
+
     <div id="right_panel">
       <div id='game_info'>
-        {% if lg_id %}
-          <a style="float:right;" href="http://www.littlegolem.net/jsp/game/game.jsp?gid={{lg_id}}">Little Golem</a>
-        {% endif %}  
         <span class="red" id='red_player'>red</span> vs. <span class="blue" id='blue_player'>blue</span>
       </div>
       <div id="branches"> </div>
-      <div id='footbar'> 
-        <!-- <a href="gid={{lg_id}}">download sgf</a> -->
-      </div>
     </div>
     <div style="clear: both;"> </div>
+
+    <div id='footbar'> 
+        {% if lg_id %}
+          <a href="http://www.littlegolem.net/jsp/game/game.jsp?gid={{lg_id}}">Little Golem</a> | 
+        {% endif %}  
+        <a href="gid={{lg_id}}">download sgf</a> | 
+        <a id="contact" href="">contact</a>
+    </div>
   </body>
 </html>

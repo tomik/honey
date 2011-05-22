@@ -33,12 +33,37 @@
   padding: 5px;
 }
 
+#help {
+  border: 1px solid;
+  margin: 10px;
+  padding:10px;
+  margin-left: 20%;
+  margin-right: 20%;
+}
+
+#help h1 {
+  font-size:16px;
+}
+
+#help h2 {
+  font-size:14px;
+}
+
+
 #footbar {
-  margin-top: 5px;
+  bottom: 0px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+#footbar a {
+  text-decoration: none;
+  font-size: 10pt;
 }
 
 #game_info {
   margin-right: 10px;
+  font-size: 11pt;
 }
 
 #game_info a {
@@ -47,16 +72,17 @@
 
 .branch {
   margin-bottom: 10px;
-  line-height: 25px;
+  line-height: 27px;
 }
 
 .node_link {
   margin-right: 5px;
   text-decoration: none;
+  padding:2px;
 }
 
 .node_link.active {
-  background-color: #DDDDDD;
+  background-color: #eaeaea;
 }
 
 .node_link.first_son {
