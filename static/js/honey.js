@@ -101,6 +101,8 @@ function Node(x, y, color, fatherNode, moveType) {
   this.getViewLabel = function() {
     if (that.moveType == MoveType.SWAP)
       return "{0}.swap".format(that.number);
+    if (that.moveType == MoveType.RESIGN)
+      return "{0}.resign".format(that.number);
     if (that.moveType == MoveType.ROOT)
       return "root".format(that.number);
     return "{0}.{1}{2}".format(that.number, _alphabet[that.x], that.y + 1);
@@ -241,6 +243,13 @@ function setupEmptyField(coord) {
 }
 
 function playMove(x, y, color, moveType) {
+  // cannot play after resign
+  // TODO it would be better upon entering resign node to remove
+  // all the links from the board instead - but then we need to remember
+  // that last state was resign and add the links back again
+  if (game.currNode.moveType == MoveType.RESIGN)
+    return;
+
   // we will move one move ahead
   // therefore hide the branches now
   if (game.currNode.fatherNode) 
@@ -357,6 +366,8 @@ function setNodeActive(node, active) {
 }
 
 function putNodeOnBoard(node) {
+  if (node.moveType == MoveType.RESIGN)
+    return;
   if (node.moveType == MoveType.SWAP) {
     removeNodeFromBoard(node.fatherNode);
     putNodeOnBoardNoSwap(node);
@@ -544,7 +555,7 @@ function jumpToNode(newNode) {
     putNodeOnBoard(node);
     node = node.fatherNode;
   }
-  if(newNode.fatherNode)
+  if(newNode.moveType != MoveType.ROOT && newNode.moveType != MoveType.RESIGN)
     putLastMoveMark(newNode.x, newNode.y);
   else
     removeLastMoveMark(newNode.x, newNode.y);
@@ -580,6 +591,12 @@ function sgfOnMove(who, where) {
   color = who == "W" ? Color.RED : Color.BLUE;
   if (who != "W" && who != "B")
     throw "invalid move color {0}".format(who)
+
+  if (where == "resign")
+  {
+    playMove(game.currNode.y, game.currNode.x, color, MoveType.RESIGN);
+    return;
+  }
 
   if (where == "swap")
   {
