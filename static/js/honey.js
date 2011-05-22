@@ -252,7 +252,9 @@ function playMove(x, y, color, moveType) {
 
   // we will move one move ahead
   // therefore hide the branches now
-  if (game.currNode.fatherNode) 
+  if (game.currNode.fatherNode &&
+      // prevent hiding branches when on variant border
+      game.currNode.fatherNode.branch == game.currNode.branch)
     hideChildrenBranches(game.currNode.fatherNode, {}); 
 
   var existingNode = false; 
