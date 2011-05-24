@@ -4,16 +4,6 @@ FIELD_X_DIFF = 25;
 FIELD_Y_DIFF = 21;
 FIELD_RADIUS = 10;
 
-String.prototype.format = function() {
-  var s = this;
-  for (var i = 0; i < arguments.length; i++) {
-    var reg = new RegExp("\\{" + i + "\\}", "gm");
-    s = s.replace(reg, arguments[i]);
-  }
-
-  return s;
-}
-
 _sgfParseHandler = {
   onGameProperty: sgfOnGameProperty,
   onMove: sgfOnMove,
@@ -57,6 +47,7 @@ function CreateGame() {
     root: root,
     currNode: root,   
     nodeMap: {0: root},
+    properties: {}
   };
 
   game.getColorToMove = function() {
@@ -72,7 +63,6 @@ _nextNodeId = 0;
 
 game = CreateGame();
 
-_alphabet = ("abcdefghijklmnopqrstuvwxyz").split("");
 function Node(x, y, color, fatherNode, moveType) {
   var that = this
   this.x = x;
@@ -145,12 +135,18 @@ $(document).ready(function() {
     sgfParse(_inputSgf, _sgfParseHandler);
   }
   else {
-    for (var i = 0; i < 50; i ++) {
+    for (var i = 0; i < 5; i ++) {
       var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
       var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
       playMove(x, y, game.getColorToMove(), MoveType.NORMAL);
     }
   }
+
+  $("#download").click(function(e){
+    $("#post_sgf_field").attr("value", generateSgf());
+    $("#post_sgf_form").submit();
+    return false;
+    });
 
 });
 
@@ -583,9 +579,23 @@ function sgfOnGameProperty(propName, propValue) {
     throw "invalid board size";
   // player names
   if (propName == "PB")
+  {
     $("#red_player").text(propValue);
+    game.properties.red = propValue
+  }
   if (propName == "PW")
+  {
     $("#blue_player").text(propValue);
+    game.properties.blue = propValue
+  }
+  if (propName == "SZ")
+    game.properties.size = propValue
+  if (propName == "SO")
+    game.properties.source = propValue
+  if (propName == "GC")
+    game.properties.gameComment = propValue
+  if (propName == "EV")
+    game.properties.hexEvent = propValue
 }
 
 function sgfOnMove(who, where) {
@@ -623,5 +633,55 @@ function sgfOnBranchStart() {
 
 function sgfOnBranchStop() {
   throw "not implemented";
+}
+
+function SgfProducer(rootNode) {
+  var that = this
+  this.stack = [rootNode]
+
+  this.empty = function() {
+    return !this.stack.length;
+  }
+
+  this.newVariant = function() {
+    if(!that.stack.length)
+      return false;
+
+    var node = that.stack[that.stack.length - 1];
+    return node.fatherNode && node.fatherNode.children.length > 1;
+  }
+
+  this.yield = function() {
+    if(!that.stack.length)
+      return null;
+
+    var node = that.stack.splice(that.stack.length - 1, 1)[0]
+      print 
+    node.children.forEach(function(child){
+        that.stack[that.stack.length] = child;
+        });
+
+    return [node.color, node.x, node.y];
+  }
+
+  this.endVariant = function() {
+    if(!that.stack.length)
+      return false;
+
+    var node = that.stack[that.stack.length - 1];
+    return node.children.length;
+  }
+}
+
+function generateSgf()
+{
+  return sgfOutput(
+      game.properties.size,
+      game.properties.hexEvent,
+      game.properties.red,
+      game.properties.blue,
+      game.properties.gameComment,
+      game.properties.source,
+      new SgfProducer(game.root));
 }
 

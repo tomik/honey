@@ -56,8 +56,12 @@
         {% if lg_id %}
           <a href="http://www.littlegolem.net/jsp/game/game.jsp?gid={{lg_id}}">Little Golem</a> | 
         {% endif %}  
-        <a href="gid={{lg_id}}">download sgf</a> | 
+        <a id="download" href="">download sgf</a> | 
         <a id="contact" href="">contact</a>
     </div>
+    <form id="post_sgf_form" action="/sgf" style="display:none;" method="POST">
+      <input id="post_sgf_field" type="hidden" name="sgf" value="">
+      <input type="submit" value="go">
+    </form>
   </body>
 </html>

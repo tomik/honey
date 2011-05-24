@@ -1,5 +1,15 @@
 
-hsgf = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[ game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])";
+_alphabet = ("abcdefghijklmnopqrstuvwxyz").split("");
+
+String.prototype.format = function() {
+  var s = this;
+  for (var i = 0; i < arguments.length; i++) {
+    var reg = new RegExp("\\{" + i + "\\}", "gm");
+    s = s.replace(reg, arguments[i]);
+  }
+
+  return s;
+}
 
 // define an eventhandler which is called as parser steps via input string
 // header tags needed: FF, SZ
@@ -7,6 +17,7 @@ hsgf = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[ game #
 // lexer (syntactic) and parser (semantic)
 // 
 // lexer is FA
+
 
 LexState = {
   COLLECTION: "collection",
@@ -17,8 +28,28 @@ LexState = {
   PROP: "prop",
 }
 
+hsgf = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[ game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])";
+
 // list of transition rules (state + char -> new state + handler name)
 
+function sgfOutput(size, hexEvent, red, blue, name, source, recordProducer) {
+  hsgf = "(;FF[4]EV[{0}],PB[{1}]PW[{2}]SZ[{3}]GC[{4}]SO[{5}]".format(
+        hexEvent, red, blue, size, name, source);
+
+  while(!recordProducer.empty())
+  {
+    if(recordProducer.newVariant())
+      hsgf += "(";
+    var endVariant = recordProducer.endVariant();
+    var node = recordProducer.yield(); 
+    hsgf += ";{0}[{1}{2}]".format(
+        node[0] == "red" ? "W" : "B", _alphabet[node[1]], _alphabet[node[2]]);
+    if(endVariant)
+      hsgf += ")";
+  }
+  hsgf += ")";
+  return hsgf
+}
 
 function sgfParse(input, handler) {
   var isFirstNode = true;
