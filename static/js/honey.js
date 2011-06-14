@@ -47,7 +47,12 @@ function CreateGame() {
     root: root,
     currNode: root,   
     nodeMap: {0: root},
-    properties: {}
+    properties: {
+      size: 13,
+      red: "red",
+      blue: "blue",
+      source: "honey hex viewer"
+    }
   };
 
   game.getColorToMove = function() {
@@ -656,12 +661,12 @@ function SgfProducer(rootNode) {
       return null;
 
     var node = that.stack.splice(that.stack.length - 1, 1)[0]
-      print 
     node.children.forEach(function(child){
         that.stack[that.stack.length] = child;
         });
 
-    return [node.color, node.x, node.y];
+    return [node.color, node.x, node.y,
+           node.moveType == MoveType.NORMAL ? null : node.MoveType];
   }
 
   this.endVariant = function() {
@@ -669,8 +674,11 @@ function SgfProducer(rootNode) {
       return false;
 
     var node = that.stack[that.stack.length - 1];
-    return node.children.length;
+    return !node.children.length;
   }
+
+  // we are not interested in root node
+  this.yield();
 }
 
 function generateSgf()
