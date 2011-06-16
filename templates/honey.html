@@ -48,6 +48,16 @@
           </div>
 
           <div id="right_panel">
+            <div id='help'>
+              <a id="close_help" href="">close</a>
+              <h5>Controls:</h5>
+              <div><span class="action">click on empty field:</span> <span class="description">play a move</span></div>
+              <div><span class="action">click on stone:</span> <span class="description">jump to that move</span></div>
+              <div><span class="action">clicon on move in list:</span> <span class="description">ditto</span></div>
+              <div><span class="action">left, right:</span> <span class="description">navigate along active branch</span></div>
+              <div><span class="action">up, down:</span> <span class="description">select from multiple variants</span></div>
+              <div><span class="action">del:</span> <span class="description">remove whole subtree</span></div>
+            </div>
             <div id='game_info'>
               <span class="red" id='red_player'>red</span> vs. <span class="blue" id='blue_player'>blue</span>
             </div>
@@ -62,6 +72,7 @@
           <a href="http://www.littlegolem.net/jsp/game/game.jsp?gid={{lg_id}}">Little Golem</a> | 
         {% endif %}  
         <a id="download" href="">download sgf</a> | 
+        <a id="show_help" href="">help</a> |
         <a id="contact" href="">contact</a>
     </div>
     <form id="post_sgf_form" action="/sgf" style="display:none;" method="POST">

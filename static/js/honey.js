@@ -154,6 +154,11 @@ $(document).ready(function() {
     return false;
     });
 
+  $("#toggle_help").click(function(e){
+    $("#help").toggle();
+    return false;
+    });
+
 });
 
 _lastKey = 0;
