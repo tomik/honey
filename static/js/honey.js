@@ -140,7 +140,8 @@ $(document).ready(function() {
     sgfParse(_inputSgf, _sgfParseHandler);
   }
   else {
-    for (var i = 0; i < 5; i ++) {
+    // only for debugging purposes
+    for (var i = 0; i < 0; i ++) {
       var x = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
       var y = Math.floor(Math.random() * (BOARD_SIZE - 1)); 
       playMove(x, y, game.getColorToMove(), MoveType.NORMAL);

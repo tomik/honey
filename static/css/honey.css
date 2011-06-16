@@ -12,6 +12,10 @@
   padding-top: 10px;
 }
 
+#positioning_wrapper {
+  position: relative;
+}
+
 #content_wrapper {
   display: table;
   border-collapse: collapse;
