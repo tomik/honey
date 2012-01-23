@@ -1,0 +1,67 @@
+
+<html>
+  <head>
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type' />
+    <title>
+      Honey Hex Viewer
+    </title>
+    <link href="/static/css/honey.css" media="all" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="/static/img/honey_small.gif" type="image/x-icon"> 
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-24469709-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+
+    <!-- protect my email address -->
+    <script type="text/javascript">
+      myContact = "gmail.com";
+      myContact = "tomas.kozelek" + "@" + myContact;
+      $(document).ready(function() {
+        $("#contact").attr("href", "mailto:" + myContact);
+      });
+    </script>
+
+  </head>
+  <body>
+    <h3 id="honey_title">
+      Honey Hex Viewer
+    </h3>
+
+    <div id="honey_image">
+      <img alt="" height="40" width="40"
+        src="/static/img/honey.png"/>
+    </div>
+    <div style="clear: both;"> </div>
+
+    <div id='positioning_wrapper'>
+      <div id='content_wrapper'>
+        <div id='content'>
+            Honey Hex Viewer is an online 13x13 hex analyzer.
+        </div>
+        <form id="load_game" method="post" action="/load_game">
+            {% if load_error %}
+                <span style="color: red;"> {{load_error}} </span>
+            {% endif %}
+            <table>
+                <tr> <td> Game url: </td> <td> <input type="text" name="url"/> </td>
+                <tr> <td> Little Golem id: </td> <td> <input type="text" name="lg_id"/> </td>
+                <tr> <td/> <td> <input type="submit" value="load"/> </td>
+            </table>
+        </form>
+        </form>
+      </div>
+    </div>
+
+    <div id='footbar'> 
+        <a id="contact" href="">contact</a>
+    </div>
+  </body>
+</html>
