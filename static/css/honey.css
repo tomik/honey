@@ -122,6 +122,11 @@
   color: blue;
 }
 
+.child_mark {
+  font-size: 13pt;
+  font-weight: bold;
+}
+
 img.move {
 }
 
