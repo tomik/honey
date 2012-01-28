@@ -1,5 +1,6 @@
 
-# constants
+# CONSTANTS
+# ====================
 
 BOARD_SIZE = 13
 FIELD_FIRST = {x: 52, y:52}
@@ -11,7 +12,8 @@ STONE_IMG_RED = "/static/img/red_small.gif"
 STONE_IMG_BLUE = "/static/img/blue_small.gif"
 LAST_IMG  = "/static/img/last.gif"
 
-# basic enums
+# BASIC ENUMS
+# ====================
 
 Color = {
   RED: "red",
@@ -25,7 +27,8 @@ MoveType = {
   RESIGN: "resign"
 }
 
-# utility functions
+# UTILITY FUNCTIONS
+# ====================
 
 flipColor = (color) ->
   if color == Color.BLUE then Color.RED else Color.BLUE
@@ -49,16 +52,21 @@ coordToPosTopLeft = (coord) ->
   pos.y -= FIELD_RADIUS + 3
   pos
 
-# globals
+randomPos = ->
+ Math.floor(Math.random() * (BOARD_SIZE - 1))
+
+# GLOBALS
+# ====================
 
 # game is a singleton
 _gameCreated = false
 # monotonic identifier for nodes
 _nextNodeId = 0
 
-# basic types
+# BASIC TYPES
+# ====================
 
-CreateDispatcher = ->
+createDispatcher = ->
   {
     listeners: {}
     register: (name, listener) ->
@@ -66,13 +74,12 @@ CreateDispatcher = ->
         @listeners[name].push(listener)
       else
         @listeners[name] = [listener]
-      console.log(@listeners)
     dispatch: (name, params...) ->
       if @listeners[name]?
         l(params...) for l in @listeners[name]
   }
 
-CreateNode = (x, y, color, father, moveType) ->
+createNode = (x, y, color, father, moveType) ->
   {
     x: x
     y: y
@@ -86,10 +93,12 @@ CreateNode = (x, y, color, father, moveType) ->
     getChildIndex: (node) ->
       return i for child, i in @children when child.id == node.id
       -1
+    toStr: ->
+      "[#{@x} #{@y}] #{@color}"
   }
 
-CreateGame = () ->
-  root = CreateNode(0, 0, 0, null, MoveType.ROOT)
+createGame = () ->
+  root = createNode(0, 0, 0, null, MoveType.ROOT)
   {
     root: root
     currNode: root
@@ -100,10 +109,7 @@ CreateGame = () ->
   }
 
 # global so we can access this from the console
-@_game = _game = CreateGame()
-
-$(document).ready ->
-  setupEmptyFields()
+@_game = _game = createGame()
 
 # creates empty field on the board
 setupEmptyField = (coord) ->
@@ -127,7 +133,7 @@ putNodeOnBoard = (node, allow_swap=true) ->
   if (node.moveType == MoveType.RESIGN)
     return
   if (node.moveType == MoveType.SWAP)
-    removeNodeFromBoard(node.fatherNode)
+    removeNodeFromBoard(node.father)
     return putNodeOnBoard(node, false)
   # remove empty field on that location
   elem = $("#empty_field_#{node.x}_#{node.y}")
@@ -135,18 +141,22 @@ putNodeOnBoard = (node, allow_swap=true) ->
   # add new empty field
   pos = coordToPosTopLeft({x:node.x, y:node.y})
   imgLocation = if node.color == Color.RED then STONE_IMG_RED else STONE_IMG_BLUE
-  # TODO
   elem = $("<img alt='' class='move' style='position: absolute; left: #{pos.x}px; top:#{pos.y}px;'
             galleryimg='no' id='move_#{node.x}_#{node.y}' src='#{imgLocation}'>")
   elem.appendTo("#board")
+  putLastMoveMark(node.x, node.y)
 
+# removes move representing given node from board
+# handles swap move as well
 removeNodeFromBoard = (node) ->
-  elem = $("#move_" + x + "_" + y)
+  elem = $("#move_#{node.x}_#{node.y}")
   elem.remove()
-  setupEmptyField({x:x, y:y})
+  setupEmptyField({x:node.x, y:node.y})
   # with swap add nodes father
   if (node.moveType == MoveType.SWAP)
-    putNodeOnBoard(node.fatherNode)
+    putNodeOnBoard(node.father)
+  removeLastMoveMark(node.x, node.y)
+  putLastMoveMark(node.father.x, node.father.y)
 
 # places mark for last move from the board
 putLastMoveMark = (x, y) ->
@@ -169,15 +179,74 @@ removeLastMoveMark = ->
 # plays a move on the board and updates data structures
 playMove = (x, y, color, moveType) ->
   # are we continuing in the existing branch ?
-  child = findElem _game.currNode.children, ((e) -> e.x == x and e.y == y and e.color == color)
+  newNode = findElem _game.currNode.children, ((e) -> e.x == x and e.y == y and e.color == color)
   # new move
-  if not child
-    child = CreateNode(x, y, color, _game.currNode, moveType)
-  # place TODO put into event handler
-  _dispatcher.dispatch("playMove", child)
+  if not newNode
+    newNode = createNode(x, y, color, _game.currNode, moveType)
+    newNode.father.children.push(newNode)
+    _dispatcher.dispatch("createNode", newNode)
+  # raise event
+  _dispatcher.dispatch("playMove", newNode)
 
-_dispatcher = CreateDispatcher()
-_dispatcher.register("playMove", (node) -> console.log("Playing node [#{node.x} #{node.y}] #{node.color}"))
+# removes last move from the board
+unplayMove = () ->
+  if (_game.currNode.moveType == MoveType.ROOT)
+    return
+  _dispatcher.dispatch("unplayMove", _game.currNode)
+
+_dispatcher = createDispatcher()
+_dispatcher.register("createNode", (node) -> console.log("Created node #{node.toStr()}"))
+_dispatcher.register("playMove", (node) -> console.log("Playing node #{node.toStr()}"))
 _dispatcher.register("playMove", (node) -> putNodeOnBoard(node))
 _dispatcher.register("playMove", (node) -> _game.currNode = node)
+_dispatcher.register("unplayMove", (node) -> console.log("Unplaying node #{node.toStr()}"))
+_dispatcher.register("unplayMove", (node) -> removeNodeFromBoard(node))
+_dispatcher.register("unplayMove", (node) -> _game.currNode = node.father)
+
+# DOCUMENT FUNCTIONS
+# ====================
+
+$ ->
+  setupEmptyFields()
+  # TOO for debugging
+  playMove(randomPos(), randomPos(), _game.getColorToMove(), MoveType.NORMAL) for i in [0...10]
+
+_lastKey = 0
+
+$(document).keydown((e) ->
+  keydownHandler(e.which)
+  # wait for a while before first timer is started
+  $(document).oneTime("400ms", "keydown_timer_bootstrap", ->
+    $(document).everyTime("100ms", "keydown_timer", ->
+      if (_lastKey)
+        keydownHandler(_lastKey)
+    , 0)))
+
+$(document).keyup((e) ->
+    _lastKey = 0
+    $(document).stopTime("keydown_timer")
+    $(document).stopTime("keydown_timer_bootstrap"))
+
+keydownHandler = (key) ->
+  # left
+  if key == 37
+    if _game.currNode.father
+      unplayMove()
+  # right
+  else if key == 39
+    if _game.currNode.children.length
+      node = _game.currNode.children[0]
+      playMove(node.x, node.y, node.color, node.moveType)
+  # up
+  else if key == 38
+    cycleBranches(_game.currNode, true)
+  # down
+  else if key == 40
+    cycleBranches(_game.currNode, false)
+  # u
+  else if key == 88
+    removeSubTree(_game.currNode)
+  else
+    console.log("pressed #{key}")
+  _lastKey = key
 
