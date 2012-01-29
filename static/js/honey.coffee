@@ -1,5 +1,5 @@
 
-# >> CONSTANTS
+# ==>> CONSTANTS
 
 BOARD_SIZE = 13
 FIELD_FIRST = {x: 52, y:52}
@@ -11,7 +11,7 @@ STONE_IMG_RED = "/static/img/red_small.gif"
 STONE_IMG_BLUE = "/static/img/blue_small.gif"
 LAST_IMG  = "/static/img/last.gif"
 
-# >> BASIC ENUMS
+# ==>> BASIC ENUMS
 
 Color = {
   RED: "red",
@@ -25,7 +25,7 @@ MoveType = {
   RESIGN: "resign"
 }
 
-# >> UTILITY FUNCTIONS
+# ==>> UTILITY FUNCTIONS
 
 flipColor = (color) ->
   if color == Color.BLUE then Color.RED else Color.BLUE
@@ -59,69 +59,89 @@ coordToPosForText = (coord) ->
 randomPos = ->
  Math.floor(Math.random() * (BOARD_SIZE - 1))
 
-# >> BASIC TYPES
+# ==>> BASIC TYPES
 
-createDispatcher = ->
-  {
-    listeners: {}
-    register: (name, listener) ->
-      if @listeners[name]?
-        @listeners[name].push(listener)
-      else
-        @listeners[name] = [listener]
-    dispatch: (name, params...) ->
-      if @listeners[name]?
-        l(params...) for l in @listeners[name]
-  }
+class Dispatcher
+  listeners: {}
+  register: (name, listener) ->
+    if @listeners[name]?
+      @listeners[name].push(listener)
+    else
+      @listeners[name] = [listener]
+  dispatch: (name, params...) ->
+    if @listeners[name]?
+      l(params...) for l in @listeners[name]
+  
+class Node
+  constructor: (@x, @y, @color, @father, @moveType) ->
+    @id = @_nextNodeId++
+    @children = []
+    @number = if @father then @father.number + 1 else 0
+  # static monotonic identifier for nodes
+  @_nextNodeId: 0
+  getChildIndex: (node) ->
+    return i for child, i in @children when child.id == node.id
+    -1
+  toStr: ->
+    "[#{@x} #{@y}] #{@color}"
 
-createNode = (x, y, color, father, moveType) ->
-  {
-    x: x
-    y: y
-    color: color
-    father: father
-    id: _nextNodeId++
-    children: []
-    moveType: moveType
-    number: if father then father.number + 1 else 0
+class Game
+  constructor: () ->
+    @currNode = @root = new Node(0, 0, 0, null, MoveType.ROOT)
+    @properties = {}
+  getColorToMove: () ->
+    flipColor(@currNode.color)
 
-    getChildIndex: (node) ->
-      return i for child, i in @children when child.id == node.id
-      -1
-    toStr: ->
-      "[#{@x} #{@y}] #{@color}"
-  }
+# ==>> SGF PARSING AND OUTPUTTING
 
-createGame = () ->
-  root = createNode(0, 0, 0, null, MoveType.ROOT)
-  {
-    root: root
-    currNode: root
-    nodeMap: {0: root}
+# sgf parsing object
+class SgfParseHandler
+  onGameProperty: (propName, propValue) ->
+    console.log("sgf on game property #{propName}=#{propValue}") 
+    if propName == "FF" and propValue != "4"
+      throw "invalid game type"
+    else if propName == "SZ" and propValue != "13"
+      throw "invalid board size"
+    # player names
+    else if propName == "PB"
+      $("#red_player").text(propValue)
+      _game.properties.red = propValue
+    else if propName == "PW"
+      $("#blue_player").text(propValue)
+      _game.properties.blue = propValue
+    # other game properties
+    else if propName == "SZ"
+      _game.properties.size = propValue
+    else if propName == "SO"
+      _game.properties.source = propValue
+    else if propName == "GC"
+      _game.properties.gameComment = propValue
+    else if propName == "EV"
+      _game.properties.hexEvent = propValue
 
-    getColorToMove: () ->
-      flipColor(@currNode.color)
-  }
+  onMove: (who, where) ->
+    console.log("sgf move #{who}#{where}")
+    color = if who == "W" then Color.RED else Color.BLUE
+    if who != "W" and who != "B"
+      throw "invalid move color #{who}"
+    else if where == "resign"
+      playMove(_game.currNode.y, _game.currNode.x, color, MoveType.RESIGN)
+    else if (where == "swap")
+      playMove(_game.currNode.y, _game.currNode.x, color, MoveType.SWAP)
+    else if (where.length > 2)
+      throw "invalid move definition length #{where}"
+    else if (x = _alphabet.indexOf(where[0])) == -1 or (y = _alphabet.indexOf(where[1])) == -1
+      throw "invalid move definition #{where}"
+    else
+      playMove(x, y, color, MoveType.NORMAL)
 
-# >> GLOBALS
+  onBranchStart: ->
+    throw "not implemented"
 
-# game is a singleton
-_gameCreated = false
-# monotonic identifier for nodes
-_nextNodeId = 0
-_lastKey = 0
-# global so we can access this from the console
-@_game = _game = createGame()
-_dispatcher = createDispatcher()
-_dispatcher.register("createNode", (node) -> console.log("Created node #{node.toStr()} #{node}"))
-_dispatcher.register("playMove", (node) -> console.log("Playing node #{node.toStr()} #{node}"))
-_dispatcher.register("playMove", (node) -> putNodeOnBoard(node))
-_dispatcher.register("playMove", (node) -> _game.currNode = node)
-_dispatcher.register("unplayMove", (node) -> console.log("Unplaying node #{node.toStr()} #{node}"))
-_dispatcher.register("unplayMove", (node) -> removeNodeFromBoard(node))
-_dispatcher.register("unplayMove", (node) -> _game.currNode = node.father)
+  onBranchStop: ->
+    throw "not implemented"
 
-# >> Logic
+# ==>> Logic
 
 # creates empty field on the board
 setupEmptyField = (coord) ->
@@ -153,10 +173,10 @@ putChildMarkOnBoard = (node, child_index) ->
   elem.appendTo("#board")
 
 # places move representing given node on board
-putNodeOnBoard = (node, allow_swap=true) ->
+putNodeOnBoard = (node, allowSwap=true) ->
   if (node.moveType == MoveType.RESIGN)
     return
-  if (node.moveType == MoveType.SWAP)
+  if (node.moveType == MoveType.SWAP and allowSwap)
     removeNodeFromBoard(node.father)
     return putNodeOnBoard(node, false)
   # remove empty field on that location
@@ -215,7 +235,7 @@ playMove = (x, y, color, moveType) ->
                      ((e) -> e.x == x and e.y == y and e.color == color)
   # new move
   if not newNode
-    newNode = createNode(x, y, color, _game.currNode, moveType)
+    newNode = new Node(x, y, color, _game.currNode, moveType)
     newNode.father.children.push(newNode)
     _dispatcher.dispatch("createNode", newNode)
   _dispatcher.dispatch("playMove", newNode)
@@ -230,34 +250,49 @@ unplayMove = () ->
     return
   _dispatcher.dispatch("unplayMove", _game.currNode)
 
-# >> DOCUMENT FUNCTIONS
+# ==>> GLOBALS
 
+_lastKey = 0
+# global so we can access this from the console
+@_game = _game = new Game
+_dispatcher = new Dispatcher()
+_dispatcher.register("createNode", (node) -> console.log("Created node #{node.toStr()}"))
+_dispatcher.register("playMove", (node) -> console.log("Playing node #{node.toStr()}"))
+_dispatcher.register("playMove", (node) -> putNodeOnBoard(node))
+_dispatcher.register("playMove", (node) -> _game.currNode = node)
+_dispatcher.register("unplayMove", (node) -> console.log("Unplaying node #{node.toStr()}"))
+_dispatcher.register("unplayMove", (node) -> removeNodeFromBoard(node))
+_dispatcher.register("unplayMove", (node) -> _game.currNode = node.father)
+_sgfParseHandler = new SgfParseHandler
+
+# ==>> DOCUMENT FUNCTIONS
+
+# load position
 $ ->
   setupEmptyFields()
-  # TODO for debugging
-  playMove(randomPos(), randomPos(), _game.getColorToMove(), MoveType.NORMAL) for i in [0...10]
-  # go back and make a branch
-  unplayMove()
-  playMove(randomPos(), randomPos(), _game.getColorToMove(), MoveType.NORMAL)
-  unplayMove()
-  playMove(randomPos(), randomPos(), _game.getColorToMove(), MoveType.NORMAL)
+  _sgfTest = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])";
+  # _inputSgf is global variable (possibly) filled from template
+  sgfParse(_inputSgf or= _sgfTest, _sgfParseHandler);
 
+# handle keydown including holding the key 
 $(document).keydown((e) ->
   keydownHandler(e.which)
   # wait for a while before first timer is started
   $(document).oneTime("400ms", "keydown_timer_bootstrap", ->
     $(document).everyTime("100ms", "keydown_timer", ->
-      if (_lastKey)
+      if _lastKey
         keydownHandler(_lastKey)
     , 0)))
 
+# release key timers
 $(document).keyup((e) ->
     _lastKey = 0
     $(document).stopTime("keydown_timer")
     $(document).stopTime("keydown_timer_bootstrap"))
 
+# key handling logic
 keydownHandler = (key) ->
-  # move shortcuts  - 9
+  # move shortcuts 1 - 9
   if key in [49...58]
     variant = key - 49
     if _game.currNode.children.length > variant
@@ -282,5 +317,5 @@ keydownHandler = (key) ->
     removeSubTree(_game.currNode)
   else
     console.log("pressed #{key}")
-   _lastKey = key
+  _lastKey = key
 
