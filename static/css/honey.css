@@ -16,25 +16,12 @@
   padding-top: 10px;
 }
 
-#positioning_wrapper {
-  margin-left: 30px;
-  width: 90%;
-  position: relative;
-}
-
-#content_wrapper {
-  display: table;
-  border-collapse: collapse;
-  width: 100%;
-}
-
 #content {
-  display: table-row;
 }
 
-#board, #right_panel {
-  display: table-cell;
-  vertical-align: top;
+#left_panel {
+  float:left;
+  margin-left: 50px;
 }
 
 #board {
@@ -42,48 +29,13 @@
   border: none;
   /* image width is 550px */
   width: 600px;
+  position: relative;
+  margin-top: 15px;
 }
 
-#right_panel {
-}
-
-#branches, #help {
-  border: 1px solid;
-  margin-right:10px;
-  padding: 5px;
-}
-
-#help {
-  /* visible on demand */
-  display: none;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-#help h5 {
-  font-size: 15px;
-  margin-bottom: 3px;
-  margin-top: 3px;
-}
-
-#help .action {
+.child_mark {
+  font-size: 13pt;
   font-weight: bold;
-}
-
-#branches {
-  min-height: 50px;
-  margin-top:10px;
-}
-
-#footbar {
-  bottom: 0px;
-  margin-top: 30px;
-  text-align: center;
-}
-
-#footbar a {
-  text-decoration: none;
-  font-size: 10pt;
 }
 
 #game_info {
@@ -93,11 +45,6 @@
 
 #game_info a {
   text-decoration: none;
-}
-
-.branch {
-  margin-bottom: 10px;
-  line-height: 27px;
 }
 
 .node_link {
@@ -122,14 +69,41 @@
   color: blue;
 }
 
-.child_mark {
-  font-size: 13pt;
-  font-weight: bold;
-}
-
 img.move {
 }
 
 img.move:hover {
  cursor: pointer;  
 }
+
+#help {
+  border: 1px solid;
+  margin-right:10px;
+  padding: 5px;
+  /* visible on demand */
+  display: none;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+#help h5 {
+  font-size: 15px;
+  margin-bottom: 3px;
+  margin-top: 3px;
+}
+
+#help .action {
+  font-weight: bold;
+}
+
+#footbar {
+  bottom: 0px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+#footbar a {
+  text-decoration: none;
+  font-size: 10pt;
+}
+
