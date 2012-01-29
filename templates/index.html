@@ -42,11 +42,10 @@
     <div style="clear: both;"> </div>
 
     <div id='positioning_wrapper'>
-      <div id='content_wrapper'>
-        <div id='content'>
+      <div id='content'>
             Honey Hex Viewer is an online 13x13 hex analyzer.
-        </div>
         <form id="load_game" method="post" action="/load_game">
+        <span> Load existing game: </span>
             {% if load_error %}
                 <span style="color: red;"> {{load_error}} </span>
             {% endif %}
@@ -56,7 +55,7 @@
                 <tr> <td/> <td> <input type="submit" value="load"/> </td>
             </table>
         </form>
-        </form>
+        <span> or start a <a href="/new_game"> new game </a> </span>
       </div>
     </div>
 

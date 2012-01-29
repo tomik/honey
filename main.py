@@ -4,8 +4,8 @@ from flask import Flask, request, redirect, url_for, render_template, abort
 app = Flask(__name__)
 
 @app.route("/")
-def new_game():
-    return render_template("index.html", input_sgf="")
+def main():
+    return render_template("index.html")
 
 @app.route("/load_game", methods=["POST"])
 def load_game():
@@ -19,6 +19,8 @@ def load_game():
             return render_template("view_game.html", input_sgf=f.readlines())
     except KeyError:
         pass
+    except IOError:
+        return render_template("index.html", load_error="invalid resource")
     try:
         lg_id = request.form["lg_id"]
         if lg_id:
@@ -26,6 +28,10 @@ def load_game():
     except KeyError:
         pass
     return render_template("index.html", load_error="please fill one of the fields below")
+
+@app.route("/new_game")
+def new_game():
+    return render_template("view_game.html", input_sgf=None)
 
 @app.route("/lg/<game_id>")
 def lg_game(game_id):
@@ -40,3 +46,4 @@ def sgf_download():
 if __name__ == "__main__":
     app.debug = True
     app.run()
+

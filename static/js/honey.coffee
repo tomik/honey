@@ -166,10 +166,10 @@ removeChildMarks = ->
   $(".child_mark").remove()
 
 # create marks like 1 2 3 directly on board
-putChildMarkOnBoard = (node, child_index) ->
+putChildMarkOnBoard = (node, childIndex) ->
   pos = coordToPosForText({x:node.x, y:node.y})
   elem = $("<div class='child_mark' style='position: absolute; left: #{pos.x}px; top:#{pos.y}px;'
-            id='child_mark_#{node.x}_#{node.y}'>#{child_index + 1}</div>")
+            id='child_mark_#{node.x}_#{node.y}'>#{childIndex + 1}</div>")
   elem.appendTo("#board")
 
 # places move representing given node on board
@@ -270,9 +270,9 @@ _sgfParseHandler = new SgfParseHandler
 # load position
 $ ->
   setupEmptyFields()
-  _sgfTest = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])";
+  _sgfTest = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])"
   # _inputSgf is global variable (possibly) filled from template
-  sgfParse(_inputSgf or= _sgfTest, _sgfParseHandler);
+  sgfParse(_inputSgf or= _sgfTest, _sgfParseHandler)
 
 # handle keydown including holding the key 
 $(document).keydown((e) ->
