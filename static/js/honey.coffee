@@ -276,7 +276,8 @@ $ ->
 
 # handle keydown including holding the key 
 $(document).keydown((e) ->
-  keydownHandler(e.which)
+  if not keydownHandler(e.which)
+    return
   # wait for a while before first timer is started
   $(document).oneTime("400ms", "keydown_timer_bootstrap", ->
     $(document).everyTime("100ms", "keydown_timer", ->
@@ -301,11 +302,15 @@ keydownHandler = (key) ->
   else if key == 37
     if _game.currNode.father
       unplayMove()
+      # this event is repeatable
+      return true
   # right
   else if key == 39
     if _game.currNode.children.length
       node = _game.currNode.children[0]
       playNode(node)
+      # this event is repeatable
+      return true
   # up
   else if key == 38
     cycleBranches(_game.currNode, true)
@@ -318,4 +323,6 @@ keydownHandler = (key) ->
   else
     console.log("pressed #{key}")
   _lastKey = key
+  # most of the events are not repeatable
+  false
 
