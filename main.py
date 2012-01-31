@@ -1,7 +1,7 @@
 import urllib
 
-from flask import Flask, request, redirect, url_for, render_template, abort
-app = Flask(__name__)
+from flask import request, redirect, url_for, render_template, abort
+from core import app
 
 @app.route("/")
 def main():
@@ -9,6 +9,7 @@ def main():
 
 @app.route("/load_game", methods=["POST"])
 def load_game():
+    """Loads game from url/file, stores in the DB and displays. Requires login."""
     try:
         url = request.form["url"]
         if url:
@@ -33,15 +34,24 @@ def load_game():
 def new_game():
     return render_template("view_game.html", input_sgf=None)
 
-@app.route("/lg/<game_id>")
-def lg_game(game_id):
+@app.route("/lg/<lg_game_id>")
+def lg_game(lg_game_id):
+    """Views lg game for analysis only."""
     f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % game_id)
     return render_template("view_game.html", 
         lg_id=game_id, input_sgf=f.readlines())
 
-@app.route("/sgf", methods=["POST"])
-def sgf_download():
-    return request.form["sgf"]
+@app.route("/view_game/<game_id>")
+def view_game(game_id):
+    """Views existing game based on internal game id."""
+    f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % game_id)
+    return render_template("view_game.html", 
+        lg_id=game_id, input_sgf=f.readlines())
+
+@app.route("/comment/<game_id>")
+def post_comment():
+    """Posts comment for a given game. Requires login."""
+    raise NotImplementedError
 
 if __name__ == "__main__":
     app.debug = True
