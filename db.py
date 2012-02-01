@@ -25,11 +25,8 @@ import pymongo
 import utils
 import core
 
-def createGame(sgf, user):
-    """
-    Parses and validates sgf and stores a game in the database.
-    """
-
+def create_game(sgf, user):
+    """Parses and validates sgf and stores a game in the database."""
     try:
         game = utils.parseSgf(sgf)
     except utils.SgfParseError:
@@ -39,18 +36,21 @@ def createGame(sgf, user):
     games = db.games
     games.insert(game)
 
-def getGames(ordering, reversed=False):
+def get_games(ordering, reversed=False):
     """
     Fetches all the games bases on given ordering.
+
     @ordering one of the following:
         "datetime" "activity" "player_strength" "popularity" "first_name" "second_name"
     @return games iterator
     """
     raise NotImplementedError
 
-def getGamesForUser(user, ordering, reversed=False):
-    """
-    Same as getGames for a single user.
-    """
+def get_games_for_user(user, ordering, reversed=False):
+    """Same as get_games for a single user."""
+    raise NotImplementedError
+
+def get_hash_passwd_for_user(user):
+    """Returns password hash fetched from the db."""
     raise NotImplementedError
 
