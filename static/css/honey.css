@@ -3,6 +3,11 @@
   margin-top: 20px;
 }
 
+#header {
+  float: right;
+  margin-right: 30px;
+}
+
 #honey_title {
   margin-top: 20px;
   margin-bottom: 20px;

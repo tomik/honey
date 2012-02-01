@@ -21,9 +21,8 @@
 # {"username": "slpwnd", "email": "slpwnd@gmail.com", "passwd": "hashed passwd"}
 #
 
-import pymongo
 import utils
-import core
+from core import app
 
 def create_game(sgf, user):
     """Parses and validates sgf and stores a game in the database."""
@@ -31,9 +30,7 @@ def create_game(sgf, user):
         game = utils.parseSgf(sgf)
     except utils.SgfParseError:
         return False
-    conn = pymongo.Connection(core.app.config["db_host"], core.app.config["db_port"])
-    db = conn[core.app.config["db_name"]]
-    games = db.games
+    games = app.db.games
     games.insert(game)
 
 def get_games(ordering, reversed=False):
@@ -50,7 +47,11 @@ def get_games_for_user(user, ordering, reversed=False):
     """Same as get_games for a single user."""
     raise NotImplementedError
 
-def get_passwd_hash_for_user(user):
+def get_user(username):
     """Returns password hash fetched from the db."""
-    raise NotImplementedError
+    return app.db.users.find_one({"username": username})
+
+def create_user(username, email, passwd_hash):
+    """Creates user in the db."""
+    app.db.users.insert({"username": username, "email": email, "passwd": passwd_hash})
 

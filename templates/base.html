@@ -21,6 +21,17 @@
   </head>
 
   <body>
+    <div id="header">
+        {% if session["username"] %}
+            {{ session["username"] }}
+            <a href="/logout"> Logout </a> 
+        {% else %}    
+            <a href="/login"> Login </a> | 
+            <a href="/signup"> Signup </a> 
+        {% endif %}
+    </div>
+    <div style="clear: both;"> </div>
+
     <h3 id="honey_title">
       Honey Hex Viewer
     </h3>
@@ -29,9 +40,6 @@
         src="/static/img/honey.png"/>
     </div>
     <div style="clear: both;"> </div>
-
-    <div id="header">
-    </div>
 
     <div id="content">
       {% block content %} {% endblock %} 

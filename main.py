@@ -1,32 +1,35 @@
 import urllib
 
 from flask import abort, flash, redirect, render_template, request, session, url_for
-from werkzeug import check_password_hash, generate_password_hash
+from werkzeug import  generate_password_hash
 
 from forms import LoginForm, SignupForm
-from db import get_passwd_hash_for_user
+from db import get_user, create_user
 from core import app
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    form = SignupForm()
+    if form.validate_on_submit():
+        create_user(form.username.data, form.email.data,
+                generate_password_hash(form.password.data))
+        session["username"] = form.username.data
+        flash("You have signed up sucessfully.")
+        return redirect(url_for("main"))
+    return render_template("signup.html", form=form)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    error = None
-    if request.method == "POST":
-        username = request.form["username"]
-        passwd_hash = get_passwd_hash_for_user(username)
-        if passwd_hash is None:
-            error = "Unknown username"
-        elif check_password_hash(request.form["password"]) != passwd_hash:
-            error = "Invalid password"
-        else:
-            session["logged_in"] = True
-            flash("You were logged in")
-            return redirect(url_for("main"))
-    form = LoginForm(request.form)
-    return render_template("login.html", error=error, form=form)
+    form = LoginForm()
+    if form.validate_on_submit():
+        session["username"] = form.username.data
+        flash("You were logged in")
+        return redirect(url_for("main"))
+    return render_template("login.html", form=form)
 
 @app.route("/logout")
 def logout():
-    session.pop("logged_in", None)
+    session.pop("username", None)
     flash("You were logged out")
     return redirect(url_for("main"))
 
