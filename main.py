@@ -64,9 +64,9 @@ def new_game():
 @app.route("/lg/<lg_game_id>")
 def lg_game(lg_game_id):
     """Views lg game for analysis only."""
-    f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % game_id)
+    f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % lg_game_id)
     return render_template("view_game.html", 
-        lg_id=game_id, input_sgf=f.readlines())
+        lg_id=lg_game_id, input_sgf=f.readlines())
 
 @app.route("/view_game/<game_id>")
 def view_game(game_id):

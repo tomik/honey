@@ -50,7 +50,7 @@ def get_games_for_user(user, ordering, reversed=False):
     """Same as get_games for a single user."""
     raise NotImplementedError
 
-def get_hash_passwd_for_user(user):
+def get_passwd_hash_for_user(user):
     """Returns password hash fetched from the db."""
     raise NotImplementedError
 

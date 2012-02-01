@@ -96,13 +96,13 @@ img.move:hover {
   font-weight: bold;
 }
 
-#footbar {
+#footer {
   bottom: 0px;
   margin-top: 30px;
   text-align: center;
 }
 
-#footbar a {
+#footer a {
   text-decoration: none;
   font-size: 10pt;
 }
