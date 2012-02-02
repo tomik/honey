@@ -1,0 +1,17 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+  <div id='content'>
+      {% from "_formhelpers.html" import render_field %}
+      <form method="post" action="{{ url_for('upload_game') }}">
+            <dl>
+              {{ render_field(form.url) }}
+              {{ render_field(form.file) }}
+              {{ render_field(form.lg) }}
+            </dl>
+            <p><input type=submit value=Upload></p>
+          </form>
+          <span> or start a <a href="{{ url_for('new_game') }}"> new game </a> </span>
+  </div>
+{% endblock %}
