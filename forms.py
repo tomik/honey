@@ -40,7 +40,6 @@ class SignupForm(Form):
     email = TextField("Email", [validators.Required()])
 
     def validate(self):
-        print(self)
         if not Form.validate(self):
             return False
         user = get_user(self.username.data)

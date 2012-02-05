@@ -2,16 +2,9 @@
 # db objects:
 #
 # db.games:
-# {"player1": "xxx", "player2", "yyy", "winner" : 0,
-#  "moves": [
-#       {"move": "j17", "color": 0, "comment": "beginning of the game", "marks": []},
-#       {"move": "k12", "color": 1},
-#       first variant
-#       [{"move": "k13", "color": 0}],
-#       second variant
-#       [{"move": "k14", "color": 0}],
-#       third  variant
-#       [{"move": "k14", "color": 0}]]}
+# { "author": "username", "date": "2011-02-17",
+#   "nodes": [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
+#              {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
 #
 # db.comments:
 # {"author": user_id, "date": "2011-02-17", "game": gameID
@@ -21,14 +14,14 @@
 # {"username": "slpwnd", "email": "slpwnd@gmail.com", "passwd": "hashed passwd"}
 #
 
-import utils
+import sgf
 from core import app
 
 def create_game(sgf, user):
     """Parses and validates sgf and stores a game in the database."""
     try:
-        game = utils.parseSgf(sgf)
-    except utils.SgfParseError:
+        game = sgf.parseSgf(sgf)
+    except sgf.SgfParseError:
         return False
     games = app.db.games
     games.insert(game)

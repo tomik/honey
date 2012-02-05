@@ -57,7 +57,7 @@ def upload_game():
         if form.sgf:
             return render_template("view_game.html", input_sgf=form.sgf.readlines())
         elif form.lg_id:
-            return redirect("/lg/" + form.lg_id) 
+            return redirect(url_for("lg_game", lg_game_id=form.lg_id))
         else:
             abort(500)
     return render_template("upload_game.html", form=form)
