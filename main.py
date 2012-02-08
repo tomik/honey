@@ -1,4 +1,5 @@
 import urllib
+import json
 from functools import wraps
 
 from flask import abort, flash, redirect, render_template, request, session, url_for
@@ -57,8 +58,8 @@ def upload_game():
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
             user = session["username"]
-            create_game(form.sgf, user)
-            return render_template("view_game.html", input_sgf=form.sgf)
+            game_id = create_game(form.sgf, user)
+            return redirect(url_for("view_game", game_id=game_id))
         else:
             abort(500)
     return render_template("upload_game.html", form=form)
@@ -67,6 +68,7 @@ def upload_game():
 def new_game():
     return render_template("view_game.html", input_sgf=None)
 
+# TODO fix
 @app.route("/lg/<lg_game_id>")
 def lg_game(lg_game_id):
     """Views lg game for analysis only."""
@@ -80,9 +82,8 @@ def view_game(game_id):
     game = get_game(game_id)
     if not game:
         abort(404) 
-    print game["nodes"]
     return render_template("view_game.html", 
-        lg_id=game_id, input_sgf=game["nodes"])
+        lg_id=game_id, input_sgf=json.dumps(game["nodes"]))
 
 @app.route("/comment/<game_id>")
 def post_comment():

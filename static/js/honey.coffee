@@ -1,6 +1,7 @@
 
 # ==>> CONSTANTS
 
+ALPHABET = ("abcdefghijklmnopqrstuvwxyz").split("");
 BOARD_SIZE = 13
 FIELD_FIRST = {x: 52, y:52}
 FIELD_X_DIFF = 25
@@ -94,6 +95,21 @@ class Game
 
 # ==>> SGF PARSING AND OUTPUTTING
 
+sgfParse = (sgf, handler) ->
+  nodes = $.parseJSON(sgf)
+  if nodes.length <= 0
+    return
+  gameNode = nodes[0]
+  handler.onGameProperty(propName, propValue) for propName, propValue of gameNode
+  for node in nodes[1...nodes.length]
+    if "W" of node
+      handler.onMove("W", node["W"])
+    else if "B" of node
+      handler.onMove("B", node["B"])
+    else
+      console.log(node)
+      throw "Invalid node"
+
 # sgf parsing object
 class SgfParseHandler
   onGameProperty: (propName, propValue) ->
@@ -130,7 +146,7 @@ class SgfParseHandler
       playMove(_game.currNode.y, _game.currNode.x, color, MoveType.SWAP)
     else if (where.length > 2)
       throw "invalid move definition length #{where}"
-    else if (x = _alphabet.indexOf(where[0])) == -1 or (y = _alphabet.indexOf(where[1])) == -1
+    else if (x = ALPHABET.indexOf(where[0])) == -1 or (y = ALPHABET.indexOf(where[1])) == -1
       throw "invalid move definition #{where}"
     else
       playMove(x, y, color, MoveType.NORMAL)

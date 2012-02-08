@@ -32,9 +32,10 @@ def create_game(sgf_str, user_id):
     sgf_game = sgf_coll[0]
     game = {"user_id": user_id,
             "date": datetime.datetime.now().strftime(app.config["datetime_format"]),
-            "nodes": sgf_coll}
+            "nodes": sgf_game}
     games = app.db.games
-    games.insert(game)
+    obj = games.insert(game)
+    return obj["_id"]
 
 def get_game(id):
     """ Fetches game for given id. """
