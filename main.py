@@ -5,7 +5,7 @@ from flask import abort, flash, redirect, render_template, request, session, url
 from werkzeug import  generate_password_hash
 
 from forms import LoginForm, SignupForm, SgfUploadForm
-from db import get_user, create_user
+from db import create_user, create_game, get_game, get_games
 from core import app
 
 def login_required(f):
@@ -46,7 +46,8 @@ def logout():
 
 @app.route("/")
 def main():
-    return render_template("index.html")
+    games = get_games() 
+    return render_template("index.html", games=games)
 
 @app.route("/upload_game", methods=["GET", "POST"])
 @login_required
@@ -55,9 +56,9 @@ def upload_game():
     form = SgfUploadForm(request.form)
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
-            return render_template("view_game.html", input_sgf=form.sgf.readlines())
-        elif form.lg_id:
-            return redirect(url_for("lg_game", lg_game_id=form.lg_id))
+            user = session["username"]
+            create_game(form.sgf, user)
+            return render_template("view_game.html", input_sgf=form.sgf)
         else:
             abort(500)
     return render_template("upload_game.html", form=form)
@@ -76,9 +77,12 @@ def lg_game(lg_game_id):
 @app.route("/view_game/<game_id>")
 def view_game(game_id):
     """Views existing game based on internal game id."""
-    f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % game_id)
+    game = get_game(game_id)
+    if not game:
+        abort(404) 
+    print game["nodes"]
     return render_template("view_game.html", 
-        lg_id=game_id, input_sgf=f.readlines())
+        lg_id=game_id, input_sgf=game["nodes"])
 
 @app.route("/comment/<game_id>")
 def post_comment():

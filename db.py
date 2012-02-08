@@ -2,7 +2,7 @@
 # db objects:
 #
 # db.games:
-# { "author": "username", "date": "2011-02-17",
+# { "user_id": "12345", "date": "2011-02-17",
 #   "nodes": [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
 #              {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
 #
@@ -14,19 +14,33 @@
 # {"username": "slpwnd", "email": "slpwnd@gmail.com", "passwd": "hashed passwd"}
 #
 
+import datetime
+
+from bson.objectid import ObjectId
 import sgf
+
 from core import app
 
-def create_game(sgf, user):
+def create_game(sgf_str, user_id):
     """Parses and validates sgf and stores a game in the database."""
     try:
-        game = sgf.parseSgf(sgf)
-    except sgf.SgfParseError:
+        sgf_coll = sgf.parseSgf(sgf_str)
+    except sgf.SgfParseError, e:
+        app.logger.warning("cannot parse sgf: error(%s) sgf(%s)" % (str(e), sgf_str))
         return False
+    # TODO validate
+    sgf_game = sgf_coll[0]
+    game = {"user_id": user_id,
+            "date": datetime.datetime.now().strftime(app.config["datetime_format"]),
+            "nodes": sgf_coll}
     games = app.db.games
     games.insert(game)
 
-def get_games(ordering, reversed=False):
+def get_game(id):
+    """ Fetches game for given id. """
+    return app.db.games.find_one({"_id": ObjectId(id)})
+
+def get_games(ordering=None, reversed=False):
     """
     Fetches all the games bases on given ordering.
 
@@ -34,9 +48,9 @@ def get_games(ordering, reversed=False):
         "datetime" "activity" "player_strength" "popularity" "first_name" "second_name"
     @return games iterator
     """
-    raise NotImplementedError
+    return app.db.games.find()
 
-def get_games_for_user(user, ordering, reversed=False):
+def get_games_for_user(user_id, ordering, reversed=False):
     """Same as get_games for a single user."""
     raise NotImplementedError
 

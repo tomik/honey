@@ -19,19 +19,26 @@ class SgfUploadForm(Form):
     def validate(self):
         if not Form.validate(self):
             return False
+        f_sgf = None 
         if self.url.data:
             try:
-                self.sgf = urllib.urlopen(self.url.data)
+                f_sgf = urllib.urlopen(self.url.data)
             except IOError:
                 self.url.errors = ("Invalid url.",)
                 return False
         elif self.file.data:
             pass
         elif self.lg.data:
-            self.lg_id = self.lg.data
+            try:
+                f_sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % self.lg.data)
+            except IOError:
+                self.url.errors = ("Invalid lg game id or server down.",)
+                return False
         else:
             self.url.errors = ("One of the fields must be filled.",)
             return False
+        assert(f_sgf)
+        self.sgf = " ".join(f_sgf.readlines())
         return True
 
 class SignupForm(Form):
