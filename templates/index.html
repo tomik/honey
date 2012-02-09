@@ -10,8 +10,10 @@
   <div id="game_list">
     {% for game in games %}
       <div id="game_in_list">
-        <a href='{{ url_for("view_game", game_id=game._id)}}'>{{game.date}}</a>
+        <a href='{{ url_for("view_game", game_id=game._id)}}'>
+          {{game.date.strftime("%Y-%m-%d")}} {{game.player1}} vs. {{game.player2}}</a>
       </div>
     {% endfor %}
   </div>
 {% endblock %}
+

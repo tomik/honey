@@ -8,6 +8,5 @@ app.config["CSRF_ENABLED"] = False
 app.config["db_host"] = "localhost"
 app.config["db_port"] = 27017
 app.config["db_name"] = "honey"
-app.config["datetime_format"] = "%Y-%M-%D %h:%m:%s"
 app.db = pymongo.Connection(app.config["db_host"], app.config["db_port"])[app.config["db_name"]]
 

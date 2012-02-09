@@ -3,6 +3,7 @@
 #
 # db.games:
 # { "user_id": "12345", "date": "2011-02-17",
+#   "player1": "black", "player2": "white",
 #   "nodes": [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
 #              {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
 #
@@ -31,14 +32,15 @@ def create_game(sgf_str, user_id):
     # TODO validate
     sgf_game = sgf_coll[0]
     game = {"user_id": user_id,
-            "date": datetime.datetime.now().strftime(app.config["datetime_format"]),
+            "date": datetime.datetime.now(),
+            "player1": sgf_game[0].get("PB", "?"),
+            "player2": sgf_game[0].get("PW", "?"),
             "nodes": sgf_game}
     games = app.db.games
-    obj = games.insert(game)
-    return obj["_id"]
+    return games.insert(game)
 
 def get_game(id):
-    """ Fetches game for given id. """
+    """Fetches game for given id."""
     return app.db.games.find_one({"_id": ObjectId(id)})
 
 def get_games(ordering=None, reversed=False):
