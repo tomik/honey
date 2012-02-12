@@ -2,11 +2,11 @@ import urllib
 import json
 from functools import wraps
 
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug import  generate_password_hash
 
-from forms import LoginForm, SignupForm, SgfUploadForm
-from db import create_user, create_game, get_game, get_games
+import db
+import forms
 from core import app
 
 def login_required(f):
@@ -21,9 +21,9 @@ def login_required(f):
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    form = SignupForm()
+    form = forms.SignupForm()
     if form.validate_on_submit():
-        create_user(form.username.data, form.email.data,
+        db.create_user(form.username.data, form.email.data,
                 generate_password_hash(form.password.data))
         session["username"] = form.username.data
         flash("You have signed up sucessfully.")
@@ -32,7 +32,7 @@ def signup():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    form = LoginForm()
+    form = forms.LoginForm()
     if form.validate_on_submit():
         session["username"] = form.username.data
         flash("You were logged in.")
@@ -47,28 +47,40 @@ def logout():
 
 @app.route("/")
 def main():
-    games = get_games() 
+    games = db.get_games() 
     return render_template("index.html", games=games)
 
 @app.route("/upload_game", methods=["GET", "POST"])
 @login_required
 def upload_game():
     """Loads game from url/file, stores in the DB and displays. Requires login."""
-    form = SgfUploadForm(request.form)
+    form = forms.SgfUploadForm(request.form)
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
             user = session["username"]
-            game_id = create_game(form.sgf, user)
+            game_id = db.create_game(user, form.sgf)
             return redirect(url_for("view_game", game_id=game_id))
         else:
             abort(500)
     return render_template("upload_game.html", form=form)
 
+@app.route("/upload_comment", methods=["POST"])
+@login_required
+def upload_comment():
+    """Uploads comment for given game and path. Requires login. Can be called via AJAX."""
+    form = forms.CommentForm(request.form)
+    if form.validate_on_submit():
+        user = session["username"]
+        db.create_comment(user, form.game_id.data, form.path, form.comment.data)
+    return redirect(url_for("view_game", game_id=form.game_id.data))
+
+# TODO how to handle not-uploaded games?
 @app.route("/new_game")
 def new_game():
+    """Start a new game."""
     return render_template("view_game.html", input_sgf=None)
 
-# TODO fix
+# TODO handle not-uploaded games?
 @app.route("/lg/<lg_game_id>")
 def lg_game(lg_game_id):
     """Views lg game for analysis only."""
@@ -79,11 +91,14 @@ def lg_game(lg_game_id):
 @app.route("/view_game/<game_id>")
 def view_game(game_id):
     """Views existing game based on internal game id."""
-    game = get_game(game_id)
+    game = db.get_game(game_id)
     if not game:
         abort(404) 
     return render_template("view_game.html", 
-        lg_id=game_id, input_sgf=json.dumps(game["nodes"]))
+        game_id=game_id,
+        comments=db.get_comments_for_game(game_id),
+        form=forms.CommentForm(),
+        input_sgf=json.dumps(game["nodes"]))
 
 @app.route("/comment/<game_id>")
 def post_comment():

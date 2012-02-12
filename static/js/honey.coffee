@@ -72,19 +72,19 @@ class Dispatcher
   dispatch: (name, params...) ->
     if @listeners[name]?
       l(params...) for l in @listeners[name]
-  
+
 class Node
   constructor: (@x, @y, @color, @father, @moveType) ->
-    @id = @_nextNodeId++
+    @id = Node.nextNodeId++
     @children = []
     @number = if @father then @father.number + 1 else 0
-  # static monotonic identifier for nodes
-  @_nextNodeId: 0
   getChildIndex: (node) ->
     return i for child, i in @children when child.id == node.id
     -1
   toStr: ->
     "[#{@x} #{@y}] #{@color}"
+  # static monotonic identifier for nodes
+  @nextNodeId: 0
 
 class Game
   constructor: () ->
@@ -280,15 +280,32 @@ _dispatcher.register("unplayMove", (node) -> console.log("Unplaying node #{node.
 _dispatcher.register("unplayMove", (node) -> removeNodeFromBoard(node))
 _dispatcher.register("unplayMove", (node) -> _game.currNode = node.father)
 _sgfParseHandler = new SgfParseHandler
+_bridge.getCurrNodePath = ->
+  node = _game.currNode
+  path = []
+  index = 0
+  while node.father != null
+    if node.father.children.length > 0
+      i = node.father.getChildIndex(node)
+      if i != 0
+        path.push([i, index])
+        index = -1
+    node = node.father
+    index += 1
+  path.push([0, index])
+  return path.reverse()
 
 # ==>> DOCUMENT FUNCTIONS
 
 # load position
 $ ->
   setupEmptyFields()
-  _sgfTest = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])"
-  # _inputSgf is global variable (possibly) filled from template
-  sgfParse(_inputSgf or= _sgfTest, _sgfParseHandler)
+  sgfTest = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]
+                SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];
+                W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])"
+  # inputSgf is filled into bridge in the template
+  inputSgf = _bridge.inputSgf 
+  sgfParse(inputSgf or= sgfTest, _sgfParseHandler)
 
 # handle keydown including holding the key 
 $(document).keydown((e) ->
