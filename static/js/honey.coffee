@@ -81,6 +81,8 @@ class Node
   getChildIndex: (node) ->
     return i for child, i in @children when child.id == node.id
     -1
+  hasBranches: () ->
+    return @children.length > 1
   toStr: ->
     "[#{@x} #{@y}] #{@color}"
   # static monotonic identifier for nodes
@@ -332,6 +334,7 @@ keydownHandler = (key) ->
     if _game.currNode.children.length > variant
       node = _game.currNode.children[variant]
       playNode(node)
+  # left
   else if key == 37
     if _game.currNode.father
       unplayMove()
@@ -344,15 +347,20 @@ keydownHandler = (key) ->
       playNode(node)
       # this event is repeatable
       return true
-  # up
+  # up - go to last junction
   else if key == 38
-    cycleBranches(_game.currNode, true)
-  # down
+    if _game.currNode.father
+      unplayMove()
+      while _game.currNode.father and not _game.currNode.hasBranches()
+        unplayMove()
+      return true
+  # down - go to next junction
   else if key == 40
-    cycleBranches(_game.currNode, false)
-  # u
-  else if key == 88
-    removeSubTree(_game.currNode)
+    if _game.currNode.children.length
+      playNode(_game.currNode.children[0])
+      while _game.currNode.children.length and not _game.currNode.hasBranches()
+        playNode(_game.currNode.children[0])
+      return true
   else
     console.log("pressed #{key}")
   _lastKey = key
