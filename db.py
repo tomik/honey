@@ -76,6 +76,7 @@ def get_games_for_user(user_id, ordering, reversed=False):
 def create_comment(user_id, game_id, path, text):
     """Creates comment."""
     comment = {"text": text,
+               "date": datetime.datetime.now(),  
                "user_id": user_id,
                "game_id": game_id,
                "path": path}

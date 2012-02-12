@@ -37,6 +37,7 @@
     <div id="comments">
       {% for comment in comments %}
         <div id="comment">    
+          Posted by {{ comment.user_id }} on {{ comment.date.strftime("%Y-%m-%d")}}
           {{ comment.text }} 
         </div>
       {% endfor %}
