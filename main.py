@@ -94,9 +94,11 @@ def view_game(game_id):
     game = db.get_game(game_id)
     if not game:
         abort(404) 
+    comments=list(db.get_comments_for_game(game_id))
     return render_template("view_game.html", 
         game_id=game_id,
-        comments=db.get_comments_for_game(game_id),
+        comments=comments,
+        comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
         form=forms.CommentForm(),
         input_sgf=json.dumps(game["nodes"]))
 

@@ -112,3 +112,8 @@ img.move:hover {
   font-size: 10pt;
 }
 
+/* comments */
+
+.comment.selected {
+  border: 10px solid;
+}
