@@ -219,7 +219,10 @@ putNodeOnBoard = (node, allowSwap=true) ->
 
 #updates move marks and board marks
 updateBoard = (placedNode) ->
-  updateLastMoveMark(placedNode.x, placedNode.y)
+  if placedNode.father
+    updateLastMoveMark(placedNode.x, placedNode.y)
+  else
+    removeLastMoveMark()
   removeChildMarks()
   if placedNode.children.length > 1
     putChildMarkOnBoard(child, i) for child, i in placedNode.children
@@ -300,14 +303,14 @@ _lastKey = 0
 @_game = _game = new Game
 _dispatcher = new Dispatcher()
 _dispatcher.register("createNode", (node) -> console.log("Created node #{node.toStr()}"))
+_dispatcher.register("playMove", (node) -> _game.currNode = node)
 _dispatcher.register("playMove", (node) -> console.log("Playing node #{node.toStr()}"))
 _dispatcher.register("playMove", (node) -> putNodeOnBoard(node))
-_dispatcher.register("playMove", (node) -> _game.currNode = node)
-_dispatcher.register("playMove", (node) -> updateComments(node.father))
+_dispatcher.register("playMove", (node) -> updateComments(_game.currNode))
+_dispatcher.register("unplayMove", (node) -> _game.currNode = node.father)
 _dispatcher.register("unplayMove", (node) -> console.log("Unplaying node #{node.toStr()}"))
 _dispatcher.register("unplayMove", (node) -> removeNodeFromBoard(node))
-_dispatcher.register("unplayMove", (node) -> _game.currNode = node.father)
-_dispatcher.register("unplayMove", (node) -> updateComments(node.father))
+_dispatcher.register("unplayMove", (node) -> updateComments(_game.currNode))
 _sgfParseHandler = new SgfParseHandler
 _bridge.getCurrNodePath = -> getNodePath(_game.currNode)
 
@@ -315,14 +318,13 @@ _bridge.getCurrNodePath = -> getNodePath(_game.currNode)
   
 updateComments = (currNode) ->
   path = getNodePath(currNode)
-  console.log(path)
-  console.log(_bridge.comments[_bridge.comments.length - 1][1])
   currComments = (comment for comment in _bridge.comments when pathCompare(comment[1], path))
-  console.log(currComments)
   $("#comments > .comment").removeClass("selected")
+  $("#comments > .comment").hide()
   for comment in currComments
     elem = $("#comment_#{comment[0]}")
     elem.addClass("selected")
+    elem.show()
 
 # ==>> DOCUMENT FUNCTIONS
 

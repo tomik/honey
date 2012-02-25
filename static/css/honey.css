@@ -115,5 +115,8 @@ img.move:hover {
 /* comments */
 
 .comment.selected {
-  border: 10px solid;
+  /*border: 10px solid;*/
+}
+
+.comment.header {
 }
