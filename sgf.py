@@ -18,10 +18,130 @@ class LexState:
 class SgfParseError(Exception):
     pass
 
+class CursorError(Exception):
+    pass
+
+class Cursor:
+    """Abstraction of navigation and manipulation of the sgf parsed game."""
+    def __init__(self, nodes):
+        self.nodes = nodes
+        if not len(nodes):
+            raise CursorError("Empty game.")
+        # we remember the path with "frames"
+        # frame consists of (node, index, parental list)
+        self.stack = [(nodes[0], 0, nodes)]
+
+    def get_node(self):
+        """Returns current node."""
+        return self.stack[-1][0]
+
+    def has_variants(self):
+        """Check if current node has multiple children (variants)."""
+        return "variants" in self.get_node()
+
+    def get_variants_num(self):
+        """Return the number of variants."""
+        if not self.has_variants():
+            return 1
+        return len(self.get_node()["variants"])
+
+    def next(self, variant_index=0):
+        """
+        Go forward in the game tree.
+
+        @param variant_index index of variant to go to
+        @return new current node or None if at the end
+        """
+        node, index, l = self.stack[-1]
+        if "variants" in node:
+            variants = node["variants"]
+            if variant_index >= len(variants):
+                raise CursorError("Invalid variant.")
+            assert(len(variants[variant_index]) > 0)
+            new_l = variants[variant_index]
+            new_index = 0
+            new_node = new_l[new_index]
+            self.stack.append((new_node, new_index, new_l))
+        else:
+            if variant_index != 0:
+                raise CursorError("No variant.")
+            # we are at the end
+            if len(l) <= index + 1:
+                return None
+            self.stack.append((l[index + 1], index + 1, l))
+        return self.get_node()
+
+    def get_next(self, variant_index=0):
+        """Sneak peek at what the next node is."""
+        node = self.next(variant_index)
+        if node:
+            self.previous()
+        return node
+
+    def previous(self):
+        """
+        Go backward in the game tree.
+
+        @return new current node or None if at the beginning
+        """
+        if len(self.stack) == 1:
+            return None
+        self.stack.pop()
+        return self.get_node()
+
+    def add_node(self, node):
+        """
+        Add new child to the current node.
+        """
+        frame = self.stack[-1]
+        curr_node, index, l = frame
+        # adding to the end of the variant
+        if len(l) == index + 1:
+            # check that node doesn't exist yet
+            # TODO be node coordinates aware ?
+            if "variants" in curr_node:
+                for child in self._get_children(frame):
+                    if child == node:
+                        raise CursorError("Node already exists.")
+                curr_node["variants"].append([node])
+            else:
+                l.append(node)
+        # forking the simple variant
+        else:
+            if l[index +1] == node:
+                raise CursorError("Node already exists.")
+            variants = []
+            variants.append(l[index + 1:])
+            variants.append([node])
+            curr_node["variants"] = variants
+            while len(l) > index + 1:
+                l.pop()
+
+    def _get_children(self, frame):
+        node, index, l = frame
+        if "variants" not in node:
+            if len(l) <= index + 1:
+                return
+            yield l[index + 1]
+            return
+        else:
+            for variant in node["variants"]:
+                if len(variant) > 0:
+                    yield variant[0]
+
 class Node(dict):
     """ Representation of a single node in a game.  """
     def __init__(self, *a, **k):
         super(Node, self).__init__(*a, **k)
+
+    def is_same_move(self, other):
+        # TODO
+        if type(self) != type(other) and type(other) != dict:
+            return False
+        if self.get("W", None) != other.get("W", None) or \
+           self.get("B", None) != other.get("B", None):
+            return False
+        return True
 
 class SgfHandler:
     """

@@ -64,14 +64,17 @@ def upload_game():
             abort(500)
     return render_template("upload_game.html", form=form)
 
-@app.route("/upload_comment", methods=["POST"])
+@app.route("/post_comment", methods=["POST"])
 @login_required
-def upload_comment():
-    """Uploads comment for given game and path. Requires login. Can be called via AJAX."""
+def post_comment():
+    """Posts comment for given game and path. Requires login. Can be called via AJAX."""
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
         user = session["username"]
-        db.create_comment(user, form.game_id.data, form.path, form.comment.data)
+        db.create_comment(user, form.game_id.data, form.short_path, form.comment.data)
+        game = form.game
+        patched_game = db.patch_game_with_variant(game, form.full_path)
+        db.update_game(patched_game)
     return redirect(url_for("view_game", game_id=form.game_id.data))
 
 # TODO how to handle not-uploaded games?
@@ -101,11 +104,6 @@ def view_game(game_id):
         comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
         form=forms.CommentForm(),
         input_sgf=json.dumps(game["nodes"]))
-
-@app.route("/comment/<game_id>")
-def post_comment():
-    """Posts comment for a given game. Requires login."""
-    raise NotImplementedError
 
 if __name__ == "__main__":
     app.debug = True

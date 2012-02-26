@@ -40,6 +40,12 @@ pathCompare = (a, b) ->
 flipColor = (color) ->
   if color == Color.BLUE then Color.RED else Color.BLUE
 
+colorToSgf = (color) ->
+  if color == Color.BLUE then "B" else "W"
+
+coordToSgf = (coord) ->
+  ALPHABET[coord.x] + ALPHABET[coord.y]  
+
 # finds element in array satisfying f and returns it
 # if not present returns null
 findElem = (a, f) ->
@@ -73,46 +79,52 @@ randomPos = ->
 
 class Dispatcher
   listeners: {}
+
   register: (name, listener) ->
     if @listeners[name]?
       @listeners[name].push(listener)
     else
       @listeners[name] = [listener]
+
   dispatch: (name, params...) ->
     if @listeners[name]?
       l(params...) for l in @listeners[name]
 
 class Node
+  @nextNodeId: 0
   constructor: (@x, @y, @color, @father, @moveType) ->
     @id = Node.nextNodeId++
     @children = []
     @number = if @father then @father.number + 1 else 0
+
   getChildIndex: (node) ->
     return i for child, i in @children when child.id == node.id
     -1
+
   hasBranches: () ->
     return @children.length > 1
+
   toStr: ->
     "[#{@x} #{@y}] #{@color}"
   # static monotonic identifier for nodes
-  @nextNodeId: 0
+
+  toSgfDict: ->
+    d = {}
+    d[colorToSgf(@color)] = coordToSgf({x: @x, y: @y})
+    d
 
 class Game
   constructor: () ->
     @currNode = @root = new Node(0, 0, 0, null, MoveType.ROOT)
     @properties = {}
+
   getColorToMove: () ->
     flipColor(@currNode.color)
 
 # ==>> SGF PARSING AND OUTPUTTING
 
-sgfParse = (sgf, handler) ->
-  nodes = $.parseJSON(sgf)
-  if nodes.length <= 0
-    return
-  gameNode = nodes[0]
-  handler.onGameProperty(propName, propValue) for propName, propValue of gameNode
-  for node in nodes[1...nodes.length]
+sgfParseNodes = (nodes, handler) ->
+  for node in nodes
     if "W" of node
       handler.onMove("W", node["W"])
     else if "B" of node
@@ -120,9 +132,27 @@ sgfParse = (sgf, handler) ->
     else
       console.log(node)
       throw "Invalid node"
+    if "variants" of node
+      for variant in node["variants"]
+        handler.onBranchStart()
+        sgfParseNodes(variant, handler)
+        handler.onBranchStop()
+
+sgfParse = (sgf, handler) ->
+  nodes = $.parseJSON(sgf)
+  if nodes.length <= 0
+    return
+  gameNode = nodes[0]
+  handler.onGameProperty(propName, propValue) for propName, propValue of gameNode
+  sgfParseNodes(nodes[1...nodes.length], handler)
 
 # sgf parsing object
 class SgfParseHandler
+  constructor: () ->
+    # stack of nodes where branching happens
+    # used for jumping back once branch is finished
+    @junctionStack = []
+
   onGameProperty: (propName, propValue) ->
     console.log("sgf on game property #{propName}=#{propValue}") 
     if propName == "FF" and propValue != "4"
@@ -163,10 +193,14 @@ class SgfParseHandler
       playMove(x, y, color, MoveType.NORMAL)
 
   onBranchStart: ->
-    throw "not implemented"
+    @junctionStack.push(_game.currNode)
 
   onBranchStop: ->
-    throw "not implemented"
+    if @junctionStack.length < 1
+      throw "parsing error"
+    topNode = @junctionStack.pop()
+    while _game.currNode != topNode
+      unplayMove()
 
 # ==>> Logic
 
@@ -280,9 +314,11 @@ unplayMove = () ->
     return
   _dispatcher.dispatch("unplayMove", _game.currNode)
 
-# returns a json object representing current node path
+# returns a json object representing current node short path
+# short path is in the form [(branch_index, node_index), (branch_index, node_index), ...]
+# short path can be used to locate node in the existing game tree
 # used for displaying and posting comments
-getNodePath = (node) ->
+getNodeShortPath = (node) ->
   path = []
   index = 0
   while node.father != null
@@ -294,6 +330,16 @@ getNodePath = (node) ->
     node = node.father
     index += 1
   path.push([0, index])
+  return path.reverse()
+
+# returns a json object representing current node full path
+# full path is a list of nodes from the beginning to the current one
+# full path can be used to insert new variants to the game tree
+getNodeFullPath = (node) ->
+  path = []
+  while node.father != null
+    path.push(node.toSgfDict())
+    node = node.father
   return path.reverse()
 
 # ==>> GLOBALS
@@ -312,12 +358,13 @@ _dispatcher.register("unplayMove", (node) -> console.log("Unplaying node #{node.
 _dispatcher.register("unplayMove", (node) -> removeNodeFromBoard(node))
 _dispatcher.register("unplayMove", (node) -> updateComments(_game.currNode))
 _sgfParseHandler = new SgfParseHandler
-_bridge.getCurrNodePath = -> getNodePath(_game.currNode)
+_bridge.getCurrNodeShortPath = -> getNodeShortPath(_game.currNode)
+_bridge.getCurrNodeFullPath = -> getNodeFullPath(_game.currNode)
 
 # ==>> COMMENTS
   
 updateComments = (currNode) ->
-  path = getNodePath(currNode)
+  path = getNodeShortPath(currNode)
   currComments = (comment for comment in _bridge.comments when pathCompare(comment[1], path))
   $("#comments > .comment").removeClass("selected")
   $("#comments > .comment").hide()

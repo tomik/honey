@@ -13,8 +13,9 @@
   <script>
     // Post click handler
     $(function() {
-      $("#upload_comment form input[value='Post']").click(function(e) {
-        $("#upload_comment form input[name='path_json']").attr("value", JSON.stringify(_bridge.getCurrNodePath()));
+      $("#post_comment form input[value='Post']").click(function(e) {
+        $("#post_comment form input[name='short_path_json']").attr("value", JSON.stringify(_bridge.getCurrNodeShortPath()));
+        $("#post_comment form input[name='full_path_json']").attr("value", JSON.stringify(_bridge.getCurrNodeFullPath()));
       });
     });
   </script>
@@ -42,13 +43,14 @@
         </div>
       {% endfor %}
     </div>
-    <div id="upload_comment">
+    <div id="post_comment">
       {% if session.username %}
         {% from "_formhelpers.html" import render_field %}
-        <form method="post" action="{{ url_for('upload_comment') }}">
+        <form method="post" action="{{ url_for('post_comment') }}">
           <dl>
             {{ form.game_id(value=game_id) }}
-            {{ form.path_json(value=null) }}
+            {{ form.short_path_json(value=null) }}
+            {{ form.full_path_json(value=null) }}
             {{ render_field(form.comment, rows=5, cols=50) }}
           </dl>
           <p><input type=submit value=Post></p>

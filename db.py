@@ -15,7 +15,7 @@
 #  "game": gameID
 #  #path to the node where comment applies in form [(branch, node-in-branch), ...]
 #  "path": [(0, 7), (1, 5), (1, 2)]
-#  "text": "This move is wrong"}    
+#  "text": "This move is wrong"}
 #
 # db.users:
 # {"username": "slpwnd",
@@ -52,8 +52,11 @@ def create_game(user_id, sgf_str):
             "player1": sgf_game[0].get("PB", "?"),
             "player2": sgf_game[0].get("PW", "?"),
             "nodes": sgf_game}
-    games = app.db.games
-    return games.insert(game)
+    return app.db.games.insert(game)
+
+def update_game(game):
+    """Updates game in the db."""
+    app.db.games.update({"_id": game["_id"]}, game)
 
 def get_game(id):
     """Fetches game for given id."""
@@ -61,7 +64,7 @@ def get_game(id):
 
 def get_games(ordering=None, reversed=False):
     """
-    Fetches all the games bases on given ordering.
+    Fetches all the games based on given ordering.
 
     @ordering one of the following:
         "datetime" "activity" "player_strength" "popularity" "first_name" "second_name"
@@ -72,6 +75,23 @@ def get_games(ordering=None, reversed=False):
 def get_games_for_user(user_id, ordering, reversed=False):
     """Same as get_games for a single user."""
     raise NotImplementedError
+
+def patch_game_with_variant(game, full_path):
+    """Adds variant to given game if it doesn't exist yet."""
+    cursor = sgf.Cursor(game["nodes"])
+    # skip the root
+    # cursor.next()
+    for node_dict in full_path:
+        node = sgf.Node(node_dict)
+        for variant in xrange(cursor.get_variants_num()):
+            if node.is_same_move(cursor.get_next(variant)):
+                cursor.next(variant)
+                break
+        else:
+            # create new node
+            cursor.add_node(node)
+            cursor.next(cursor.get_variants_num() - 1)
+    return game
 
 def create_comment(user_id, game_id, path, text):
     """Creates comment."""
