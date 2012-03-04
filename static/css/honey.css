@@ -1,34 +1,4 @@
 
-#load_game {
-  margin-top: 20px;
-}
-
-#header {
-  float: right;
-  margin-right: 30px;
-}
-
-#honey_title {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  margin-right: 10px;
-  position: relative;
-  float:left;
-  margin-left: 50px;
-}
-
-#honey_image {
-  padding-top: 10px;
-}
-
-#content {
-  margin-left: 50px;
-}
-
-#left_panel, #right_panel {
-  float:left;
-}
-
 #board {
   background-color: #FFFFFF;
   border: none;
@@ -78,7 +48,7 @@ img.move {
 }
 
 img.move:hover {
- cursor: pointer;  
+ cursor: pointer;
 }
 
 #help {
@@ -99,17 +69,6 @@ img.move:hover {
 
 #help .action {
   font-weight: bold;
-}
-
-#footer {
-  bottom: 0px;
-  margin-top: 30px;
-  text-align: center;
-}
-
-#footer a {
-  text-decoration: none;
-  font-size: 10pt;
 }
 
 /* comments */

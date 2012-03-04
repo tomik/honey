@@ -1,16 +1,14 @@
 
-Javascript hex games viewer and analyzer. Inspired by twixt.servegame.org. Currently limited to games on 13 board.
+Board games viewing, analyzing and sharing application. Inspired by twixt.servegame.org. Currently only for 13 x 13 hex games.
 
-Controls:
-left, right : move along variant
-up, down : switch between variants
-del : remove subtree
-click on empty field : play a move
-click on occupied field : jump to this move
-click on move in list : jump to this move 
+Credits:
 
-Credits and Dependencies:
+jquery
+jquery timers plugin
+twitter bootstrap
 
-jquery (in static/js/jquery.js)
-jquery timers plugin (in static/js/jquery.timers.js)
+Dependencies:
+
+copy bootstrap into static/bootstrap
+create a link css/bootstrap.css to generated bootstrap stylesheet
 

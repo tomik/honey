@@ -2,18 +2,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div id="content">
+  <p>
     Honey Hex Viewer is an online 13x13 hex analyzer.
     <a href="{{ url_for('upload_game') }}"> Upload </a> a game.
+  </p>
+  <h3>Games:</h3>
+  <div>
+    <ul class="unstyled">
+      {% for game in games %}
+        <li>
+          <a href='{{ url_for("view_game", game_id=game._id)}}'>{{game.date.strftime("%Y-%m-%d")}} {{game.player1}} vs. {{game.player2}}</a>
+        </li>
+      {% endfor %}
+    </ul>
   </div>
-  Games:
-  <div id="game_list">
-    {% for game in games %}
-      <div id="game_in_list">
-        <a href='{{ url_for("view_game", game_id=game._id)}}'>
-          {{game.date.strftime("%Y-%m-%d")}} {{game.player1}} vs. {{game.player2}}</a>
-      </div>
-    {% endfor %}
+  <div class="pagination">
+    <ul>
+      <li><a href="#">Prev</a></li>
+      <li class="active"><a href="#">1</a></li>
+      <li class="active"><a href="#">2</a></li>
+      <li><a href="#">Next</a></li>
+    </ul class="pager">
   </div>
 {% endblock %}
 

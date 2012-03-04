@@ -22,7 +22,8 @@
 {% endblock %}
 
 {% block content %}
-  <div id="left_panel">
+  <div class="row">
+  <div class="span7">
     <div id='game_info'>
       <span class="red" id='red_player'>red</span> vs. <span class="blue" id='blue_player'>blue</span>
     </div>
@@ -34,12 +35,12 @@
     </div>
   </div>
 
-  <div id="right_panel">
+  <div class="span4 offset1">
     <div id="comments">
       {% for comment in comments %}
         <div class="comment" id="comment_{{comment._id}}">    
           <div class="header"> Posted by {{ comment.user_id }} on {{ comment.date.strftime("%Y-%m-%d")}} </div>
-          {{ comment.text }} 
+          {{ comment.text }}
         </div>
       {% endfor %}
     </div>
@@ -66,15 +67,15 @@
       <div><span class="action">x:</span> <span class="description">remove whole subtree</span></div>
     </div>
   </div>
-  <div style="clear:both;"/>
+  </div>
 {% endblock %}
 
 {% block footer %}
   {{ super()}}
   {% if lg_id %}
-    <a href="http://www.littlegolem.net/jsp/game/game.jsp?gid={{lg_id}}">Little Golem</a> | 
-  {% endif %}  
-  <a id="download" href="">download sgf</a> | 
+    <a href="http://www.littlegolem.net/jsp/game/game.jsp?gid={{lg_id}}">Little Golem</a> |
+  {% endif %}
+  <a id="download" href="">download sgf</a> |
   <a id="toggle_help" href="">help</a> |
   <a id="contact" href="">contact</a>
   <form id="post_sgf_form" action="/sgf" style="display:none;" method="POST">
