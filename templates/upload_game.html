@@ -3,7 +3,7 @@
 
 {% block content %}
   <div id='content'>
-      {% from "_formhelpers.html" import render_field %}
+      {% from "macros.html" import render_field %}
       <form method="post" action="{{ url_for('upload_game') }}">
             <dl>
               {{ render_field(form.url) }}

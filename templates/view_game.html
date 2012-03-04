@@ -46,7 +46,7 @@
     </div>
     <div id="post_comment">
       {% if session.username %}
-        {% from "_formhelpers.html" import render_field %}
+        {% from "macros.html" import render_field %}
         <form method="post" action="{{ url_for('post_comment') }}">
           <dl>
             {{ form.game_id(value=game_id) }}

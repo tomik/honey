@@ -8,6 +8,7 @@ from werkzeug import  generate_password_hash
 import db
 import forms
 from core import app
+from pagination import Pagination
 
 def login_required(f):
     @wraps(f)
@@ -45,10 +46,14 @@ def logout():
     flash("You were logged out")
     return redirect(url_for("main"))
 
-@app.route("/")
-def main():
-    games = db.get_games() 
-    return render_template("index.html", games=games)
+@app.route("/page/<int:page>")
+@app.route("/", defaults={"page": 1})
+def main(page):
+    per_page = app.config["games_per_page"]
+    game_from, game_to = (page - 1) * per_page, page * per_page
+    games = db.get_games()[game_from:game_to]
+    pagination = Pagination(per_page, page, games.count(), "main")
+    return render_template("index.html", games=games, pagination=pagination)
 
 @app.route("/upload_game", methods=["GET", "POST"])
 @login_required

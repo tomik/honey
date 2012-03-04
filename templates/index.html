@@ -3,21 +3,26 @@
 
 {% block content %}
   <div>
-    <ul class="unstyled">
+    <table class="table table-bordered">
+        <thead>
+            <td><strong>game id</strong></td>
+            <td><strong>date</strong></td>
+            <td><strong>player1</strong></td>
+            <td><strong>player2</strong></td>
+            <td><strong>uploaded by</strong></td>
+        </thead>
       {% for game in games %}
-        <li>
-          <a href='{{ url_for("view_game", game_id=game._id)}}'>{{game.date.strftime("%Y-%m-%d")}} {{game.player1}} vs. {{game.player2}}</a>
-        </li>
+        <tr>
+            <td><a href='{{ url_for("view_game", game_id=game._id) }}'>{{ game._id }}</a></td>
+            <td>{{ game.date.strftime("%Y-%m-%d") }}</td>
+            <td>{{ game.player1 }}</td>
+            <td>{{ game.player2 }}</td>
+            <td>{{ game.user_id }}</td>
+        </tr>
       {% endfor %}
-    </ul>
-  </div>
-  <div class="pagination">
-    <ul>
-      <li><a href="#">Prev</a></li>
-      <li class="active"><a href="#">1</a></li>
-      <li class="active"><a href="#">2</a></li>
-      <li><a href="#">Next</a></li>
-    </ul class="pager">
+    </table>
+    {% from "macros.html" import render_pagination %}
+    {{ render_pagination(pagination) }}
   </div>
 {% endblock %}
 

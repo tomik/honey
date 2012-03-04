@@ -1,0 +1,39 @@
+
+{% macro render_field(field) %}
+  <dt>{{ field.label }}
+  <dd>{{ field(**kwargs)|safe }}
+  {% if field.errors %}
+    <ul class="errors">
+    {% for error in field.errors %}<li>{{ error }}{% endfor %}
+    </ul>
+  {% endif %}
+  </dd>
+{% endmacro %}
+
+{% macro render_pagination(pagination) %}
+  <div class="pagination pagination-centered">
+    <ul>
+    {% if pagination.has_previous() %}
+      <li>
+      <a href="{{ pagination.url_for(pagination.page - 1)}}">Previous</a>
+      </li>
+    {% endif %}
+    {%- for page in pagination %}
+      {% if page %}
+        {% if page != pagination.page %}
+          <li><a href="{{ pagination.url_for(page) }}">{{ page }}</a></li>
+        {% else %}
+          <li class="active"><a href="#">{{ page }}</a></li>
+        {% endif %}
+      {% else %}
+        <li><a href="#">...</a></li>
+      {% endif %}
+    {%- endfor %}
+    {% if pagination.has_next() %}
+      <li>
+      <a href="{{ pagination.url_for(pagination.page + 1)}}">Next</a>
+      </li>
+    {% endif %}
+    </ul>
+  </div>
+{% endmacro %}
