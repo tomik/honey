@@ -59,6 +59,8 @@ def upload_game():
         if form.sgf:
             user = session["username"]
             game_id = db.create_game(user, form.sgf)
+            if not game_id:
+                return render_template("upload_game.html", form=form)
             return redirect(url_for("view_game", game_id=game_id))
         else:
             abort(500)

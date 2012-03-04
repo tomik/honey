@@ -2,11 +2,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <p>
-    Honey Hex Viewer is an online 13x13 hex analyzer.
-    <a href="{{ url_for('upload_game') }}"> Upload </a> a game.
-  </p>
-  <h3>Games:</h3>
   <div>
     <ul class="unstyled">
       {% for game in games %}
