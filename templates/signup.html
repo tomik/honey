@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  {% from "_formhelpers.html" import render_field %}
+  {% from "macros.html" import render_field %}
   <form method="post" action="/signup">
     <dl>
       {{ render_field(form.username) }}

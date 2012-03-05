@@ -12,7 +12,7 @@
 # db.comments:
 # {"author": user_id,
 #  "date": "2011-02-17",
-#  "game": gameID
+#  "game_id": gameID
 #  #path to the node where comment applies in form [(branch, node-in-branch), ...]
 #  "path": [(0, 7), (1, 5), (1, 2)]
 #  "text": "This move is wrong"}
@@ -29,6 +29,20 @@ from bson.objectid import ObjectId
 import sgf
 
 from core import app
+
+def annotate(obj, recursive=False):
+    """
+    Transforms mongodb ids into objects.
+    """
+    # TODO use reference
+    if "user_id" in obj:
+        obj["user"] = app.db.users.find_one({"_id": ObjectId(obj["user_id"])})
+        if recursive:
+            annotate(obj["user"], recursive=True)
+    if "game_id" in obj:
+        obj["game"] = app.db.games.find_one({"_id": ObjectId(obj["game_id"])})
+        if recursive:
+            annotate(obj["user"], recursive=True)
 
 def get_user(username):
     """Returns password hash fetched from the db."""

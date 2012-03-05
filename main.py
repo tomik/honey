@@ -51,8 +51,11 @@ def logout():
 def main(page):
     per_page = app.config["games_per_page"]
     game_from, game_to = (page - 1) * per_page, page * per_page
-    games = db.get_games()[game_from:game_to]
-    pagination = Pagination(per_page, page, games.count(), "main")
+    game_cursor = db.get_games()
+    games = list(db.get_games()[game_from:game_to])
+    for game in games:
+        db.annotate(game)
+    pagination = Pagination(per_page, page, game_cursor.count(), "main")
     return render_template("index.html", games=games, pagination=pagination)
 
 @app.route("/upload_game", methods=["GET", "POST"])

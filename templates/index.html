@@ -17,7 +17,7 @@
             <td>{{ game.date.strftime("%Y-%m-%d") }}</td>
             <td>{{ game.player1 }}</td>
             <td>{{ game.player2 }}</td>
-            <td>{{ game.user_id }}</td>
+            <td>{{ game.user.username }}</td>
         </tr>
       {% endfor %}
     </table>
