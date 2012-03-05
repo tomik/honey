@@ -1,22 +1,37 @@
 
 {% extends "base.html" %}
 
+{% block head %}
+{{ super() }}
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#games tr').click(function() {
+        var href = $(this).find("a").attr("href");
+        if(href) {
+            window.location = href;
+        }
+    });
+});
+</script>
+{% endblock %}
+
 {% block content %}
   <div>
-    <table class="table table-bordered">
+    <table id="games" class="table pointer-on-hover">
         <thead>
-            <td><strong>game id</strong></td>
             <td><strong>date</strong></td>
             <td><strong>player1</strong></td>
             <td><strong>player2</strong></td>
+            <td><strong>result</strong></td>
             <td><strong>uploaded by</strong></td>
         </thead>
       {% for game in games %}
         <tr>
-            <td><a href='{{ url_for("view_game", game_id=game._id) }}'>{{ game._id }}</a></td>
+            <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
             <td>{{ game.date.strftime("%Y-%m-%d") }}</td>
             <td>{{ game.player1 }}</td>
             <td>{{ game.player2 }}</td>
+            <td> xxx </td>
             <td>{{ game.user.username }}</td>
         </tr>
       {% endfor %}

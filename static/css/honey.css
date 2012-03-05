@@ -8,6 +8,7 @@
   margin-top: 15px;
 }
 
+
 .child_mark {
   font-size: 13pt;
   font-weight: bold;
@@ -78,4 +79,10 @@ img.move:hover {
 }
 
 .comment.header {
+}
+
+/*Twitter bootstrap extensions*/
+
+.pointer-on-hover:hover {
+  cursor: pointer;
 }
