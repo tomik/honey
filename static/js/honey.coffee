@@ -181,8 +181,9 @@ class SgfParseHandler
     color = if who == "W" then Color.RED else Color.BLUE
     if who != "W" and who != "B"
       throw "invalid move color #{who}"
+    # resign move is not displayed
     else if where == "resign"
-      playMove(_game.currNode.y, _game.currNode.x, color, MoveType.RESIGN)
+      return
     else if (where == "swap")
       playMove(_game.currNode.y, _game.currNode.x, color, MoveType.SWAP)
     else if (where.length > 2)
@@ -235,8 +236,6 @@ putChildMarkOnBoard = (node, childIndex) ->
 
 # places move representing given node on board
 putNodeOnBoard = (node, allowSwap=true) ->
-  if (node.moveType == MoveType.RESIGN)
-    return
   if (node.moveType == MoveType.SWAP and allowSwap)
     removeNodeFromBoard(node.father)
     return putNodeOnBoard(node, false)
