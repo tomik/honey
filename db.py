@@ -6,6 +6,7 @@
 #   "date": "2011-02-17",
 #   "player1": "black",
 #   "player2": "white",
+#   "result": "W + res.",
 #   "nodes": [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
 #              {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
 #
@@ -65,7 +66,11 @@ def create_game(user_id, sgf_str):
             "date": datetime.datetime.now(),
             "player1": sgf_game[0].get("PB", "?"),
             "player2": sgf_game[0].get("PW", "?"),
+            "result": sgf_game[0].get("RE", "?"),
             "nodes": sgf_game}
+    # fix the result for little golem format
+    if game["result"] in ["B", "W"]:
+        game["result"] = game["result"] + "+"
     return app.db.games.insert(game)
 
 def update_game(game):

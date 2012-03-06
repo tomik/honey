@@ -28,10 +28,10 @@ $(document).ready(function() {
       {% for game in games %}
         <tr>
             <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
-            <td>{{ game.date.strftime("%Y-%m-%d") }}</td>
+            <td>{{ game.date.strftime("%Y-%m-%d %H:%M:%S") }}</td>
             <td>{{ game.player1 }}</td>
             <td>{{ game.player2 }}</td>
-            <td> xxx </td>
+            <td>{{ game.result }}</td>
             <td>{{ game.user.username }}</td>
         </tr>
       {% endfor %}
