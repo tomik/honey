@@ -23,7 +23,7 @@
 
 {% block content %}
   <div class="row">
-  <div class="span7">
+  <div class="span6">
     <div id='game_info'>
       <span class="red" id='red_player'>red</span> vs. <span class="blue" id='blue_player'>blue</span>
     </div>
@@ -35,28 +35,26 @@
     </div>
   </div>
 
-  <div class="span4 offset1">
-    <div id="comments">
-      {% for comment in comments %}
-        <div class="comment" id="comment_{{comment._id}}">    
-          <div class="header"> Posted by {{ comment.user_id }} on {{ comment.date.strftime("%Y-%m-%d")}} </div>
-          {{ comment.text }}
-        </div>
-      {% endfor %}
-    </div>
+  <div class="span6">
     <div id="post_comment">
       {% if session.username %}
         {% from "macros.html" import render_field %}
         <form method="post" action="{{ url_for('post_comment') }}">
-          <dl>
-            {{ form.game_id(value=game_id) }}
-            {{ form.short_path_json(value=null) }}
-            {{ form.full_path_json(value=null) }}
-            {{ render_field(form.comment, rows=5, cols=50) }}
-          </dl>
+          {{ form.game_id(value=game_id) }}
+          {{ form.short_path_json(value=null) }}
+          {{ form.full_path_json(value=null) }}
+          {{ render_field(form.comment, rows=4, cols=59) }}
           <p><input type=submit value=Post></p>
        </form>
       {% endif %}
+    </div>
+    <div id="comments">
+      {% for comment in comments %}
+        <p class="comment" id="comment_{{comment._id}}">    
+          <div class="label label-info"> Posted by {{ comment.user.username }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</div>
+          {{ comment.text }}
+        </p>
+      {% endfor %}
     </div>
     <div id='help'>
       <h5>Controls:</h5>

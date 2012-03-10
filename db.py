@@ -45,13 +45,17 @@ def annotate(obj, recursive=False):
         if recursive:
             annotate(obj["user"], recursive=True)
 
-def get_user(username):
-    """Returns password hash fetched from the db."""
+def get_user(user_id):
+    """Returns user for given id."""
+    return app.db.users.find_one({"_id": ObjectId(user_id)})
+
+def get_user_by_username(username):
+    """Returns user for given username."""
     return app.db.users.find_one({"username": username})
 
 def create_user(username, email, passwd_hash):
     """Creates user in the db."""
-    app.db.users.insert({"username": username, "email": email, "passwd": passwd_hash})
+    return app.db.users.insert({"username": username, "email": email, "passwd": passwd_hash})
 
 def create_game(user_id, sgf_str):
     """Parses and validates sgf and stores a game in the database."""

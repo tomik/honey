@@ -13,7 +13,7 @@ from pagination import Pagination
 def login_required(f):
     @wraps(f)
     def wrapper(*a, **k):
-        if session.get("username", None) is not None: 
+        if session.get("user", None) is not None: 
             return f(*a, **k)
         else:
             flash("You need to login to do that.")
@@ -24,9 +24,9 @@ def login_required(f):
 def signup():
     form = forms.SignupForm()
     if form.validate_on_submit():
-        db.create_user(form.username.data, form.email.data,
+        user = db.create_user(form.username.data, form.email.data,
                 generate_password_hash(form.password.data))
-        session["username"] = form.username.data
+        session["user"] = user
         flash("You have signed up sucessfully.")
         return redirect(url_for("main"))
     return render_template("signup.html", form=form)
@@ -35,14 +35,14 @@ def signup():
 def login():
     form = forms.LoginForm()
     if form.validate_on_submit():
-        session["username"] = form.username.data
+        session["user"] = form.user
         flash("You were logged in.")
         return redirect(url_for("main"))
     return render_template("login.html", form=form)
 
 @app.route("/logout")
 def logout():
-    session.pop("username", None)
+    session.pop("user", None)
     flash("You were logged out")
     return redirect(url_for("main"))
 
@@ -65,8 +65,8 @@ def upload_game():
     form = forms.SgfUploadForm(request.form)
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
-            user = session["username"]
-            game_id = db.create_game(user, form.sgf)
+            user = session["user"]
+            game_id = db.create_game(user["_id"], form.sgf)
             if not game_id:
                 return render_template("upload_game.html", form=form)
             return redirect(url_for("view_game", game_id=game_id))
@@ -80,8 +80,8 @@ def post_comment():
     """Posts comment for given game and path. Requires login. Can be called via AJAX."""
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
-        user = session["username"]
-        db.create_comment(user, form.game_id.data, form.short_path, form.comment.data)
+        user = session["user"]
+        db.create_comment(user["_id"], form.game_id.data, form.short_path, form.comment.data)
         game = form.game
         patched_game = db.patch_game_with_variant(game, form.full_path)
         db.update_game(patched_game)
@@ -108,6 +108,8 @@ def view_game(game_id):
     if not game:
         abort(404) 
     comments=list(db.get_comments_for_game(game_id))
+    for comment in comments:
+        db.annotate(comment)
     return render_template("view_game.html", 
         game_id=game_id,
         comments=comments,

@@ -3,6 +3,7 @@
   <head>
     {% block head %}
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Honey Hex Viewer</title>
       <link href="/static/css/bootstrap.css" rel="stylesheet">
       <link href="/static/css/honey.css" rel="stylesheet"/>
@@ -17,7 +18,6 @@
           $("#contact").attr("href", "mailto:" + myContact);
         });
       </script>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% endblock %}
   </head>
 
@@ -34,8 +34,8 @@
               <li><a href="#contact">Contact</a></li>
             </ul>
             <ul class="nav pull-right">
-              {% if session["username"] %}
-              <li><a href="">{{ session["username"] }}</a></li>
+              {% if session["user"] %}
+              <li><a href="">{{ session["user"].username }}</a></li>
               <li><a href="/logout"> Logout </a></li>
               {% else %}    
               <li><a href="/login"> Login </a></li>

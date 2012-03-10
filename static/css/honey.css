@@ -2,12 +2,10 @@
 #board {
   background-color: #FFFFFF;
   border: none;
-  /* image width is 550px */
-  width: 600px;
+  width: 550px;
   position: relative;
   margin-top: 15px;
 }
-
 
 .child_mark {
   font-size: 13pt;
@@ -85,4 +83,8 @@ img.move:hover {
 
 .pointer-on-hover:hover {
   cursor: pointer;
+}
+
+#post_comment textarea {
+  width: auto;
 }
