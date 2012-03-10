@@ -43,17 +43,19 @@
           {{ form.game_id(value=game_id) }}
           {{ form.short_path_json(value=null) }}
           {{ form.full_path_json(value=null) }}
-          {{ render_field(form.comment, rows=4, cols=59) }}
+          {{ render_field(form.comment, rows=4, cols=90) }}
           <p><input type=submit value=Post></p>
        </form>
       {% endif %}
     </div>
     <div id="comments">
       {% for comment in comments %}
-        <p class="comment" id="comment_{{comment._id}}">    
+      <p>
+        <div class="comment" id="comment_{{comment._id}}">    
           <div class="label label-info"> Posted by {{ comment.user.username }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</div>
           {{ comment.text }}
-        </p>
+        </div>
+      </p>
       {% endfor %}
     </div>
     <div id='help'>

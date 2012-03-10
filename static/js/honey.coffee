@@ -365,11 +365,10 @@ _bridge.getCurrNodeFullPath = -> getNodeFullPath(_game.currNode)
 updateComments = (currNode) ->
   path = getNodeShortPath(currNode)
   currComments = (comment for comment in _bridge.comments when pathCompare(comment[1], path))
-  $("#comments > .comment").removeClass("selected")
-  $("#comments > .comment").hide()
+  $("#comments .comment").hide()
   for comment in currComments
+    console.log("x")
     elem = $("#comment_#{comment[0]}")
-    elem.addClass("selected")
     elem.show()
 
 # ==>> DOCUMENT FUNCTIONS
