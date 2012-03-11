@@ -367,7 +367,6 @@ updateComments = (currNode) ->
   currComments = (comment for comment in _bridge.comments when pathCompare(comment[1], path))
   $("#comments .comment").hide()
   for comment in currComments
-    console.log("x")
     elem = $("#comment_#{comment[0]}")
     elem.show()
 
@@ -382,6 +381,9 @@ $ ->
   # inputSgf is filled into bridge in the template
   inputSgf = _bridge.inputSgf 
   sgfParse(inputSgf or= sgfTest, _sgfParseHandler)
+  # jump to the beginning
+  while _game.currNode.father
+    unplayMove()
 
 # handle keydown including holding the key 
 $(document).keydown((e) ->
