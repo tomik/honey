@@ -110,12 +110,17 @@ def view_game(game_id):
     comments=list(db.get_comments_for_game(game_id))
     for comment in comments:
         db.annotate(comment)
-    return render_template("view_game.html", 
+    return render_template("view_game.html",
         game_id=game_id,
         comments=comments,
         comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
         form=forms.CommentForm(),
         input_sgf=json.dumps(game["nodes"]))
+
+@app.route("/faq")
+def faq():
+    """Show FAQ."""
+    return render_template("faq.html")
 
 if __name__ == "__main__":
     app.debug = True
