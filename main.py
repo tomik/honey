@@ -56,7 +56,7 @@ def main(page):
     for game in games:
         db.annotate(game)
     pagination = Pagination(per_page, page, game_cursor.count(), "main")
-    return render_template("index.html", games=games, pagination=pagination)
+    return render_template("index.html", menu_toggle_games=True, games=games, pagination=pagination)
 
 @app.route("/upload_game", methods=["GET", "POST"])
 @login_required
@@ -68,11 +68,11 @@ def upload_game():
             user = session["user"]
             game_id = db.create_game(user["_id"], form.sgf)
             if not game_id:
-                return render_template("upload_game.html", form=form)
+                return render_template("upload_game.html", menu_toggle_upload=True, form=form)
             return redirect(url_for("view_game", game_id=game_id))
         else:
             abort(500)
-    return render_template("upload_game.html", form=form)
+    return render_template("upload_game.html", menu_toggle_upload=True, form=form)
 
 @app.route("/post_comment", methods=["POST"])
 @login_required
@@ -120,7 +120,7 @@ def view_game(game_id):
 @app.route("/faq")
 def faq():
     """Show FAQ."""
-    return render_template("faq.html")
+    return render_template("faq.html", menu_toggle_faq=True)
 
 if __name__ == "__main__":
     app.debug = True

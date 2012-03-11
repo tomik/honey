@@ -28,9 +28,9 @@
           <a class="brand" href="/">Honey Hex Viewer</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li><a href="/">Games</a></li>
-              <li><a href="{{url_for ('upload_game')}}">Upload</a></li>
-              <li><a href="{{url_for ('faq')}}">FAQ</a></li>
+              <li {% if menu_toggle_games %} class="active" {% endif %}><a href="/">Games</a></li>
+              <li {% if menu_toggle_upload %} class="active" {% endif %}><a href="{{url_for ('upload_game')}}">Upload</a></li>
+              <li {% if menu_toggle_faq %} class="active" {% endif %}><a href="{{url_for ('faq')}}">FAQ</a></li>
             </ul>
             <ul class="nav pull-right">
               {% if session["user"] %}
