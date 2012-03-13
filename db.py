@@ -55,7 +55,8 @@ def get_user_by_username(username):
 
 def create_user(username, email, passwd_hash):
     """Creates user in the db."""
-    return app.db.users.insert({"username": username, "email": email, "passwd": passwd_hash})
+    user_id = app.db.users.insert({"username": username, "email": email, "passwd": passwd_hash})
+    return get_user(user_id)
 
 def create_game(user_id, sgf_str):
     """Parses and validates sgf and stores a game in the database."""
@@ -75,7 +76,8 @@ def create_game(user_id, sgf_str):
     # fix the result for little golem format
     if game["result"] in ["B", "W"]:
         game["result"] = game["result"] + "+"
-    return app.db.games.insert(game)
+    game_id = app.db.games.insert(game)
+    return get_game(game_id)
 
 def update_game(game):
     """Updates game in the db."""
@@ -124,7 +126,12 @@ def create_comment(user_id, game_id, path, text):
                "game_id": game_id,
                "path": path}
     comments = app.db.comments
-    return comments.insert(comment)
+    comment_id = comments.insert(comment)
+    return get_comment(comment_id)
+
+def get_comment(id):
+    """Fetches comment for given id."""
+    return app.db.comments.find_one({"_id": ObjectId(id)})
 
 def get_comments_for_game(game_id):
     """Fetches comments for given game."""

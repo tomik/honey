@@ -81,11 +81,11 @@ def post_comment():
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
         user = session["user"]
-        db.create_comment(user["_id"], form.game_id.data, form.short_path, form.comment.data)
+        comment = db.create_comment(user["_id"], form.game_id.data, form.short_path, form.comment.data)
         game = form.game
         patched_game = db.patch_game_with_variant(game, form.full_path)
         db.update_game(patched_game)
-    return redirect(url_for("view_game", game_id=form.game_id.data))
+    return redirect(url_for("view_comment", comment_id=comment["_id"]))
 
 # TODO how to handle not-uploaded games?
 @app.route("/new_game")
@@ -104,14 +104,27 @@ def lg_game(lg_game_id):
 @app.route("/view_game/<game_id>")
 def view_game(game_id):
     """Views existing game based on internal game id."""
+    return _view_game(game_id, [])
+
+@app.route("/view_comment/<comment_id>")
+def view_comment(comment_id):
+    """Views existing game on given comment."""
+    comment = db.get_comment(comment_id)
+    if not comment:
+        abort(404)
+    return _view_game(comment["game_id"], comment["path"])
+
+def _view_game(game_id, init_path):
+    """Views existing game on given (comment) path."""
     game = db.get_game(game_id)
     if not game:
-        abort(404) 
+        abort(404)
     comments=list(db.get_comments_for_game(game_id))
     for comment in comments:
         db.annotate(comment)
     return render_template("view_game.html",
         game_id=game_id,
+        init_path=init_path,
         comments=comments,
         comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
         form=forms.CommentForm(),

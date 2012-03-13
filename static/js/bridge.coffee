@@ -3,8 +3,9 @@
 # Takes care of passing input values (e.g. sgf) and retrieving outputs (e.g. current node changed).
 
 class Bridge
-  constructor: (@inputSgf, comments) ->
+  constructor: (@inputSgf, comments, initPath) ->
     @comments = $.parseJSON(comments)
+    @initPath = $.parseJSON(initPath)
   getCurrNodeShortPath: () ->
     # Returns short path to current node in json format as [(branch, node), ...].
     # Example:

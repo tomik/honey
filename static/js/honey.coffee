@@ -331,6 +331,20 @@ getNodeShortPath = (node) ->
   path.push([0, index])
   return path.reverse()
 
+# play moves to get to the point described by the short path
+followNodeShortPath = (path) ->
+  node = _game.currNode
+  if not node
+    throw "current node is invalid"
+  for [branch, jump] in path
+    if branch >= node.children.length
+      throw "Invalid branch"
+    for i in [0...jump]
+      node = node.children[branch]
+      playNode(node)
+      # branch only once
+      branch = 0
+
 # returns a json object representing current node full path
 # full path is a list of nodes from the beginning to the current one
 # full path can be used to insert new variants to the game tree
@@ -361,7 +375,7 @@ _bridge.getCurrNodeShortPath = -> getNodeShortPath(_game.currNode)
 _bridge.getCurrNodeFullPath = -> getNodeFullPath(_game.currNode)
 
 # ==>> COMMENTS
-  
+
 updateComments = (currNode) ->
   path = getNodeShortPath(currNode)
   currComments = (comment for comment in _bridge.comments when pathCompare(comment[1], path))
@@ -379,11 +393,14 @@ $ ->
                 SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];
                 W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])"
   # inputSgf is filled into bridge in the template
-  inputSgf = _bridge.inputSgf 
+  inputSgf = _bridge.inputSgf
   sgfParse(inputSgf or= sgfTest, _sgfParseHandler)
   # jump to the beginning
   while _game.currNode.father
     unplayMove()
+  # follow the init path
+  # this is the short path ([[branchId, jump], [branchId, jump], ...])
+  followNodeShortPath(_bridge.initPath)
 
 # handle keydown including holding the key 
 $(document).keydown((e) ->
