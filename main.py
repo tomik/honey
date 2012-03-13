@@ -29,7 +29,7 @@ def signup():
         session["user"] = user
         flash("You have signed up sucessfully.")
         return redirect(url_for("main"))
-    return render_template("signup.html", form=form)
+    return render_template("signup.html", form=form, menu_toggle_signup=True)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -38,7 +38,7 @@ def login():
         session["user"] = form.user
         flash("You were logged in.")
         return redirect(url_for("main"))
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, menu_toggle_login=True)
 
 @app.route("/logout")
 def logout():

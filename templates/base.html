@@ -37,8 +37,8 @@
               <li><a href="">{{ session["user"].username }}</a></li>
               <li><a href="/logout"> Logout </a></li>
               {% else %}    
-              <li><a href="/login"> Login </a></li>
-              <li><a href="/signup"> Signup </a></li>
+              <li {% if menu_toggle_login %} class="active" {% endif %}><a href="/login"> Login </a></li>
+              <li {% if menu_toggle_signup %} class="active" {% endif %}><a href="/signup"> Signup </a></li>
               {% endif %}
             </ul>
           </div>
