@@ -9,5 +9,7 @@ app.config["db_host"] = "localhost"
 app.config["db_port"] = 27017
 app.config["db_name"] = "honey"
 app.config["games_per_page"] = 10
+app.config["games_per_page_in_user_view"] = 5
+app.config["comments_per_page_in_user_view"] = 10
 app.db = pymongo.Connection(app.config["db_host"], app.config["db_port"])[app.config["db_name"]]
 

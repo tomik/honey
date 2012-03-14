@@ -1,3 +1,5 @@
+{% from "macros.html" import render_user_link %}
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -34,9 +36,9 @@
             </ul>
             <ul class="nav pull-right">
               {% if session["user"] %}
-              <li><a href="">{{ session["user"].username }}</a></li>
+              <li>{{ render_user_link(session["user"]) }}</li>
               <li><a href="/logout"> Logout </a></li>
-              {% else %}    
+              {% else %}
               <li {% if menu_toggle_login %} class="active" {% endif %}><a href="/login"> Login </a></li>
               <li {% if menu_toggle_signup %} class="active" {% endif %}><a href="/signup"> Signup </a></li>
               {% endif %}
@@ -47,7 +49,7 @@
     </div>
 
     <div class="container">
-      {% block content %} {% endblock %} 
+      {% block content %} {% endblock %}
     </div>
   </body>
 </html>

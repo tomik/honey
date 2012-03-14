@@ -47,9 +47,56 @@
 {% endmacro %}
 
 {% macro render_user_link(user) %}
-  <a href="#">{{ user.username }}</a>
+  <a href='{{ url_for("view_user", username=user.username) }}'>{{ user.username }}</a>
 {% endmacro %}
 
 {% macro render_game_date(date) %}
   {{ date.strftime("%Y-%m-%d %H:%M:%S") }}
+{% endmacro %}
+
+{% macro render_games(games, pagination) %}
+  <div>
+    <table id="games" class="table pointer-on-hover">
+        <thead>
+            <td><strong>date</strong></td>
+            <td><strong>player1</strong></td>
+            <td><strong>player2</strong></td>
+            <td><strong>result</strong></td>
+            <td><strong>uploaded by</strong></td>
+        </thead>
+      {% for game in games %}
+        <tr>
+            <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
+            <td>{{ render_game_date(game.date) }}</td>
+            <td>{{ game.player1 }}</td>
+            <td>{{ game.player2 }}</td>
+            <td>{{ game.result }}</td>
+            <td>{{ game.user.username }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    {{ render_pagination(pagination) }}
+  </div>
+{% endmacro %}
+
+{% macro render_comments(comments, pagination) %}
+  <div>
+    <table id="comments" class="table pointer-on-hover">
+        <thead>
+            <td><strong>date</strong></td>
+            <td><strong>author</strong></td>
+            <td><strong>text</strong></td>
+        </thead>
+      {% for comment in comments %}
+        <tr>
+            <td style="display:none;"> <a href='{{ url_for("view_comment", comment_id=comment._id) }}' style="display:none;"></a> </td>
+            <td>{{ render_game_date(comment.date) }}</td>
+            <td>{{ comment.user.username }}</td>
+            <!-- TODO -->
+            <td>{{ comment.text }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    {{ render_pagination(pagination) }}
+  </div>
 {% endmacro %}

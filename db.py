@@ -11,10 +11,10 @@
 #              {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
 #
 # db.comments:
-# {"author": user_id,
+# {"user_id": "12345",
 #  "date": "2011-02-17",
 #  "game_id": gameID
-#  #path to the node where comment applies in form [(branch, node-in-branch), ...]
+#  # short path to the node where comment applies in form [(branch, node-in-branch), ...]
 #  "path": [(0, 7), (1, 5), (1, 2)]
 #  "text": "This move is wrong"}
 #
@@ -87,6 +87,7 @@ def get_game(id):
     """Fetches game for given id."""
     return app.db.games.find_one({"_id": ObjectId(id)})
 
+# TODO ordering and reversed
 def get_games(ordering=None, reversed=False):
     """
     Fetches all the games based on given ordering.
@@ -97,9 +98,10 @@ def get_games(ordering=None, reversed=False):
     """
     return app.db.games.find()
 
-def get_games_for_user(user_id, ordering, reversed=False):
+# TODO ordering and reversed
+def get_games_for_user(user_id, ordering=None, reversed=False):
     """Same as get_games for a single user."""
-    raise NotImplementedError
+    return app.db.games.find({"user_id": user_id})
 
 def patch_game_with_variant(game, full_path):
     """Adds variant to given game if it doesn't exist yet."""
@@ -121,7 +123,7 @@ def patch_game_with_variant(game, full_path):
 def create_comment(user_id, game_id, path, text):
     """Creates comment."""
     comment = {"text": text,
-               "date": datetime.datetime.now(),  
+               "date": datetime.datetime.now(),
                "user_id": user_id,
                "game_id": game_id,
                "path": path}
@@ -136,4 +138,8 @@ def get_comment(id):
 def get_comments_for_game(game_id):
     """Fetches comments for given game."""
     return app.db.comments.find({"game_id": game_id})
+
+def get_comments_for_user(user_id):
+    """Fetches all comments made by given user."""
+    return app.db.comments.find({"user_id": user_id})
 

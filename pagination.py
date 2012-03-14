@@ -5,15 +5,15 @@ from flask import url_for
 class Pagination(object):
     """Simple pagination class."""
 
-    def __init__(self, per_page, page, count, endpoint, neighbours=5):
+    def __init__(self, per_page, page, count, url_maker, neighbours=5):
         self.per_page = per_page
         self.page = page
         self.count = count
-        self.endpoint = endpoint
+        self.url_maker = url_maker
         self.neighbours = 5
 
     def url_for(self, page):
-        return url_for(self.endpoint, page=page)
+        return self.url_maker(page)
 
     def __iter__(self):
         if self.has_previous():

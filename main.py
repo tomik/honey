@@ -13,7 +13,7 @@ from pagination import Pagination
 def login_required(f):
     @wraps(f)
     def wrapper(*a, **k):
-        if session.get("user", None) is not None: 
+        if session.get("user", None) is not None:
             return f(*a, **k)
         else:
             flash("You need to login to do that.")
@@ -51,11 +51,12 @@ def logout():
 def main(page):
     per_page = app.config["games_per_page"]
     game_from, game_to = (page - 1) * per_page, page * per_page
-    game_cursor = db.get_games()
-    games = list(db.get_games()[game_from:game_to])
+    games_cursor = db.get_games()
+    num_all_games = games_cursor.count()
+    games = list(games_cursor[game_from:game_to])
     for game in games:
         db.annotate(game)
-    pagination = Pagination(per_page, page, game_cursor.count(), "main")
+    pagination = Pagination(per_page, page, num_all_games, lambda page: url_for("main", page=page))
     return render_template("index.html", menu_toggle_games=True, games=games, pagination=pagination)
 
 @app.route("/upload_game", methods=["GET", "POST"])
@@ -101,7 +102,7 @@ def new_game():
 def lg_game(lg_game_id):
     """Views lg game for analysis only."""
     f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % lg_game_id)
-    return render_template("view_game.html", 
+    return render_template("view_game.html",
         lg_id=lg_game_id, input_sgf=f.readlines())
 
 @app.route("/view_game/<game_id>")
@@ -116,6 +117,42 @@ def view_comment(comment_id):
     if not comment:
         abort(404)
     return _view_game(comment["game_id"], comment["path"])
+
+@app.route("/view_user/<username>/games_page/<int:games_page>")
+@app.route("/view_user/<username>/comments_page/<int:comments_page>")
+@app.route("/view_user/<username>/games_page/<int:games_page>/comments_page/<int:comments_page>")
+@app.route("/view_user/<username>")
+def view_user(username, games_page=1, comments_page=1):
+    """Views existing user based on his username."""
+    user = db.get_user_by_username(username)
+    if not user:
+        abort(404)
+    # paginate games
+    games_per_page = app.config["games_per_page_in_user_view"]
+    games_from, games_to = (games_page - 1) * games_per_page, games_page * games_per_page
+    games_cursor = db.get_games_for_user(user["_id"])
+    num_all_games = games_cursor.count()
+    games = list(games_cursor)[games_from:games_to]
+    games_pagination = Pagination(games_per_page, games_page, num_all_games,
+            lambda page: url_for("view_user", username=username, games_page=page, comments_page=comments_page))
+    for game in games:
+        db.annotate(game)
+    # paginate comments
+    comments_per_page = app.config["comments_per_page_in_user_view"]
+    comments_from, comments_to = (comments_page - 1) * comments_per_page, comments_page * comments_per_page
+    comments_cursor = db.get_comments_for_user(user["_id"])
+    num_all_comments = comments_cursor.count()
+    comments = list(comments_cursor)[comments_from:comments_to]
+    comments_pagination = Pagination(comments_per_page, comments_page, num_all_comments,
+            lambda page: url_for("view_user", username=username, games_page=games_page, comments_page=page))
+    for comment in comments:
+        db.annotate(comment)
+    return render_template("view_user.html",
+        user=user,
+        games=games,
+        comments=comments,
+        games_pagination=games_pagination,
+        comments_pagination=comments_pagination)
 
 def _view_game(game_id, init_path, comment_form=None):
     """
