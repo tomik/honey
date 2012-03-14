@@ -161,10 +161,8 @@ class SgfParseHandler
       throw "invalid board size"
     # player names
     else if propName == "PB"
-      $("#red_player").text(propValue)
       _game.properties.red = propValue
     else if propName == "PW"
-      $("#blue_player").text(propValue)
       _game.properties.blue = propValue
     # other game properties
     else if propName == "SZ"

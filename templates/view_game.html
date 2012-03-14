@@ -5,7 +5,7 @@
   <script src="/static/js/jquery.timers.js" type="text/javascript"></script>
   <script src="/static/js/bridge.js" type="text/javascript"></script>
   <script type="text/javascript">
-    _bridge = new Bridge('{{input_sgf|safe}}', '{{comment_paths|tojson|safe}}', '{{init_path|tojson|safe}}');
+    _bridge = new Bridge('{{game.nodes|tojson|safe}}', '{{comment_paths|tojson|safe}}', '{{init_path|tojson|safe}}');
   </script>
   <script src="/static/js/honey.js" type="text/javascript"></script>
   <script src="/static/js/ga.js" type="text/javascript"></script>
@@ -21,11 +21,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row" style="margin-top: 20px;">
   <div class="span6">
-    <div id='game_info'>
-      <span class="red" id='red_player'>red</span> vs. <span class="blue" id='blue_player'>blue</span>
-    </div>
     <div id='board'>
       <img alt='' class='boardimage' 
       galleryimg='no' id='boardimage' src='/static/img/board.gif' usemap="#empty_fields" border="0"/>
@@ -35,22 +32,27 @@
   </div>
 
   <div class="span6">
+    {% include "game_info.html" %}
+    <h4 style="margin-bottom: 10px;">Comments</h4>
     {% if session.user %}
     <div id="post_comment">
         {% from "macros.html" import render_field %}
         <form method="post" action="{{ url_for('post_comment') }}">
-          {{ form.game_id(value=game_id) }}
+          {{ form.game_id(value=game._id) }}
           {{ form.short_path_json(value=null) }}
           {{ form.full_path_json(value=null) }}
-          {{ render_field(form.comment, rows=4, cols=90) }}
+          {{ render_field(form.comment, label=False, rows=3, cols=90) }}
           <p><input type=submit value=Post></p>
        </form>
     </div>
     {% endif %}
     <div id="comments">
+      {% if not comments %}
+      <p> No comments yet. </p>
+      {% endif %}
       {% for comment in comments %}
       <p>
-        <div class="comment" id="comment_{{comment._id}}">    
+        <div class="comment" id="comment_{{comment._id}}">
           <div class="label label-info"> Posted by {{ comment.user.username }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</div>
           {{ comment.text }}
         </div>

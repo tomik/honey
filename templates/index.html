@@ -1,5 +1,7 @@
 
 {% extends "base.html" %}
+{% from "macros.html" import render_game_date %}
+{% from "macros.html" import render_pagination %}
 
 {% block head %}
 {{ super() }}
@@ -28,7 +30,7 @@ $(document).ready(function() {
       {% for game in games %}
         <tr>
             <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
-            <td>{{ game.date.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+            <td>{{ render_game_date(game.date) }}</td>
             <td>{{ game.player1 }}</td>
             <td>{{ game.player2 }}</td>
             <td>{{ game.result }}</td>
@@ -36,7 +38,6 @@ $(document).ready(function() {
         </tr>
       {% endfor %}
     </table>
-    {% from "macros.html" import render_pagination %}
     {{ render_pagination(pagination) }}
   </div>
 {% endblock %}

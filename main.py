@@ -77,7 +77,7 @@ def upload_game():
 @app.route("/post_comment", methods=["POST"])
 @login_required
 def post_comment():
-    """Posts comment for given game and path. Requires login. Can be called via AJAX."""
+    """Posts comment for given game and path. Requires login."""
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
         user = session["user"]
@@ -85,7 +85,10 @@ def post_comment():
         game = form.game
         patched_game = db.patch_game_with_variant(game, form.full_path)
         db.update_game(patched_game)
-    return redirect(url_for("view_comment", comment_id=comment["_id"]))
+        return redirect(url_for("view_comment", comment_id=comment["_id"]))
+    if not form.game_id.data:
+        abort(500)
+    return _view_game(form.game_id.data, [], form)
 
 # TODO how to handle not-uploaded games?
 @app.route("/new_game")
@@ -114,21 +117,28 @@ def view_comment(comment_id):
         abort(404)
     return _view_game(comment["game_id"], comment["path"])
 
-def _view_game(game_id, init_path):
-    """Views existing game on given (comment) path."""
+def _view_game(game_id, init_path, comment_form=None):
+    """
+    Views existing game on given (comment) path.
+
+    When there are errors with comment for instance of this one can be passed in and errors displayed.
+    """
     game = db.get_game(game_id)
     if not game:
         abort(404)
     comments=list(db.get_comments_for_game(game_id))
+    # fetch games owner
+    db.annotate(game)
     for comment in comments:
         db.annotate(comment)
+    if not comment_form:
+        comment_form = forms.CommentForm()
     return render_template("view_game.html",
-        game_id=game_id,
+        game=game,
         init_path=init_path,
         comments=comments,
         comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
-        form=forms.CommentForm(),
-        input_sgf=json.dumps(game["nodes"]))
+        form=comment_form)
 
 @app.route("/faq")
 def faq():

@@ -1,0 +1,21 @@
+
+{% from "macros.html" import render_user_link %}
+{% from "macros.html" import render_game_date %}
+
+<div id='game_info'>
+  <h4>Game details</h4>
+  <dl class="dl-horizontal">
+    <dt>red:</dt>
+    <dd class="red">{{ game.player1 }}</dd>
+    <dt>blue:</dt>
+    <dd class="blue">{{ game.player2 }}</dd>
+    <dt>result:</dt>
+    <dd>{{ game.result }}</dd>
+    <dt>uploaded by:</dt>
+    <dd>{{ render_user_link(game.user) }} on {{ render_game_date(game.date) }}</dd>
+    {% if game.event %}
+      <dt>event:</dt>
+      <dd>{{ game.description }}</dd>
+    {% endif %}
+  </dl>
+</div>

@@ -1,6 +1,14 @@
 
 {% macro render_field(field) %}
-  <div>{{ field.label }}</div>
+  {% if "label" not in kwargs or kwargs.label %}
+  <div>
+    {% if "label" in kwargs %}
+      {{ kwargs.label }}
+    {% else %}
+      {{ field.label }}
+    {% endif %}
+  </div>
+  {% endif %}
   <div>{{ field(**kwargs)|safe }}
   {% if field.errors %}
     <ul class="errors">
@@ -36,4 +44,12 @@
     {% endif %}
     </ul>
   </div>
+{% endmacro %}
+
+{% macro render_user_link(user) %}
+  <a href="#">{{ user.username }}</a>
+{% endmacro %}
+
+{% macro render_game_date(date) %}
+  {{ date.strftime("%Y-%m-%d %H:%M:%S") }}
 {% endmacro %}
