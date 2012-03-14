@@ -1,38 +1,7 @@
 
 #board {
-  background-color: #FFFFFF;
-  border: none;
   width: 550px;
   position: relative;
-  margin-top: 15px;
-}
-
-.child_mark {
-  font-size: 13pt;
-  font-weight: bold;
-}
-
-#game_info {
-  margin-right: 10px;
-  font-size: 11pt;
-}
-
-#game_info a {
-  text-decoration: none;
-}
-
-.node_link {
-  margin-right: 5px;
-  text-decoration: none;
-  padding:2px;
-}
-
-.node_link.active {
-  background-color: #eaeaea;
-}
-
-.node_link.first_son {
-  font-weight: bold;
 }
 
 .red {
@@ -43,42 +12,6 @@
   color: blue;
 }
 
-img.move {
-}
-
-img.move:hover {
- cursor: pointer;
-}
-
-#help {
-  border: 1px solid;
-  margin-right:10px;
-  padding: 5px;
-  /* visible on demand */
-  display: none;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-#help h5 {
-  font-size: 15px;
-  margin-bottom: 3px;
-  margin-top: 3px;
-}
-
-#help .action {
-  font-weight: bold;
-}
-
-/* comments */
-
-.comment.selected {
-  /*border: 10px solid;*/
-}
-
-.comment.header {
-}
-
 /*Twitter bootstrap extensions*/
 
 .pointer-on-hover:hover {
@@ -86,5 +19,10 @@ img.move:hover {
 }
 
 #post_comment textarea {
+  width: auto;
+}
+
+.dl-horizontal dt {
+  float: left;
   width: auto;
 }
