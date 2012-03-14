@@ -3,14 +3,23 @@
 
 {% block content %}
   <h3> What is the point of all this ? </h3>
-  <p> Store games. </p>
+  <p> I always wished there would be a site where I could store all my board games I play online. This site strives to achieve exactly that. At the moment only game of Hex is supported, but there are more to come soon (Go, Chess, Amazon). Any user can create variants and comment on existing games. </p>
 
   <h3> How do I navigate in the game ? </h3>
+  Application strives to make navigation around the game straightforward and painless.
   <dl>
-    <dt>click on empty field:</dt><dd>plays a move</dd>
-    <dt>left, right:</dt> <dd>navigate along active branch</dd>
+    <dt>click on empty field</dt><dd>plays a move</dd>
+    <dt>left/right</dt> <dd>go to next/previous move in the active branch</dd>
     <dt>1-9</dt><dd>follow a variant</dd>
+    <dt>up/down</dt><dd>go to next/previous "junction" (node that has more than one children) in the game record</dd>
   </dl>
-  </div>
+  At the moment new variants are saved only if they end up with a comment.
+
+  <h3> Is your question not here ? </h3>
+  <h3>Did you find a bug ?/h3>
+  <h3> Do you have an idea for improvement ?</h3>
+  <p>
+  Then please contact me via <a id="contact_email" href="#">email</a>.
+  <p>
 {% endblock %}
 
