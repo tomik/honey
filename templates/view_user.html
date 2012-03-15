@@ -2,10 +2,15 @@
 {% extends "base.html" %}
 {% from "macros.html" import render_games %}
 {% from "macros.html" import render_comments %}
+{% from "macros.html" import render_date_time %}
 
-{% block content %}
+{% block thin_content %}
 
 <h2> User {{ user.username }} </h2>
+
+<p>
+Joined on {{ render_date_time(user.joined_date) }}
+</p>
 
 <h3> Uploaded Games </h3>
 {% if games %}

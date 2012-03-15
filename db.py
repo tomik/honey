@@ -20,6 +20,7 @@
 #
 # db.users:
 # {"username": "slpwnd",
+#  "joined on": 2011-02-17,
 #  "email": "slpwnd@gmail.com",
 #  "passwd": "hashed passwd"}
 #
@@ -55,7 +56,11 @@ def get_user_by_username(username):
 
 def create_user(username, email, passwd_hash):
     """Creates user in the db."""
-    user_id = app.db.users.insert({"username": username, "email": email, "passwd": passwd_hash})
+    user = {"username": username,
+            "email": email,
+            "passwd": passwd_hash,
+            "joined_date": datetime.datetime.now()}
+    user_id = app.db.users.insert(user)
     return get_user(user_id)
 
 def create_game(user_id, sgf_str):
