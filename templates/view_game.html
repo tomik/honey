@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros.html" import render_field %}
+{% from "macros.html" import render_user_link %}
 
 {% block head %}
   {{ super() }}
@@ -36,7 +38,6 @@
     <h4 style="margin-bottom: 10px;">Comments</h4>
     {% if session.user %}
     <div id="post_comment">
-        {% from "macros.html" import render_field %}
         <form method="post" action="{{ url_for('post_comment') }}">
           {{ form.game_id(value=game._id) }}
           {{ form.short_path_json(value=null) }}
@@ -53,7 +54,7 @@
       {% for comment in comments %}
       <p>
         <div class="comment" id="comment_{{comment._id}}">
-          <div class="label label-info"> Posted by {{ comment.user.username }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</div>
+          <div> <strong>Posted by {{ render_user_link(comment.user) }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</strong></div>
           {{ comment.text }}
         </div>
       </p>
