@@ -3,21 +3,8 @@
 {% from "macros.html" import render_game_date %}
 {% from "macros.html" import render_games %}
 
-{% block head %}
-{{ super() }}
-<script type="text/javascript">
-$(document).ready(function() {
-    $('#games tr').click(function() {
-        var href = $(this).find("a").attr("href");
-        if(href) {
-            window.location = href;
-        }
-    });
-});
-</script>
-{% endblock %}
-
-{% block content %}
+{% block thin_content %}
+  <h3> Games </h3>
   {{ render_games(games, pagination) }}
 {% endblock %}
 

@@ -50,7 +50,7 @@
   <a href='{{ url_for("view_user", username=user.username) }}'>{{ user.username }}</a>
 {% endmacro %}
 
-{% macro render_game_date(date) %}
+{% macro render_date_time(date) %}
   {{ date.strftime("%Y-%m-%d %H:%M:%S") }}
 {% endmacro %}
 
@@ -67,16 +67,26 @@
       {% for game in games %}
         <tr>
             <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
-            <td>{{ render_game_date(game.date) }}</td>
+            <td>{{ render_date_time(game.date) }}</td>
             <td>{{ game.player1 }}</td>
             <td>{{ game.player2 }}</td>
             <td>{{ game.result }}</td>
-            <td>{{ game.user.username }}</td>
+            <td>{{ render_user_link(game.user) }}</td>
         </tr>
       {% endfor %}
     </table>
     {{ render_pagination(pagination) }}
   </div>
+  <script type="text/javascript">
+  $(document).ready(function() {
+      $('#games tr').click(function() {
+          var href = $(this).find("a").attr("href");
+          if(href) {
+              window.location = href;
+          }
+      });
+  });
+  </script>
 {% endmacro %}
 
 {% macro render_comments(comments, pagination) %}
@@ -90,7 +100,7 @@
       {% for comment in comments %}
         <tr>
             <td style="display:none;"> <a href='{{ url_for("view_comment", comment_id=comment._id) }}' style="display:none;"></a> </td>
-            <td>{{ render_game_date(comment.date) }}</td>
+            <td>{{ render_date_time(comment.date) }}</td>
             <td>{{ comment.user.username }}</td>
             <!-- TODO -->
             <td>{{ comment.text }}</td>
@@ -99,4 +109,14 @@
     </table>
     {{ render_pagination(pagination) }}
   </div>
+  <script type="text/javascript">
+  $(document).ready(function() {
+      $('#comments tr').click(function() {
+          var href = $(this).find("a").attr("href");
+          if(href) {
+              window.location = href;
+          }
+      });
+  });
+  </script>
 {% endmacro %}

@@ -35,7 +35,7 @@ class Pagination(object):
             yield self.pages
 
     def has_previous(self):
-        return self.page > 1 
+        return self.page > 1
 
     def has_next(self):
         return self.page < self.pages

@@ -49,7 +49,18 @@
     </div>
 
     <div class="container">
-      {% block content %} {% endblock %}
+      <! -- used for game viewing -->
+      {% block raw_content %} {% endblock %}
+      <! -- used for table views: games list, user profile -->
+      <div class="row" style="margin-top: 20px;">
+        <div class="span8 offset2">
+          {% block thin_content %} {% endblock %}
+        </div>
+      </div>
+      <! -- used for small forms: login, signup, game upload -->
+      <div style="width: 300px; margin: auto; margin-top: 100px;">
+        {% block centered_content %} {% endblock %}
+      </div>
     </div>
   </body>
 </html>
