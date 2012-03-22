@@ -22,7 +22,7 @@ class CursorError(Exception):
     pass
 
 class Cursor:
-    """Abstraction of navigation and manipulation of the sgf parsed game."""
+    """Abstraction of navigation and manipulation of the parsed sgf game."""
     def __init__(self, nodes):
         self.nodes = nodes
         if not len(nodes):
@@ -33,7 +33,14 @@ class Cursor:
 
     def get_node(self):
         """Returns current node."""
-        return self.stack[-1][0]
+        # TODO ugly, make it explicit when we use raw vs. node structures
+        node = self.stack[-1][0]
+        if type(node) == Node:
+            return node
+        elif type(node) == dict:
+            return Node(node)
+        else:
+            raise ValueError("unexpected value")
 
     def has_variants(self):
         """Check if current node has multiple children (variants)."""
@@ -130,7 +137,7 @@ class Cursor:
                     yield variant[0]
 
 class Node(dict):
-    """ Representation of a single node in a game.  """
+    """Representation of a single node in a game."""
     def __init__(self, *a, **k):
         super(Node, self).__init__(*a, **k)
 
@@ -142,6 +149,11 @@ class Node(dict):
            self.get("B", None) != other.get("B", None):
             return False
         return True
+
+    def to_sgf(self):
+        """Returns sgf representation of the node. Properties are sorted alphabetically."""
+        properties = ["%s[%s]" % (key, value) for key, value in self.items() if key != "variants"]
+        return ";" + "".join(sorted(properties))
 
 class SgfHandler:
     """
@@ -260,12 +272,47 @@ def _runParser(sgf, handler):
             handler.on_property(prop_name, prop_value)
         elif state == LexState.NODE or state == LexState.PROPERTY:
             acc += c
-        #print(handler)
+
+def makeSgf(coll):
+    """Inverse of parseSgf. Takes Sgf collection and produces string with sgf representation."""
+    sgf = ""
+    for game in coll:
+        sgf += _makeSgfCursor(Cursor(game))
+    return sgf
+
+def _makeSgfCursor(cursor):
+    begin = cursor.get_node()
+    if not begin:
+        return ""
+    sgf = "("
+    finished = False
+    while not finished:
+        variants_num = cursor.get_variants_num()
+        node = cursor.get_node()
+        sgf += node.to_sgf()
+        if variants_num == 1:
+            finished = not cursor.next()
+        else:
+            # recursively solve variants
+            for index in xrange(variants_num):
+                cursor.next(index)
+                sgf += _makeSgfCursor(cursor)
+                cursor.previous()
+            finished = True
+    # unroll the cursor
+    while cursor.get_node() != begin:
+        cursor.previous()
+    return sgf + ")"
 
 # tests
 import unittest
 
 class TestSgf(unittest.TestCase):
+    @staticmethod
+    def _trim_sgf_whitespace(sgf_str):
+        import re
+        return re.sub(r"\s+", "", sgf_str)
+
     def test_simple(self):
         """ Tests simple sgf parsing with one game in collection, no branches and no errors. """
         sgf = """
@@ -274,6 +321,7 @@ class TestSgf(unittest.TestCase):
         coll = parseSgf(sgf)
         self.assertEqual(coll,
             [[{'SZ': '19', 'GM': '1', 'FF': '4'}, {'B': 'aa'}, {'W': 'bb'}, {'B': 'cc'}]])
+        self.assertEqual(self._trim_sgf_whitespace(sgf), makeSgf(coll))
 
     def test_more_games(self):
         """ Tests >1 games in collection are possible. """
@@ -284,6 +332,7 @@ class TestSgf(unittest.TestCase):
         coll = parseSgf(sgf)
         self.assertEqual(coll,
             [[{'FF': '4'}, {'B': 'aa'}, {'W': 'bb'}, {'B': 'cc'}], [{'FF': '5'}, {'W': 'dd'}, {'B': 'ee'}, {'W': 'ff'}]])
+        self.assertEqual(self._trim_sgf_whitespace(sgf), makeSgf(coll))
 
     def test_no_games(self):
         """ Tests 0 games is invalid. """
@@ -314,6 +363,7 @@ class TestSgf(unittest.TestCase):
         self.assertEqual(coll,
             [[{'SZ': '19', 'GM': '1', 'FF': '4'}, {'B': 'aa'},
             {'variants': [[{'B': 'cc'}, {'W': 'dd'}, {'B': 'ee'}], [{'B': 'hh'}, {'W': 'hg'}]], 'W': 'bb'}]])
+        self.assertEqual(self._trim_sgf_whitespace(sgf), makeSgf(coll))
 
     def test_multi_branches(self):
         """ Tests having two nodes with variations one of them with three. """
@@ -331,6 +381,7 @@ class TestSgf(unittest.TestCase):
                    [{'B': 'hh'}, {'W': 'gg'}],
                    [{'B': 'ii'}, {'W': 'jj'}]],
                'W': 'bb'}]])
+        self.assertEqual(self._trim_sgf_whitespace(sgf), makeSgf(coll))
 
 if __name__ == "__main__":
     unittest.main()

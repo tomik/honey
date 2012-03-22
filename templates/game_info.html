@@ -3,7 +3,9 @@
 {% from "macros.html" import render_date_time %}
 
 <div id='game_info'>
-  <h4>Game details</h4>
+  <h4>Game details
+  <a href="{{ url_for('view_sgf', game_id=game._id) }}" style="font-weight: normal;">sgf</a>
+ </h4>
   <dl class="dl-horizontal">
     <dt>red:</dt>
     <dd class="red">{{ game.player1 }}</dd>

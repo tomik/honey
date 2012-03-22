@@ -7,6 +7,7 @@ from werkzeug import  generate_password_hash
 
 import db
 import forms
+import sgf
 from core import app
 from pagination import Pagination
 
@@ -91,19 +92,13 @@ def post_comment():
         abort(500)
     return _view_game(form.game_id.data, [], form)
 
-# TODO how to handle not-uploaded games?
-@app.route("/new_game")
-def new_game():
-    """Start a new game."""
-    return render_template("view_game.html", input_sgf=None)
-
-# TODO handle not-uploaded games?
-@app.route("/lg/<lg_game_id>")
-def lg_game(lg_game_id):
-    """Views lg game for analysis only."""
-    f = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % lg_game_id)
-    return render_template("view_game.html",
-        lg_id=lg_game_id, input_sgf=f.readlines())
+@app.route("/view_sgf/<game_id>")
+def view_sgf(game_id):
+    """Views sgf for game identified by game_id"""
+    game = db.get_game(game_id)
+    if not game:
+        abort(404)
+    return sgf.makeSgf([game["nodes"]])
 
 @app.route("/view_game/<game_id>")
 def view_game(game_id):

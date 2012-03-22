@@ -70,7 +70,8 @@ def create_game(user_id, sgf_str):
     except sgf.SgfParseError, e:
         app.logger.warning("cannot parse sgf: error(%s) sgf(%s)" % (str(e), sgf_str))
         return False
-    # TODO validate
+    # TODO validate sgf
+    # TODO allow upload of multiple games
     sgf_game = sgf_coll[0]
     game = {"user_id": user_id,
             "date": datetime.datetime.now(),
