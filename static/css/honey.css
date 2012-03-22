@@ -12,6 +12,11 @@
   color: blue;
 }
 
+.child_mark {
+  font-weight: bold;
+  font-size: 13pt;
+}
+
 /*Twitter bootstrap extensions*/
 
 .pointer-on-hover:hover {
