@@ -1,27 +1,18 @@
 
-import subprocess
 import urllib
 import random
 
-from shovel import task
-from werkzeug import generate_password_hash
-
-import db
-from core import app
-
-@task
-def dev(db_path="~/data/db", port=27017):
-    """Runs the development mongo db server."""
-    subprocess.call("killall mongod 2>/dev/null", shell=True)
-    subprocess.call("mongod --rest --dbpath %s --port %s 1>mongod.log 2>/dev/null &" % (db_path, port), shell=True)
-
-@task
 def setup():
     """
     Setup simple fixtures.
 
     Creates couple of games, users, comments and variants for manual testing.
+    Requires db server to be running.
     """
+    import db
+    from core import app
+    from werkzeug import generate_password_hash
+
     # clear the database
     app.db.games.remove()
     app.db.users.remove()
