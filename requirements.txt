@@ -1,3 +1,4 @@
+Fabric==1.4.0
 Flask==0.6.1
 Flask-WTF==0.5.2
 Jinja2==2.5.5
@@ -6,6 +7,7 @@ Twisted==8.2.0
 WTForms==0.6.3
 Werkzeug==0.6.2
 altgraph==0.6.8.dev
+argparse==1.2.1
 bdist-mpkg==0.4.3.dev
 bonjour-py==0.3
 ipython==0.12
@@ -13,8 +15,10 @@ macholib==1.2.1.dev
 mercurial==2.0.2
 modulegraph==0.7.2.dev
 numpy==1.2.1
+paramiko==1.7.7.1
 py2app==0.4.2
 pyOpenSSL==0.7
+pycrypto==2.5
 pymongo==2.1.1
 pyobjc-core==2.2b3
 pyobjc-framework-AddressBook==2.2b3
@@ -49,6 +53,8 @@ pyobjc-framework-WebKit==2.2b3
 pyobjc-framework-XgridFoundation==2.2b3
 python-dateutil==1.2
 readline==6.2.1
+ssh==1.7.13
+twill==0.9
 virtualenv==1.6.1
 wsgiref==0.1.2
 wxPython==2.8.8.1
