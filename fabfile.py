@@ -29,3 +29,8 @@ def setup():
         sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % id).read()
         user_id = random.choice(list(app.db.users.find()))["_id"]
         game = db.create_game(user_id, sgf)
+    for id in go_lg_games:
+        print("Creating lg game %s" % id)
+        sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.sgf" % id).read()
+        user_id = random.choice(list(app.db.users.find()))["_id"]
+        game = db.create_game(user_id, sgf)

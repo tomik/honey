@@ -49,35 +49,34 @@ class Node
   toStr: () ->
     return "{id #{@id} move #{@move.toStr()}}"
 
-# ==>> SGF PARSING AND OUTPUTTING
+# ==>> RAW FORMAT PARSING AND OUTPUTTING
 
-sgfParseNodes = (nodes, handler) ->
+rawParseNodes = (nodes, handler) ->
   for node in nodes
     move = new Move(node)
     handler.onMove(move)
     if "variants" of node
       for variant in node["variants"]
         handler.onBranchStart()
-        sgfParseNodes(variant, handler)
+        rawParseNodes(variant, handler)
         handler.onBranchStop()
 
-sgfParse = (sgf, handler) ->
-  nodes = $.parseJSON(sgf)
+rawParse = (nodes, handler) ->
   if nodes.length <= 0
     return
   gameNode = nodes[0]
   handler.onGameProperty(propName, propValue) for propName, propValue of gameNode
-  sgfParseNodes(nodes[1...nodes.length], handler)
+  rawParseNodes(nodes[1...nodes.length], handler)
 
-# sgf parsing object
-class SgfParseHandler
+# parsing object
+class RawParseHandler
   constructor: (@game) ->
     # stack of nodes where branching happens
     # used for jumping back once branch is finished
     @junctionStack = []
 
   onGameProperty: (propName, propValue) ->
-    console.log("sgf on game property #{propName}=#{propValue}")
+    console.log("game property #{propName}=#{propValue}")
     if propName == "FF" and propValue != "4"
       throw "invalid game type"
     else if propName == "SZ" and propValue != "13"
@@ -98,8 +97,8 @@ class SgfParseHandler
       @game.properties.hexEvent = propValue
 
   onMove: (move) ->
-    console.log("sgf move #{move.toStr()}")
-    @game.playMove(move)
+    console.log("raw move #{move.toStr()}")
+    @game.playMove(move, true)
 
   onBranchStart: ->
     @junctionStack.push(@game.currNode)
@@ -186,7 +185,7 @@ class Game
   getNodeFullPath: (node) ->
     path = []
     while node.father != null
-      path.push(node.toSgfDict())
+      path.push(node.move.toRawDict())
       node = node.father
     return path.reverse()
 
@@ -223,32 +222,48 @@ class Commenter
       elem = $("#comment_#{comment[0]}")
       elem.show()
 
+# ==>> COMMENTS
+
+class Bridge
+  constructor: (inputRaw, comments, initPath) ->
+    @game = _game
+    @inputRaw = $.parseJSON(inputRaw)
+    @comments = $.parseJSON(comments)
+    @initPath = $.parseJSON(initPath)
+
+  getCurrNodeShortPath: () ->
+    # Returns short path to current node in json format as [(branch, node), ...].
+    # Example:
+    # [(0, 7), (1, 3)] means:
+    # Move on 7th node in the main branch, then move to the 3rd node on the first branch
+    return @game.getNodeShortPath(@game.currNode)
+
+  getCurrNodeFullPath: () ->
+    # Returns full path to current node in json format as [node, node, ...].
+    # Example:
+    # [{"W": "dd"}, {"B": "cc"}]
+    return @game.getNodeFullPath(@game.currNode)
+
 # ==>> GLOBALS
 
 _lastKey = 0
 # global so we can access this from the console
 @_game = _game = new Game
+# global this is accessed by the template
+@Bridge = Bridge
 _logger = new Logger()
 _dispatcher = new EventDispatcher()
 _dispatcher.register(_logger)
 _dispatcher.register(new Commenter())
 _dispatcher.register(new Display())
 _dispatcher.register(new Controller())
-_sgfParseHandler = new SgfParseHandler(_game)
-_bridge.getCurrNodeShortPath = -> _game.getNodeShortPath(_game.currNode)
-_bridge.getCurrNodeFullPath = -> _game.getNodeFullPath(_game.currNode)
 
 # ==>> DOCUMENT FUNCTIONS
 
 # load position
 $ ->
   _dispatcher.dispatch("onInit", _game)
-  sgfTest = "(;FF[4]EV[hex.mc.2011.feb.1.10]PB[Tiziano]PW[sleepywind]
-                SZ[13]GC[game #1301977]SO[http://www.littlegolem.com];
-                W[ll];B[swap];W[gg];B[fi];W[ih];B[gd];W[id];B[hj];W[ji])"
-  # inputSgf is filled into bridge in the template
-  inputSgf = _bridge.inputSgf
-  sgfParse(inputSgf or= sgfTest, _sgfParseHandler)
+  rawParse(_bridge.inputRaw, new RawParseHandler(_game))
   # jump to the beginning
   while _game.currNode.father
     _game.unplayMove()

@@ -8,9 +8,9 @@ FIELD_X_DIFF = 25
 FIELD_Y_DIFF = 21
 FIELD_RADIUS = 10
 
-STONE_IMG_RED = "/static/img/red_small.gif"
-STONE_IMG_BLUE = "/static/img/blue_small.gif"
-LAST_IMG  = "/static/img/last.gif"
+STONE_IMG_RED = "/static/img/hex_red.gif"
+STONE_IMG_BLUE = "/static/img/hex_blue.gif"
+LAST_IMG  = "/static/img/hex_last.gif"
 
 # ==>> BASIC ENUMS
 
@@ -31,10 +31,10 @@ MoveType = {
 flipColor = (color) ->
   if color == Color.BLUE then Color.RED else Color.BLUE
 
-colorToSgf = (color) ->
+colorToRaw = (color) ->
   if color == Color.BLUE then "B" else "W"
 
-coordToSgf = (coord) ->
+coordToRaw = (coord) ->
   ALPHABET[coord.x] + ALPHABET[coord.y]
 
 class HexMove
@@ -68,12 +68,12 @@ class HexMove
       return "[resign]"
     "[#{@x} #{@y}] #{@color}"
 
-  toSgfDict: ->
+  toRawDict: ->
     d = {}
     if @moveType == MoveType.SWAP
-      d[colorToSgf(@color)] = "swap"
+      d[colorToRaw(@color)] = "swap"
     else
-      d[colorToSgf(@color)] = coordToSgf({x: @x, y: @y})
+      d[colorToRaw(@color)] = coordToRaw({x: @x, y: @y})
     d
 
 # produces position with center of the field (i.e. for empty field)
@@ -181,7 +181,7 @@ class HexDisplay
   onInit: (game) ->
     # html board
     board = $("#board")
-    board.append($("<img alt='' class='boardimage' galleryimg='no' id='boardimage' src='/static/img/board.gif' usemap='#empty_fields' border='0'/>"))
+    board.append($("<img alt='' class='boardimage' galleryimg='no' id='boardimage' src='/static/img/hex_board.gif' usemap='#empty_fields' border='0'/>"))
 
   onPlayMove: (game, node) ->
     if node.move.moveType == MoveType.RESIGN
