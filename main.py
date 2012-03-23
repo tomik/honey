@@ -1,6 +1,7 @@
 import urllib
 import json
 from functools import wraps
+from datetime import datetime
 
 from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug import  generate_password_hash
@@ -10,6 +11,10 @@ import forms
 import sgf
 from core import app
 from pagination import Pagination
+
+@app.template_filter()
+def now(format):
+    return datetime.now().strftime(format)
 
 def login_required(f):
     @wraps(f)
