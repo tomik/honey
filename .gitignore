@@ -1,6 +1,8 @@
 static/js/honey.js
 static/js/bridge.js
 static/js/hex.js
+static/js/go.js
 env
 *pyc
 TODO.txt
+*.DS_STORE

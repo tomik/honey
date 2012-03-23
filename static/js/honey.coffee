@@ -79,8 +79,7 @@ class RawParseHandler
     console.log("game property #{propName}=#{propValue}")
     if propName == "FF" and propValue != "4"
       throw "invalid game type"
-    else if propName == "SZ" and propValue != "13"
-      throw "invalid board size"
+    # TODO handle board size
     # player names
     else if propName == "PB"
       @game.properties.red = propValue
