@@ -112,8 +112,6 @@ def get_games_for_user(user_id, ordering=None, reversed=False):
 def patch_game_with_variant(game, full_path):
     """Adds variant to given game if it doesn't exist yet."""
     cursor = sgf.Cursor(game["nodes"])
-    # skip the root
-    # cursor.next()
     for node_dict in full_path:
         node = sgf.Node(node_dict)
         for variant in xrange(cursor.get_variants_num()):

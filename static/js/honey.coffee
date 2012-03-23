@@ -34,7 +34,7 @@ class EventDispatcher
 
 class Node
   @nextNodeId: 0
-  constructor: (@move, @father) ->
+  constructor: (@move, @father, @committed=false) ->
     @id = Node.nextNodeId++
     @children = []
     @number = if @father then @father.number + 1 else 0
@@ -115,21 +115,21 @@ class SgfParseHandler
 
 class Game
   constructor: () ->
-    @currNode = @root = new Node(new Move(), null)
+    @currNode = @root = new Node(new Move(), null, true)
     @properties = {}
 
   # shortcut for playing existing nodes
   playNode: (node) ->
-    @playMove(node.move)
+    @playMove(node.move, true)
 
   # plays a move on the board and updates data structures
-  playMove: (move) ->
+  playMove: (move, existingMove=false) ->
     [x, y, color, moveType] = [move.x, move.y, move.color, move.moveType]
     # are we continuing in the existing branch ?
     newNode = findElem @currNode.children, ((e) -> e.move == move)
     # new move
     if not newNode
-      newNode = new Node(move, @currNode)
+      newNode = new Node(move, @currNode, existingMove)
       newNode.father.children.push(newNode)
       _dispatcher.dispatch("onCreateNode", this, newNode)
     @currNode = newNode
@@ -153,8 +153,13 @@ class Game
     while node.father != null
       if node.father.children.length > 0
         i = node.father.getChildIndex(node)
-        if i != 0
-          path.push([i, index])
+        # ignore not committed siblings
+        # this makes an assumption that all the non-committed changes will be lost (no ajax)
+        committed = ((if c.committed then 1 else 0) for c in node.father.children)
+        committedSum = committed.reduce (a, b) -> a + b
+        i = Math.min i, committedSum
+        if i > 0
+          path.push([i, index + 1])
           index = -1
       node = node.father
       index += 1
