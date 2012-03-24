@@ -22,6 +22,22 @@ randomPos = ->
 # ==>> BASIC TYPES
 
 class EventDispatcher
+  ###
+  # This class raises events for the listeners.
+  #
+  # The events can be following:
+  #
+  # onInit(game) - raised in the very beginning
+  # onLoad(game) - raised when nodes were loaded but before the initial position is setup
+  # onPlayMove(game, node) - raised after current node is updated forward
+  # onUnplayMove(game, node) - raised after current node is updated backward
+  # onCreateNode(game, node) - raised when new node is created
+  #
+  # Notes:
+  # * Node structure initialization from the input format is done without raising play/unplay events.
+  # * New moves (not following existing line of play) must pass model.isValidMove Before onPlayMove is raised
+  # * Listener is invoked if it contains a function with the same name as the event (i.e. onLoad)
+  ###
   listeners: []
 
   register: (listener) ->
@@ -96,8 +112,11 @@ class RawParseHandler
       @game.properties.hexEvent = propValue
 
   onMove: (move) ->
-    console.log("raw move #{move.toStr()}")
-    @game.playMove(move, true)
+    # create the node for the move
+    # we don't question node's validity as the model is not invoked at all
+    newNode = new Node(move, @game.currNode, true)
+    newNode.father.children.push(newNode)
+    @game.currNode = newNode
 
   onBranchStart: ->
     @junctionStack.push(@game.currNode)
@@ -107,7 +126,7 @@ class RawParseHandler
       throw "parsing error"
     topNode = @junctionStack.pop()
     while @game.currNode != topNode
-      @game.unplayMove()
+      @game.currNode = @game.currNode.father
 
 # ==>> Game Logic
 
@@ -116,30 +135,43 @@ class Game
     @currNode = @root = new Node(new Move(), null, true)
     @properties = {}
 
+  jumpToRoot: () ->
+    @currNode = @root
+
   # shortcut for playing existing nodes
-  playNode: (node) ->
-    @playMove(node.move, true)
+  playNode: (node, redraw) ->
+    @playMove(node.move, redraw)
 
   # plays a move on the board and updates data structures
-  playMove: (move, existingMove=false) ->
+  playMove: (move, redraw=true) ->
+    # TODO prevent playing resign moves
+    #if node.move.moveType == MoveType.RESIGN or not node.father
+      #return
     [x, y, color, moveType] = [move.x, move.y, move.color, move.moveType]
     # are we continuing in the existing branch ?
     newNode = findElem @currNode.children, ((e) -> e.move == move)
     # new move
     if not newNode
-      newNode = new Node(move, @currNode, existingMove)
+      if not _model.isValidMove(move)
+        console.log("Game: invalid move #{move.toStr()}")
+        return
+      newNode = new Node(move, @currNode, false)
       newNode.father.children.push(newNode)
       _dispatcher.dispatch("onCreateNode", this, newNode)
     @currNode = newNode
     _dispatcher.dispatch("onPlayMove", this, newNode)
+    if redraw
+      _dispatcher.dispatch("onRedraw", this)
 
   # removes last move from the board
-  unplayMove: () ->
+  unplayMove: (redraw=true) ->
     if not @currNode.father
       return
     node = @currNode
     @currNode = @currNode.father
-    _dispatcher.dispatch("onUnPlayMove", this, node)
+    _dispatcher.dispatch("onUnplayMove", this, node)
+    if redraw
+      _dispatcher.dispatch("onRedraw", this)
 
   # returns a json object representing current node short path
   # short path is in the form [(branch_index, node_index), (branch_index, node_index), ...]
@@ -174,7 +206,8 @@ class Game
         throw "Invalid branch"
       for i in [0...jump]
         node = node.children[branch]
-        @playNode(node)
+        redraw = true
+        @playNode(node, redraw)
         # branch only once
         branch = 0
 
@@ -192,16 +225,22 @@ class Game
 
 class Logger
   onInit: (game) ->
-    console.log("Init")
+    console.log("Logger: received onInit")
+
+  onLoad: (game) ->
+    console.log("Logger: received onLoad")
 
   onCreateNode: (game, node) ->
-    console.log("Created node #{node.toStr()}")
+    console.log("Logger: received onCreateNode node #{node.toStr()}")
 
   onPlayMove: (game, node) ->
-    console.log("Playing node #{node.toStr()}")
+    console.log("Logger: received onPlayMove node #{node.toStr()}")
 
-  onUnPlayMove: (game, node) ->
-    console.log("Unplaying node #{node.toStr()}")
+  onUnplayMove: (game, node) ->
+    console.log("Logger: received onUnplayMove node #{node.toStr()}")
+
+  onRedraw: (game) ->
+    console.log("Logger: received onRedraw")
 
 # ==>> COMMENTS
 
@@ -209,7 +248,7 @@ class Commenter
   onPlayMove: (game, node) ->
     @updateComments(game)
 
-  onUnPlayMove: (game, node) ->
+  onUnplayMove: (game, node) ->
     @updateComments(game)
 
   updateComments: (game) ->
@@ -252,9 +291,11 @@ _lastKey = 0
 @Bridge = Bridge
 _logger = new Logger()
 _dispatcher = new EventDispatcher()
+_model = new Model()
 _dispatcher.register(_logger)
+_dispatcher.register(_model)
 _dispatcher.register(new Commenter())
-_dispatcher.register(new Display())
+_dispatcher.register(new Display(_model))
 _dispatcher.register(new Controller())
 
 # ==>> DOCUMENT FUNCTIONS
@@ -262,14 +303,13 @@ _dispatcher.register(new Controller())
 # load position
 $ ->
   _dispatcher.dispatch("onInit", _game)
+  # creates the node structure with moves
   rawParse(_bridge.inputRaw, new RawParseHandler(_game))
-  # jump to the beginning
-  while _game.currNode.father
-    _game.unplayMove()
+  _game.jumpToRoot()
+  _dispatcher.dispatch("onLoad", _game)
   # follow the init path
   # this is the short path ([[branchId, jump], [branchId, jump], ...])
   _game.followNodeShortPath(_bridge.initPath)
-  _dispatcher.dispatch("onLoad", _game)
 
 # handle keydown including holding the key
 $(document).keydown((e) ->
@@ -290,38 +330,41 @@ $(document).keyup((e) ->
 
 # key handling logic
 keydownHandler = (key) ->
+  redraw = true
   # move shortcuts 1 - 9
   if key in [49...58]
     variant = key - 49
     if _game.currNode.children.length > variant
       node = _game.currNode.children[variant]
-      _game.playNode(node)
+      _game.playNode(node, redraw)
   # left
   else if key == 37
     if _game.currNode.father
-      _game.unplayMove()
+      _game.unplayMove(redraw)
       # this event is repeatable
       return true
   # right
   else if key == 39
     if _game.currNode.children.length
       node = _game.currNode.children[0]
-      _game.playNode(node)
+      _game.playNode(node, redraw)
       # this event is repeatable
       return true
   # up - go to last junction
   else if key == 38
     if _game.currNode.father
-      _game.unplayMove()
+      _game.unplayMove(not redraw)
       while _game.currNode.father and not _game.currNode.hasBranches()
-        _game.unplayMove()
+        _game.unplayMove(not redraw)
+      _dispatcher.dispatch("onRedraw", _game)
       return true
   # down - go to next junction
   else if key == 40
     if _game.currNode.children.length
-      _game.playNode(_game.currNode.children[0])
+      _game.playNode(_game.currNode.children[0], not redraw)
       while _game.currNode.children.length and not _game.currNode.hasBranches()
-        _game.playNode(_game.currNode.children[0])
+        _game.playNode(_game.currNode.children[0], not redraw)
+      _dispatcher.dispatch("onRedraw", _game)
       return true
   else
     console.log("pressed #{key}")

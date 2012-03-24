@@ -37,7 +37,7 @@ colorToRaw = (color) ->
 coordToRaw = (coord) ->
   ALPHABET[coord.x] + ALPHABET[coord.y]
 
-class HexMove
+class Move
   constructor: (rawMove=0) ->
     if not rawMove
       return
@@ -98,6 +98,11 @@ coordToPosForText = (coord) ->
 
 # ==>> RULES
 
+class Model
+  # hex is the game with simplest rules ever
+  isValidMove: (move) ->
+    # TODO check if the field is empty ?
+    true
 
 # ==>> DISPLAY
 
@@ -177,7 +182,7 @@ removeLastMoveMark = ->
   if(last)
     last.hide()
 
-class HexDisplay
+class Display
   onInit: (game) ->
     # html board
     board = $("#board")
@@ -188,12 +193,12 @@ class HexDisplay
       return
     putNodeOnBoard(node)
 
-  onUnPlayMove: (game, node) ->
+  onUnplayMove: (game, node) ->
     removeNodeFromBoard(node)
 
 # ==>> CONTROLLER
 
-class HexController
+class Controller
   constructor: () ->
     @game = null
 
@@ -226,12 +231,13 @@ class HexController
         y: Math.floor(i / BOARD_SIZE)
       @setupEmptyField(coord)
 
-  onUnPlayMove: (game, node) ->
+  onUnplayMove: (game, node) ->
     @setupEmptyField({x:node.move.x, y:node.move.y})
 
 # ==>> EXPORT
 
-@Display = HexDisplay
-@Move = HexMove
-@Controller = HexController
+@Display = Display
+@Move = Move
+@Model = Model
+@Controller = Controller
 
