@@ -1,36 +1,82 @@
 
-# db objects:
-#
-# db.games:
-# { "user_id": "12345",
-#   "date": "2011-02-17",
-#   "player1": "black",
-#   "player2": "white",
-#   "result": "W + res.",
-#   "nodes": [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
-#              {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
-#
-# db.comments:
-# {"user_id": "12345",
-#  "date": "2011-02-17",
-#  "game_id": gameID
-#  # short path to the node where comment applies in form [(branch, node-in-branch), ...]
-#  "path": [(0, 7), (1, 5), (1, 2)]
-#  "text": "This move is wrong"}
-#
-# db.users:
-# {"username": "slpwnd",
-#  "joined on": 2011-02-17,
-#  "email": "slpwnd@gmail.com",
-#  "passwd": "hashed passwd"}
-#
+# Simple abstraction of common db tasks.
+
+# Under the hood MongoKit is used and therefore all the returned objects (i.e. via get_game, get_comment)
+# are actually MongoKit classes. The rest of the application knows nothing about MongoKit or even MongoDB.
 
 import datetime
 
 from bson.objectid import ObjectId
 import sgf
+import mongokit
 
 from core import app
+
+# helpers
+db_games = app.db_conn.games
+db_comments = app.db_conn.comments
+db_users = app.db_conn.users
+
+@app.conn.register
+class Game(mongokit.Document):
+    use_dot_notation = True
+    structure = {
+            "user_id": ObjectId,
+            "date": datetime.datetime,
+            # parsed nodes from sgf
+            # first node is the root with game meta information
+            # example: [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
+            #   {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
+            "nodes": list,
+            }
+
+    @property
+    def result(self):
+        root = self.nodes[0]
+        return root.get("RE", "?")
+
+    @property
+    def player1(self):
+        root = self.nodes[0]
+        return root.get("PB", "?")
+
+    @property
+    def player2(self):
+        root = self.nodes[0]
+        return root.get("PW", "?")
+
+@app.conn.register
+class Comment(mongokit.Document):
+    use_dot_notation = True
+    structure = {
+            "user_id": ObjectId,
+            "game_id": ObjectId,
+            "date": datetime.datetime,
+            # short path to the node where comment applies in form [(branch, node-in-branch), ...]
+            # example: [(0, 7), (1, 5), (1, 2)]
+            "path": list,
+            "text": unicode,
+            }
+
+@app.conn.register
+class User(mongokit.Document):
+    use_dot_notation = True
+    structure = {
+            "username": str,
+            "email": str,
+            "passwd": str,
+            "joined_date": datetime.datetime,
+            }
+
+def reset():
+    """
+    Resets all the date in all the collections.
+
+    Only for dev purpose.
+    """
+    db_games.remove()
+    db_users.remove()
+    db_comments.remove()
 
 def annotate(obj, recursive=False):
     """
@@ -38,30 +84,40 @@ def annotate(obj, recursive=False):
     """
     # TODO use reference
     if "user_id" in obj:
-        obj["user"] = app.db.users.find_one({"_id": ObjectId(obj["user_id"])})
+        obj["user"] = db_users.User.find_one({"_id": ObjectId(obj["user_id"])})
         if recursive:
             annotate(obj["user"], recursive=True)
     if "game_id" in obj:
-        obj["game"] = app.db.games.find_one({"_id": ObjectId(obj["game_id"])})
+        obj["game"] = db_games.Game.find_one({"_id": ObjectId(obj["game_id"])})
         if recursive:
             annotate(obj["user"], recursive=True)
 
+def get_users():
+    """
+    Fetches all the users based on given ordering.
+
+    @return users iterator
+    """
+    return db_users.User.find()
+
 def get_user(user_id):
     """Returns user for given id."""
-    return app.db.users.find_one({"_id": ObjectId(user_id)})
+    return db_users.User.find_one({"_id": ObjectId(user_id)})
 
 def get_user_by_username(username):
     """Returns user for given username."""
-    return app.db.users.find_one({"username": username})
+    return db_users.User.find_one({"username": username})
 
 def create_user(username, email, passwd_hash):
     """Creates user in the db."""
-    user = {"username": username,
-            "email": email,
-            "passwd": passwd_hash,
-            "joined_date": datetime.datetime.now()}
-    user_id = app.db.users.insert(user)
-    return get_user(user_id)
+    user = db_users.User()
+    user["username"] = username
+    user["email"] = email
+    user["passwd"] = passwd_hash
+    user["joined_date"] = datetime.datetime.now()
+    user.save()
+    user_id = user["_id"]
+    return user
 
 def create_game(user_id, sgf_str):
     """Parses and validates sgf and stores a game in the database."""
@@ -73,25 +129,27 @@ def create_game(user_id, sgf_str):
     # TODO validate sgf
     # TODO allow upload of multiple games
     sgf_game = sgf_coll[0]
-    game = {"user_id": user_id,
-            "date": datetime.datetime.now(),
-            "player1": sgf_game[0].get("PB", "?"),
-            "player2": sgf_game[0].get("PW", "?"),
-            "result": sgf_game[0].get("RE", "?"),
-            "nodes": sgf_game}
+    game = db_games.Game()
+    game["user_id"] = user_id
+    game["date"] = datetime.datetime.now()
+    game["nodes"] = sgf_game
     # fix the result for little golem format
-    if game["result"] in ["B", "W"]:
-        game["result"] = game["result"] + "+"
-    game_id = app.db.games.insert(game)
-    return get_game(game_id)
+    try:
+        if game["nodes"][0]["RE"] in ["B", "W"]:
+           game["nodes"][0]["RE"] = game["nodes"][0]["RE"] + "+"
+    except KeyError:
+        pass
+    game.save()
+    game_id = game["_id"]
+    return game
 
 def update_game(game):
     """Updates game in the db."""
-    app.db.games.update({"_id": game["_id"]}, game)
+    game.save()
 
 def get_game(id):
     """Fetches game for given id."""
-    return app.db.games.find_one({"_id": ObjectId(id)})
+    return db_games.Game.find_one({"_id": ObjectId(id)})
 
 # TODO ordering and reversed
 def get_games(ordering=None, reversed=False):
@@ -102,12 +160,12 @@ def get_games(ordering=None, reversed=False):
         "datetime" "activity" "player_strength" "popularity" "first_name" "second_name"
     @return games iterator
     """
-    return app.db.games.find()
+    return db_games.Game.find()
 
 # TODO ordering and reversed
 def get_games_for_user(user_id, ordering=None, reversed=False):
     """Same as get_games for a single user."""
-    return app.db.games.find({"user_id": user_id})
+    return db_games.Game.find({"user_id": user_id})
 
 def patch_game_with_variant(game, full_path):
     """Adds variant to given game if it doesn't exist yet."""
@@ -126,24 +184,28 @@ def patch_game_with_variant(game, full_path):
 
 def create_comment(user_id, game_id, path, text):
     """Creates comment."""
-    comment = {"text": text,
-               "date": datetime.datetime.now(),
-               "user_id": user_id,
-               "game_id": game_id,
-               "path": path}
-    comments = app.db.comments
-    comment_id = comments.insert(comment)
-    return get_comment(comment_id)
+    # game_id goes through the form post and doesn't retain its type
+    if type(game_id) != ObjectId:
+        game_id = ObjectId(game_id)
+    comment = db_comments.Comment()
+    comment["text"] = text
+    comment["date"] = datetime.datetime.now()
+    comment["user_id"] = user_id
+    comment["game_id"] = game_id
+    comment["path"] = path
+    comment.save()
+    comment_id = comment["_id"]
+    return comment
 
 def get_comment(id):
     """Fetches comment for given id."""
-    return app.db.comments.find_one({"_id": ObjectId(id)})
+    return db_comments.Comment.find_one({"_id": ObjectId(id)})
 
 def get_comments_for_game(game_id):
     """Fetches comments for given game."""
-    return app.db.comments.find({"game_id": game_id})
+    return db_comments.Comment.find({"game_id": game_id})
 
 def get_comments_for_user(user_id):
     """Fetches all comments made by given user."""
-    return app.db.comments.find({"user_id": user_id})
+    return db_comments.Comment.find({"user_id": user_id})
 
