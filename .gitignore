@@ -2,6 +2,8 @@ static/js/honey.js
 static/js/bridge.js
 static/js/hex.js
 static/js/go.js
+static/js/bootstrap*
+static/img/glyphicons*
 env
 *pyc
 TODO.txt
