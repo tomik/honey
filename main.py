@@ -1,4 +1,5 @@
 import urllib
+import urlparse
 import json
 from functools import wraps
 from datetime import datetime
@@ -52,9 +53,15 @@ def logout():
     flash("You were logged out")
     return redirect(url_for("main"))
 
-@app.route("/page/<int:page>")
-@app.route("/", defaults={"page": 1})
-def main(page):
+@app.route("/")
+def main():
+    """
+    Views all games.
+
+    Pagination is provided in query string via key page.
+    """
+    queries = dict(urlparse.parse_qsl(request.query_string))
+    page = int(queries.get("page", 1))
     per_page = app.config["games_per_page"]
     game_from, game_to = (page - 1) * per_page, page * per_page
     games_cursor = db.get_games()
@@ -124,15 +131,19 @@ def view_comment(comment_id):
         abort(404)
     return _view_game(comment.game_id, comment.path)
 
-@app.route("/view_user/<username>/games_page/<int:games_page>")
-@app.route("/view_user/<username>/comments_page/<int:comments_page>")
-@app.route("/view_user/<username>/games_page/<int:games_page>/comments_page/<int:comments_page>")
 @app.route("/view_user/<username>")
-def view_user(username, games_page=1, comments_page=1):
-    """Views existing user based on his username."""
+def view_user(username):
+    """
+    Views existing user based on his username.
+
+    Pagination is provided in query string via keys games_page, comments_page.
+    """
     user = db.get_user_by_username(username)
     if not user:
         abort(404)
+    queries = dict(urlparse.parse_qsl(request.query_string))
+    games_page = int(queries.get("games_page", 1))
+    comments_page = int(queries.get("comments_page", 1))
     # paginate games
     games_per_page = app.config["games_per_page_in_user_view"]
     games_from, games_to = (games_page - 1) * games_per_page, games_page * games_per_page
