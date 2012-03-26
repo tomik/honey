@@ -62,8 +62,8 @@ class Comment(mongokit.Document):
 class User(mongokit.Document):
     use_dot_notation = True
     structure = {
-            "username": str,
-            "email": str,
+            "username": unicode,
+            "email": unicode,
             "passwd": str,
             "joined_date": datetime.datetime,
             }
@@ -111,8 +111,8 @@ def get_user_by_username(username):
 def create_user(username, email, passwd_hash):
     """Creates user in the db."""
     user = db_users.User()
-    user.username = username
-    user.email = email
+    user.username = unicode(username)
+    user.email = unicode(email)
     user.passwd = passwd_hash
     user.joined_date = datetime.datetime.now()
     user.save()

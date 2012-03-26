@@ -121,12 +121,11 @@ class LoginForm(Form):
     def validate(self):
         if not Form.validate(self):
             return False
-        user = db.get_user_by_username(self.username.data)
-        if user is None:
+        self.user = db.get_user_by_username(self.username.data)
+        if self.user is None:
             self.username.errors = ("Unknown username",)
             return False
-        if not check_password_hash(user.passwd, self.password.data):
+        if not check_password_hash(self.user.passwd, self.password.data):
             self.password.errors = ("Invalid password",)
             return False
-        self.user = db.get_user_by_username(self.username.data)
         return True

@@ -46,8 +46,8 @@
   </div>
 {% endmacro %}
 
-{% macro render_user_link(user) %}
-  <a href='{{ url_for("view_user", username=user.username) }}'>{{ user.username }}</a>
+{% macro render_user_link(username) %}
+  <a href='{{ url_for("view_user", username=username) }}'>{{ username }}</a>
 {% endmacro %}
 
 {% macro render_date_time(date) %}
@@ -71,7 +71,7 @@
             <td>{{ game.player1 }}</td>
             <td>{{ game.player2 }}</td>
             <td>{{ game.result }}</td>
-            <td>{{ render_user_link(game.user) }}</td>
+            <td>{{ render_user_link(game.user.username) }}</td>
         </tr>
       {% endfor %}
     </table>

@@ -19,7 +19,7 @@ def now(format):
 def login_required(f):
     @wraps(f)
     def wrapper(*a, **k):
-        if session.get("user", None) is not None:
+        if session.get("username", None) is not None:
             return f(*a, **k)
         else:
             flash("You need to login to do that.")
@@ -32,7 +32,7 @@ def signup():
     if form.validate_on_submit():
         user = db.create_user(form.username.data, form.email.data,
                 generate_password_hash(form.password.data))
-        session["user"] = user
+        session["username"] = user.username
         flash("You have signed up sucessfully.")
         return redirect(url_for("main"))
     return render_template("signup.html", form=form, menu_toggle_signup=True)
@@ -41,14 +41,14 @@ def signup():
 def login():
     form = forms.LoginForm()
     if form.validate_on_submit():
-        session["user"] = form.user
+        session["username"] = form.user.username
         flash("You were logged in.")
         return redirect(url_for("main"))
     return render_template("login.html", form=form, menu_toggle_login=True)
 
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+    session.pop("username", None)
     flash("You were logged out")
     return redirect(url_for("main"))
 
@@ -72,7 +72,10 @@ def upload_game():
     form = forms.SgfUploadForm(request.form)
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
-            user = session["user"]
+            username = session["username"]
+            user = db.get_user_by_username(username)
+            if not user:
+                abort(500)
             game_id = db.create_game(user._id, form.sgf)
             if not game_id:
                 return render_template("upload_game.html", menu_toggle_upload=True, form=form)
@@ -87,7 +90,10 @@ def post_comment():
     """Posts comment for given game and path. Requires login."""
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
-        user = session["user"]
+        username = session["username"]
+        user = db.get_user_by_username(username)
+        if not user:
+            abort(500)
         comment = db.create_comment(user._id, form.game_id.data, form.short_path, form.comment.data)
         game = form.game
         patched_game = db.patch_game_with_variant(game, form.full_path)

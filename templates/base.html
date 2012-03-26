@@ -35,8 +35,8 @@
               <li {% if menu_toggle_faq %} class="active" {% endif %}><a href="{{url_for ('faq')}}">FAQ</a></li>
             </ul>
             <ul class="nav pull-right">
-              {% if session["user"] %}
-              <li>{{ render_user_link(session["user"]) }}</li>
+              {% if session["username"] %}
+              <li>{{ render_user_link(session["username"]) }}</li>
               <li><a href="/logout"> Logout </a></li>
               {% else %}
               <li {% if menu_toggle_login %} class="active" {% endif %}><a href="/login"> Login </a></li>

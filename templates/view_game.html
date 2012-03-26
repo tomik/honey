@@ -35,7 +35,7 @@
   <div class="span6">
     {% include "game_info.html" %}
     <h4 style="margin-bottom: 10px;">Comments</h4>
-    {% if session.user %}
+    {% if session.username %}
     <div id="post_comment">
         <form method="post" action="{{ url_for('post_comment') }}">
           {{ form.game_id(value=game._id) }}
@@ -53,7 +53,7 @@
       {% for comment in comments %}
       <p>
         <div class="comment" id="comment_{{comment._id}}">
-          <div> <strong>Posted by {{ render_user_link(comment.user) }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</strong></div>
+          <div> <strong>Posted by {{ render_user_link(comment.user.username) }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</strong></div>
           {{ comment.text }}
         </div>
       </p>

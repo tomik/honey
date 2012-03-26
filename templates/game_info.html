@@ -14,7 +14,7 @@
     <dt>result:</dt>
     <dd>{{ game.result }}</dd>
     <dt>uploaded by:</dt>
-    <dd>{{ render_user_link(game.user) }} on {{ render_date_time(game.date) }}</dd>
+    <dd>{{ render_user_link(game.user.username) }} on {{ render_date_time(game.date) }}</dd>
     {% if game.event %}
       <dt>event:</dt>
       <dd>{{ game.description }}</dd>
