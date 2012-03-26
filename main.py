@@ -73,7 +73,7 @@ def upload_game():
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
             user = session["user"]
-            game_id = db.create_game(user["_id"], form.sgf)
+            game_id = db.create_game(user._id, form.sgf)
             if not game_id:
                 return render_template("upload_game.html", menu_toggle_upload=True, form=form)
             return redirect(url_for("view_game", game_id=game_id))
@@ -88,11 +88,11 @@ def post_comment():
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
         user = session["user"]
-        comment = db.create_comment(user["_id"], form.game_id.data, form.short_path, form.comment.data)
+        comment = db.create_comment(user._id, form.game_id.data, form.short_path, form.comment.data)
         game = form.game
         patched_game = db.patch_game_with_variant(game, form.full_path)
         db.update_game(patched_game)
-        return redirect(url_for("view_comment", comment_id=comment["_id"]))
+        return redirect(url_for("view_comment", comment_id=comment._id))
     if not form.game_id.data:
         abort(500)
     return _view_game(form.game_id.data, [], form)
@@ -103,7 +103,7 @@ def view_sgf(game_id):
     game = db.get_game(game_id)
     if not game:
         abort(404)
-    return sgf.makeSgf([game["nodes"]])
+    return sgf.makeSgf([game.nodes])
 
 @app.route("/view_game/<game_id>")
 def view_game(game_id):
@@ -116,7 +116,7 @@ def view_comment(comment_id):
     comment = db.get_comment(comment_id)
     if not comment:
         abort(404)
-    return _view_game(comment["game_id"], comment["path"])
+    return _view_game(comment.game_id, comment.path)
 
 @app.route("/view_user/<username>/games_page/<int:games_page>")
 @app.route("/view_user/<username>/comments_page/<int:comments_page>")
@@ -130,7 +130,7 @@ def view_user(username, games_page=1, comments_page=1):
     # paginate games
     games_per_page = app.config["games_per_page_in_user_view"]
     games_from, games_to = (games_page - 1) * games_per_page, games_page * games_per_page
-    games_cursor = db.get_games_for_user(user["_id"])
+    games_cursor = db.get_games_for_user(user._id)
     num_all_games = games_cursor.count()
     games = list(games_cursor)[games_from:games_to]
     games_pagination = Pagination(games_per_page, games_page, num_all_games,
@@ -140,7 +140,7 @@ def view_user(username, games_page=1, comments_page=1):
     # paginate comments
     comments_per_page = app.config["comments_per_page_in_user_view"]
     comments_from, comments_to = (comments_page - 1) * comments_per_page, comments_page * comments_per_page
-    comments_cursor = db.get_comments_for_user(user["_id"])
+    comments_cursor = db.get_comments_for_user(user._id)
     num_all_comments = comments_cursor.count()
     comments = list(comments_cursor)[comments_from:comments_to]
     comments_pagination = Pagination(comments_per_page, comments_page, num_all_comments,
