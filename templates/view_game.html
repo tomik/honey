@@ -34,14 +34,26 @@
 
   <div class="span6">
     {% include "game_info.html" %}
+    {% if game_edit_form %}
+    <div id="edit_game">
+        <form method="post" action="{{ url_for('edit_game') }}">
+          {{ game_edit_form.game_id(value=game._id) }}
+          {{ render_field(game_edit_form.player1, value=game.player1) }}
+          {{ render_field(game_edit_form.player2, value=game.player2) }}
+          {{ render_field(game_edit_form.result, value=game.result) }}
+          {{ render_field(game_edit_form.event, value=game.event) }}
+          <p><input type=submit value=Post></p>
+       </form>
+    </div>
+    {% endif %}
     <h4 style="margin-bottom: 10px;">Comments</h4>
     {% if session.username %}
     <div id="post_comment">
         <form method="post" action="{{ url_for('post_comment') }}">
-          {{ form.game_id(value=game._id) }}
-          {{ form.short_path_json(value=null) }}
-          {{ form.full_path_json(value=null) }}
-          {{ render_field(form.comment, label=False, rows=3, cols=90) }}
+          {{ comment_form.game_id(value=game._id) }}
+          {{ comment_form.short_path_json(value=null) }}
+          {{ comment_form.full_path_json(value=null) }}
+          {{ render_field(comment_form.comment, label=False, rows=3, cols=90) }}
           <p><input type=submit value=Post></p>
        </form>
     </div>

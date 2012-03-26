@@ -91,6 +91,26 @@ def upload_game():
             abort(500)
     return render_template("upload_game.html", menu_toggle_upload=True, form=form)
 
+@app.route("/edit_game", methods=["POST"])
+@login_required
+def edit_game():
+    """Edit game meta information."""
+    form = forms.GameEditForm(request.form)
+    if form.validate_on_submit():
+        user = db.get_user_by_username(session["username"])
+        if not user:
+            abort(500)
+        game = form.game
+        game.player1 = form.player1.data
+        game.player2 = form.player2.data
+        game.event = form.event.data
+        game.result = form.result.data
+        db.update_game(game)
+        return redirect(url_for("view_game", game_id=game._id))
+    if not form.game_id.data:
+        abort(500)
+    return _view_game(form.game_id.data, [], game_edit_form=form)
+
 @app.route("/post_comment", methods=["POST"])
 @login_required
 def post_comment():
@@ -108,7 +128,7 @@ def post_comment():
         return redirect(url_for("view_comment", comment_id=comment._id))
     if not form.game_id.data:
         abort(500)
-    return _view_game(form.game_id.data, [], form)
+    return _view_game(form.game_id.data, [], comment_form=form)
 
 @app.route("/view_sgf/<game_id>")
 def view_sgf(game_id):
@@ -171,7 +191,7 @@ def view_user(username):
         games_pagination=games_pagination,
         comments_pagination=comments_pagination)
 
-def _view_game(game_id, init_path, comment_form=None):
+def _view_game(game_id, init_path, game_edit_form=None, comment_form=None):
     """
     Views existing game on given (comment) path.
 
@@ -180,19 +200,24 @@ def _view_game(game_id, init_path, comment_form=None):
     game = db.get_game(game_id)
     if not game:
         abort(404)
-    comments=list(db.get_comments_for_game(game_id))
     # fetch games owner
     db.annotate(game)
+    comments=list(db.get_comments_for_game(game_id))
     for comment in comments:
         db.annotate(comment)
+    # forms
     if not comment_form:
         comment_form = forms.CommentForm()
+    user = db.get_user_by_username(session.get("username", None))
+    if user and game.is_owner(user) and not game_edit_form:
+        game_edit_form = forms.GameEditForm()
     return render_template("view_game.html",
         game=game,
         init_path=init_path,
         comments=comments,
         comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
-        form=comment_form)
+        comment_form=comment_form,
+        game_edit_form=game_edit_form)
 
 @app.route("/faq")
 def faq():

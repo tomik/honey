@@ -44,6 +44,27 @@ class SgfUploadForm(Form):
         self.sgf = " ".join(f_sgf.readlines())
         return True
 
+class GameEditForm(Form):
+    """Form for editing game metainformation (players, result, etc.)."""
+    player1 = TextField("Player1", [validators.Required()])
+    player2 = TextField("Player2", [validators.Required()])
+    result = TextField("Result")
+    event = TextField("Event")
+    game_id = HiddenField("GameId", [validators.Required()])
+
+    def __init__(self, *a, **k):
+        Form.__init__(self, *a, **k)
+        self.game = None
+
+    def validate(self):
+        if not Form.validate(self):
+            return False
+        self.game = db.get_game(self.game_id.data)
+        if not self.game:
+            self.comment.errors.append("Server upload error")
+            return False
+        return True
+
 class CommentForm(Form):
     """
     Form for commenting upon moves in the game.

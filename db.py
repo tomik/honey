@@ -32,18 +32,38 @@ class Game(mongokit.Document):
 
     @property
     def result(self):
-        root = self.nodes[0]
-        return root.get("RE", "?")
+        return self.nodes[0].get("RE", "?")
+
+    @result.setter
+    def result(self, value):
+        self.nodes[0]["RE"] = value
 
     @property
     def player1(self):
-        root = self.nodes[0]
-        return root.get("PB", "?")
+        return self.nodes[0].get("PB", "?")
+
+    @player1.setter
+    def player1(self, value):
+        self.nodes[0]["PB"] = value
 
     @property
     def player2(self):
-        root = self.nodes[0]
-        return root.get("PW", "?")
+        return self.nodes[0].get("PW", "?")
+
+    @player2.setter
+    def player2(self, value):
+        self.nodes[0]["PW"] = value
+
+    @property
+    def event(self):
+        return self.nodes[0].get("EV", "?")
+
+    @event.setter
+    def event(self, value):
+        self.nodes[0]["EV"] = value
+
+    def is_owner(self, user):
+        return user._id == self.user_id
 
 @app.conn.register
 class Comment(mongokit.Document):
@@ -82,7 +102,6 @@ def annotate(obj, recursive=False):
     """
     Transforms mongodb ids into objects.
     """
-    # TODO use reference
     if "user_id" in obj:
         obj["user"] = db_users.User.find_one({"_id": ObjectId(obj["user_id"])})
         if recursive:
@@ -146,6 +165,7 @@ def create_game(user_id, sgf_str):
 def update_game(game):
     """Updates game in the db."""
     game.save()
+    return game
 
 def get_game(id):
     """Fetches game for given id."""
