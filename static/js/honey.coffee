@@ -19,6 +19,9 @@ findElem = (a, f) ->
 randomPos = ->
  Math.floor(Math.random() * (BOARD_SIZE - 1))
 
+isArray = (obj) ->
+  return Object.prototype.toString.call(obj) == '[object Array]'
+
 # ==>> BASIC TYPES
 
 class EventDispatcher
@@ -69,13 +72,15 @@ class Node
 
 rawParseNodes = (nodes, handler) ->
   for node in nodes
-    move = new Move(node)
-    handler.onMove(move)
-    if "variants" of node
-      for variant in node["variants"]
+    # variants
+    if isArray(node)
+      for variant in node
         handler.onBranchStart()
         rawParseNodes(variant, handler)
         handler.onBranchStop()
+    else
+      move = new Move(node)
+      handler.onMove(move)
 
 rawParse = (nodes, handler) ->
   if nodes.length <= 0

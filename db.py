@@ -26,7 +26,7 @@ class Game(mongokit.Document):
             # parsed nodes from sgf
             # first node is the root with game meta information
             # example: [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
-            #   {"B": "bb", "variants": [{"W": "dd"}]}, {"W": "cc"}]}
+            #   [[{"B": "bb"}], [{"B": "dd"}]}, {"W": "cc"}]]]
             "nodes": list,
             }
 
@@ -177,8 +177,9 @@ def patch_game_with_variant(game, full_path):
                 cursor.next(variant)
                 break
         else:
-            # create new node
+            # create new node (creates new variant as well)
             cursor.add_node(node)
+            # and follow it
             cursor.next(cursor.get_variants_num() - 1)
     return game
 

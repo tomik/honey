@@ -1,11 +1,20 @@
 """
 Smart Game Format parser.
 
-Parsing is done by calling parseSgf(sgf_string).
-Resulting object represents a sgf collection.
-This object is a list (games) of lists (nodes) where each node is a dict of properties to values.
-Moreover if node has variants (aside from main variant) these are stored
-in node under key "variants".
+Parsing is done by calling parseSgf(sgf_string). Resulting object represents a sgf collection.
+This object is a list (games) of branches. Each element of the branch is either:
+   * instance of class Node(a dict of properties to values with couple of added methods)
+   * list of branches representing variants
+For navigating and manipulating parsed sgf collection use Cursor.
+
+Example:
+
+parsed == [
+    # game 1
+    [{"FF": "4", "GM": "0"}, {"W": "aa"}, {"B": "bb"}, [[{"W": "cc"}, {"B": "dd"}], [{"W": "ee"}]]],
+    # game 2
+    ...
+    ]
 """
 
 class LexState:
@@ -44,13 +53,23 @@ class Cursor:
 
     def has_variants(self):
         """Check if current node has multiple children (variants)."""
-        return "variants" in self.get_node()
+        return bool(self.get_variants())
+
+    def get_variants(self):
+        """Get list of variants (list of lists) for given node."""
+        node, index, line = self.stack[-1]
+        if len(line) <= index + 1:
+            return []
+        next = line[index + 1]
+        if type(next) == list:
+            return next
+        return []
 
     def get_variants_num(self):
         """Return the number of variants."""
         if not self.has_variants():
             return 1
-        return len(self.get_node()["variants"])
+        return len(self.get_variants())
 
     def next(self, variant_index=0):
         """
@@ -59,23 +78,26 @@ class Cursor:
         @param variant_index index of variant to go to
         @return new current node or None if at the end
         """
-        node, index, l = self.stack[-1]
-        if "variants" in node:
-            variants = node["variants"]
+        node, index, line = self.stack[-1]
+        variants = self.get_variants()
+        if variants:
             if variant_index >= len(variants):
                 raise CursorError("Invalid variant.")
             assert(len(variants[variant_index]) > 0)
-            new_l = variants[variant_index]
+            new_line = variants[variant_index]
             new_index = 0
-            new_node = new_l[new_index]
-            self.stack.append((new_node, new_index, new_l))
+            new_node = new_line[new_index]
+            # TODO make sure it is always dict
+            assert(type(new_node) in [Node, dict])
+            self.stack.append((new_node, new_index, new_line))
         else:
             if variant_index != 0:
                 raise CursorError("No variant.")
             # we are at the end
-            if len(l) <= index + 1:
+            if len(line) <= index + 1:
                 return None
-            self.stack.append((l[index + 1], index + 1, l))
+            # follow the current variant
+            self.stack.append((line[index + 1], index + 1, line))
         return self.get_node()
 
     def get_next(self, variant_index=0):
@@ -101,40 +123,28 @@ class Cursor:
         Add new child to the current node.
         """
         frame = self.stack[-1]
-        curr_node, index, l = frame
+        curr_node, index, line = frame
+        variants = self.get_variants()
         # adding to the end of the variant
-        if len(l) == index + 1:
+        if len(line) == index + 1:
+            line.append(node)
+        # adding new variant
+        elif variants:
             # check that node doesn't exist yet
-            # TODO be node coordinates aware ?
-            if "variants" in curr_node:
-                for child in self._get_children(frame):
-                    if child == node:
-                        raise CursorError("Node already exists.")
-                curr_node["variants"].append([node])
-            else:
-                l.append(node)
+            for variant in variants:
+                if len(variant) and variant[0] == node:
+                    raise CursorError("Node already exists.")
+            variants.append([node])
         # forking the simple variant
         else:
-            if l[index +1] == node:
+            if line[index +1] == node:
                 raise CursorError("Node already exists.")
             variants = []
-            variants.append(l[index + 1:])
+            variants.append(line[index + 1:])
             variants.append([node])
-            curr_node["variants"] = variants
-            while len(l) > index + 1:
-                l.pop()
-
-    def _get_children(self, frame):
-        node, index, l = frame
-        if "variants" not in node:
-            if len(l) <= index + 1:
-                return
-            yield l[index + 1]
-            return
-        else:
-            for variant in node["variants"]:
-                if len(variant) > 0:
-                    yield variant[0]
+            while len(line) > index + 1:
+                line.pop()
+            line.append(variants)
 
 class Node(dict):
     """Representation of a single node in a game."""
@@ -152,7 +162,7 @@ class Node(dict):
 
     def to_sgf(self):
         """Returns sgf representation of the node. Properties are sorted alphabetically."""
-        properties = ["%s[%s]" % (key, value) for key, value in self.items() if key != "variants"]
+        properties = ["%s[%s]" % (key, value) for key, value in self.items()]
         return ";" + "".join(sorted(properties))
 
 class SgfHandler:
@@ -196,10 +206,18 @@ class SgfHandler:
         self.curr_node[name] = value
 
     def on_branch_start(self):
-        node = self._get_curr_node()
-        branch = []
-        node.setdefault("variants", []).append(branch)
-        self.branch_stack.append(branch)
+        branch = self._get_curr_branch()
+        # use existing variant
+        if type(branch[-1]) == list:
+            variants = branch[-1]
+        # create new variant
+        else:
+            variants = []
+            branch.append(variants)
+        # create new branch
+        new_branch = []
+        variants.append(new_branch)
+        self.branch_stack.append(new_branch)
 
     def on_branch_stop(self):
         if len(self.branch_stack) <= 1:
@@ -277,10 +295,10 @@ def makeSgf(coll):
     """Inverse of parseSgf. Takes Sgf collection and produces string with sgf representation."""
     sgf = ""
     for game in coll:
-        sgf += _makeSgfCursor(Cursor(game))
+        sgf += _makeSgfFromCursor(Cursor(game))
     return sgf
 
-def _makeSgfCursor(cursor):
+def _makeSgfFromCursor(cursor):
     begin = cursor.get_node()
     if not begin:
         return ""
@@ -296,7 +314,7 @@ def _makeSgfCursor(cursor):
             # recursively solve variants
             for index in xrange(variants_num):
                 cursor.next(index)
-                sgf += _makeSgfCursor(cursor)
+                sgf += _makeSgfFromCursor(cursor)
                 cursor.previous()
             finished = True
     # unroll the cursor
@@ -361,8 +379,8 @@ class TestSgf(unittest.TestCase):
         """
         coll = parseSgf(sgf)
         self.assertEqual(coll,
-            [[{'SZ': '19', 'GM': '1', 'FF': '4'}, {'B': 'aa'},
-            {'variants': [[{'B': 'cc'}, {'W': 'dd'}, {'B': 'ee'}], [{'B': 'hh'}, {'W': 'hg'}]], 'W': 'bb'}]])
+                [[{'SZ': '19', 'GM': '1', 'FF': '4'}, {'B': 'aa'}, {'W': 'bb'},
+                    [[{'B': 'cc'}, {'W': 'dd'}, {'B': 'ee'}], [{'B': 'hh'}, {'W': 'hg'}]]]])
         self.assertEqual(self._trim_sgf_whitespace(sgf), makeSgf(coll))
 
     def test_multi_branches(self):
@@ -376,11 +394,11 @@ class TestSgf(unittest.TestCase):
         coll = parseSgf(sgf)
         self.assertEqual(coll,
             [[{'SZ': '19', 'GM': '1', 'FF': '4'}, {'B': 'aa'},
-              {'variants':
-                  [[{'B': 'cc'}, {'variants': [[{'B': 'ad'}, {'W': 'bd'}], [{'B': 'ee'}, {'W': 'ff'}]], 'W': 'dd'}],
+              {'W': 'bb'},
+                  [[{'B': 'cc'}, {'W': 'dd'}, [[{'B': 'ad'}, {'W': 'bd'}], [{'B': 'ee'}, {'W': 'ff'}]]],
                    [{'B': 'hh'}, {'W': 'gg'}],
                    [{'B': 'ii'}, {'W': 'jj'}]],
-               'W': 'bb'}]])
+               ]])
         self.assertEqual(self._trim_sgf_whitespace(sgf), makeSgf(coll))
 
 if __name__ == "__main__":
