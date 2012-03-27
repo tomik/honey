@@ -5,6 +5,7 @@
 # are actually MongoKit classes. The rest of the application knows nothing about MongoKit or even MongoDB.
 
 import datetime
+import re
 
 from bson.objectid import ObjectId
 import sgf
@@ -23,12 +24,47 @@ class Game(mongokit.Document):
     structure = {
             "user_id": ObjectId,
             "date": datetime.datetime,
+            # type of the game, valid values are "hex", "go", None (unknown)
+            "type": str,
             # parsed nodes from sgf
             # first node is the root with game meta information
             # example: [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
             #   [[{"B": "bb"}], [{"B": "dd"}]}, {"W": "cc"}]]]
             "nodes": list,
             }
+
+    # sgf GM to game type mapping
+    GAME_TYPES = {1: "go", 11: "hex"}
+
+    def resolve_type(self):
+        """
+        Tries to guess what the game type is. If it can resolve the game type it will set it as well.
+
+        @return True if game type can be resolved. Otherwise False.
+        """
+        assert(not self.type)
+        # GM is the main source of game type information
+        if "GM" in self.nodes[0]:
+            try:
+                self.type = self.GAME_TYPES[int(self.nodes[0]["GM"])]
+                return True
+            except KeyError:
+                pass
+        # little golem games can be guessed from the tournament name
+        if self.is_from_little_golem():
+            for game_type in self.GAME_TYPES.values():
+                if re.match(r"^%s[0-9\.]" % game_type, self.event):
+                    self.type = game_type
+                    return True
+        return False
+
+    @property
+    def source(self):
+        return self.nodes[0].get("SO", None)
+
+    @property
+    def size(self):
+        return self.nodes[0].get("SZ", None)
 
     @property
     def result(self):
@@ -65,6 +101,10 @@ class Game(mongokit.Document):
     def is_owner(self, user):
         return user._id == self.user_id
 
+    def is_from_little_golem(self):
+        return self.source == "http://www.littlegolem.com"
+
+
 @app.conn.register
 class Comment(mongokit.Document):
     use_dot_notation = True
@@ -78,6 +118,7 @@ class Comment(mongokit.Document):
             "text": unicode,
             }
 
+
 @app.conn.register
 class User(mongokit.Document):
     use_dot_notation = True
@@ -87,6 +128,7 @@ class User(mongokit.Document):
             "passwd": str,
             "joined_date": datetime.datetime,
             }
+
 
 def reset():
     """
@@ -158,6 +200,8 @@ def create_game(user_id, sgf_str):
            game.nodes[0]["RE"] = game.nodes[0]["RE"] + "+"
     except KeyError:
         pass
+    if not game.resolve_type():
+        return False
     game.save()
     game_id = game._id
     return game
