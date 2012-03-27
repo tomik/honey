@@ -98,6 +98,10 @@ class Game(mongokit.Document):
     def event(self, value):
         self.nodes[0]["EV"] = value
 
+    @property
+    def komi(self):
+        return self.nodes[0].get("KM", None)
+
     def is_owner(self, user):
         return user._id == self.user_id
 
