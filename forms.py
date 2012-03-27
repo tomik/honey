@@ -3,7 +3,7 @@ import urllib
 import json
 import re
 
-from flaskext.wtf import Form, HiddenField, IntegerField, PasswordField, TextField, TextAreaField, validators
+from flaskext.wtf import Form, HiddenField, FileField, IntegerField, PasswordField, TextField, TextAreaField, validators
 from werkzeug import check_password_hash
 
 import db
@@ -11,18 +11,16 @@ import db
 class SgfUploadForm(Form):
     """Form for uploading sgf games. Uploaded games are stored in the database."""
     url = TextField("Url")
-    file = TextField("File")
-    lg = TextField("LG game")
+    file = FileField("File")
 
     def __init__(self, *a, **k):
         Form.__init__(self, *a, **k)
         self.sgf = None
-        self.lg_id = None
 
     def validate(self):
         if not Form.validate(self):
             return False
-        f_sgf = None 
+        f_sgf = None
         if self.url.data:
             try:
                 f_sgf = urllib.urlopen(self.url.data)
@@ -30,18 +28,15 @@ class SgfUploadForm(Form):
                 self.url.errors = ("Invalid url.",)
                 return False
         elif self.file.data:
-            pass
-        elif self.lg.data:
-            try:
-                f_sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.hsgf" % self.lg.data)
-            except IOError:
-                self.url.errors = ("Invalid lg game id or server down.",)
+            f_sgf = self.file.data
+            if not f_sgf.filename.endswith("sgf"):
+                self.url.errors = ("Invalid file extension. Expected .sgf file.",)
                 return False
         else:
             self.url.errors = ("One of the fields must be filled.",)
             return False
         assert(f_sgf)
-        self.sgf = " ".join(f_sgf.readlines())
+        self.sgf = f_sgf.read()
         return True
 
 class GameEditForm(Form):

@@ -4,11 +4,10 @@
 {% block centered_content %}
   <h2> Upload game </h2>
   {% from "macros.html" import render_field %}
-  <form method="post" action="{{ url_for('upload_game') }}">
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_game') }}">
         <dl>
           {{ render_field(form.url) }}
           {{ render_field(form.file) }}
-          {{ render_field(form.lg) }}
         </dl>
         <p><input type=submit value=Upload></p>
       </form>

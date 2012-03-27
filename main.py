@@ -76,17 +76,21 @@ def main():
 @login_required
 def upload_game():
     """Loads game from url/file, stores in the DB and displays. Requires login."""
-    form = forms.SgfUploadForm(request.form)
+    form = forms.SgfUploadForm()
+    # this must be done explicitly
+    # because for some reason request.files is not picked up by the wtf form
+    if request.method == "POST" and "file" in request.files:
+        form.file.data = request.files["file"]
     if request.method == "POST" and form.validate_on_submit():
         if form.sgf:
             username = session["username"]
             user = db.get_user_by_username(username)
             if not user:
                 abort(500)
-            game_id = db.create_game(user._id, form.sgf)
-            if not game_id:
+            game = db.create_game(user._id, form.sgf)
+            if not game:
                 return render_template("upload_game.html", menu_toggle_upload=True, form=form)
-            return redirect(url_for("view_game", game_id=game_id))
+            return redirect(url_for("view_game", game_id=game._id))
         else:
             abort(500)
     return render_template("upload_game.html", menu_toggle_upload=True, form=form)
