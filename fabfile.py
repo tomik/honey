@@ -1,7 +1,4 @@
 
-import urllib
-import random
-
 def setup():
     """
     Setup simple fixtures.
@@ -9,9 +6,13 @@ def setup():
     Creates couple of games, users, comments and variants for manual testing.
     Requires db server to be running.
     """
+    import urllib
+    import random
+
+    from werkzeug import generate_password_hash
+
     import db
     from core import app
-    from werkzeug import generate_password_hash
 
     # clear the database
     db.reset()

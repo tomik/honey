@@ -181,7 +181,6 @@ def create_user(username, email, passwd_hash):
     user.passwd = passwd_hash
     user.joined_date = datetime.datetime.now()
     user.save()
-    user_id = user._id
     return user
 
 def create_game(user_id, sgf_str):

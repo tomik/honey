@@ -120,6 +120,7 @@ def post_comment():
         username = session["username"]
         user = db.get_user_by_username(username)
         if not user:
+            app.logger.warning("comment without user")
             abort(500)
         comment = db.create_comment(user._id, form.game_id.data, form.short_path, form.comment.data)
         game = form.game
@@ -127,6 +128,7 @@ def post_comment():
         db.update_game(patched_game)
         return redirect(url_for("view_comment", comment_id=comment._id))
     if not form.game_id.data:
+        app.logger.warning("comment without game_id")
         abort(500)
     return _view_game(form.game_id.data, [], comment_form=form)
 
