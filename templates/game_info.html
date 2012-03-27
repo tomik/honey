@@ -7,10 +7,25 @@
   <a href="{{ url_for('view_sgf', game_id=game._id) }}" style="font-weight: normal;">sgf</a>
  </h4>
   <dl class="dl-horizontal">
-    <dt>red:</dt>
-    <dd class="red">{{ game.player1 }}</dd>
-    <dt>blue:</dt>
-    <dd class="blue">{{ game.player2 }}</dd>
+    {% if game.type == "hex" %}
+      <dt>red:</dt>
+      <dd class="red">{{ game.player1 }}</dd>
+      <dt>blue:</dt>
+      <dd class="blue">{{ game.player2 }}</dd>
+    {% elif game.type == "go" %}
+      <dt>black:</dt>
+      <dd >{{ game.player1 }}</dd>
+      <dt>white:</dt>
+      <dd >{{ game.player2 }}</dd>
+      {% if game.komi %}
+        <dt>komi:</dt>
+        <dd >{{ game.komi }}</dd>
+      {% endif %}
+      {% if game.handicap %}
+        <dt>handicap:</dt>
+        <dd >{{ game.handicap }}</dd>
+      {% endif %}
+    {% endif %}
     <dt>result:</dt>
     <dd>{{ game.result }}</dd>
     {% if game.event %}
