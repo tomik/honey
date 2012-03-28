@@ -48,9 +48,6 @@ class Move
   constructor: (rawMove=0) ->
     if not rawMove
       return
-    # list of stones this move is capturing
-    # this is filled when playing the move for the unplaying purpose
-    @capturedStones = []
     @color = null
     where = null
     if "W" of rawMove
@@ -365,7 +362,7 @@ class Controller
         e.preventDefault()
         move = new Move()
         # this is pretty much the only place that makes any assumptions about game object
-        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, flipColor(game.currNode.move.color), MoveType.Normal]
+        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, flipColor(game.currNode.move.color), MoveType.NORMAL]
         game.playMove(move))
 
   # setups all empty fields on board
