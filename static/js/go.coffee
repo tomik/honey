@@ -94,7 +94,7 @@ coordToPosTopLeft = (coord) ->
 # produces position for inputting text
 coordToPosForText = (coord) ->
   pos = coordToPosCenter(coord)
-  pos.x -= FIELD_RADIUS / 2 + 1
+  pos.x -= FIELD_RADIUS / 2 + 3
   pos.y -= FIELD_RADIUS + 2
   pos
 
@@ -304,7 +304,8 @@ class Display
   # create marks like 1 2 3 directly on board
   @putChildMarkOnBoard: (node, childIndex) ->
     pos = coordToPosForText({x:node.move.x, y:node.move.y})
-    elem = $("<div class='child_mark' style='position: absolute; left: #{pos.x}px; top:#{pos.y}px;'
+    elem = $("<div class='child_mark' style='background-color: white; position: absolute; left: #{pos.x}px; top:#{pos.y}px;
+              padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
               id='child_mark_#{node.move.x}_#{node.move.y}'>#{childIndex + 1}</div>")
     elem.appendTo("#board")
 
