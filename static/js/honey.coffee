@@ -208,7 +208,8 @@ class Game
       throw "current node is invalid"
     for [branch, jump] in path
       if branch >= node.children.length
-        throw "Invalid branch"
+        console.log("Warning: Invalid branch")
+        return
       for i in [0...jump]
         node = node.children[branch]
         redraw = true

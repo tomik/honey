@@ -145,8 +145,8 @@ class Cursor:
 def nodes_are_same_moves(fst, snd):
     if type(fst) != dict or type(snd) != dict:
         return False
-    if fst.get("W", None) != fst.get("W", None) or \
-       snd.get("B", None) != snd.get("B", None):
+    if fst.get("W", None) != snd.get("W", None) or \
+       fst.get("B", None) != snd.get("B", None):
         return False
     return True
 

@@ -245,7 +245,7 @@ def patch_game_with_variant(game, full_path):
                 break
         else:
             # create new node (creates new variant as well)
-            cursor.add_node(node)
+            cursor.add_node(node_dict)
             # and follow it
             cursor.next(cursor.get_variants_num() - 1)
     return game
