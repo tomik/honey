@@ -4,7 +4,7 @@ import json
 from functools import wraps
 from datetime import datetime
 
-from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import abort, flash, jsonify, make_response, redirect, render_template, request, session, url_for
 from werkzeug import  generate_password_hash
 
 import db
@@ -146,7 +146,9 @@ def view_sgf(game_id):
     # this changes the game itself
     # but that is fine since we don't intend to save it
     game = db.patch_game_with_comments(game, annotated_comments)
-    return sgf.makeSgf([game.nodes])
+    response = make_response(sgf.makeSgf([game.nodes]))
+    response.headers["Content-type"] = "text/plain"
+    return response
 
 @app.route("/view_game/<game_id>")
 def view_game(game_id):
