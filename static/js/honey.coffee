@@ -250,6 +250,9 @@ class Logger
 # ==>> COMMENTS
 
 class Commenter
+  onLoad: (game, node) ->
+    @updateComments(game)
+
   onPlayMove: (game, node) ->
     @updateComments(game)
 
