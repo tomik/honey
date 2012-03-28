@@ -82,9 +82,6 @@
     </div>
     {% endif %}
     <div id="comments">
-      {% if not comments %}
-      <p> No comments yet. </p>
-      {% endif %}
       {% for comment in comments %}
       <p>
         <div class="comment" id="comment_{{comment._id}}">
