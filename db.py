@@ -25,7 +25,7 @@ class Game(mongokit.Document):
             "user_id": ObjectId,
             "date": datetime.datetime,
             # type of the game, valid values are "hex", "go", None (unknown)
-            "type": str,
+            "type": unicode,
             # parsed nodes from sgf
             # first node is the root with game meta information
             # example: [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
@@ -34,7 +34,7 @@ class Game(mongokit.Document):
             }
 
     # sgf GM to game type mapping
-    GAME_TYPES = {1: "go", 11: "hex"}
+    GAME_TYPES = {1: u"go", 11: u"hex"}
 
     def resolve_type(self):
         """

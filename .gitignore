@@ -8,3 +8,4 @@ env
 *pyc
 TODO.txt
 *.DS_STORE
+honey.log
