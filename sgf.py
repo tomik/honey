@@ -3,7 +3,7 @@ Smart Game Format parser.
 
 Parsing is done by calling parseSgf(sgf_string). Resulting object represents a sgf collection.
 This object is a list (games) of branches. Each element of the branch is either:
-   * instance of class Node(a dict of properties to values with couple of added methods)
+   * a node (dict of properties to values)
    * list of branches representing variants
 For navigating and manipulating parsed sgf collection use Cursor.
 
@@ -42,12 +42,9 @@ class Cursor:
 
     def get_node(self):
         """Returns current node."""
-        # TODO ugly, make it explicit when we use raw vs. node structures
         node = self.stack[-1][0]
-        if type(node) == Node:
+        if type(node) == dict:
             return node
-        elif type(node) == dict:
-            return Node(node)
         else:
             raise ValueError("unexpected value")
 
@@ -87,8 +84,7 @@ class Cursor:
             new_line = variants[variant_index]
             new_index = 0
             new_node = new_line[new_index]
-            # TODO make sure it is always dict
-            assert(type(new_node) in [Node, dict])
+            assert(type(new_node) == dict)
             self.stack.append((new_node, new_index, new_line))
         else:
             if variant_index != 0:
@@ -146,24 +142,18 @@ class Cursor:
                 line.pop()
             line.append(variants)
 
-class Node(dict):
-    """Representation of a single node in a game."""
-    def __init__(self, *a, **k):
-        super(Node, self).__init__(*a, **k)
+def nodes_are_same_moves(fst, snd):
+    if type(fst) != dict or type(snd) != dict:
+        return False
+    if fst.get("W", None) != fst.get("W", None) or \
+       snd.get("B", None) != snd.get("B", None):
+        return False
+    return True
 
-    def is_same_move(self, other):
-        # TODO
-        if type(self) != type(other) and type(other) != dict:
-            return False
-        if self.get("W", None) != other.get("W", None) or \
-           self.get("B", None) != other.get("B", None):
-            return False
-        return True
-
-    def to_sgf(self):
-        """Returns sgf representation of the node. Properties are sorted alphabetically."""
-        properties = ["%s[%s]" % (key, value) for key, value in self.items()]
-        return ";" + "".join(sorted(properties))
+def node_to_sgf(node):
+    """Returns sgf representation of the node. Properties are sorted alphabetically."""
+    properties = ["%s[%s]" % (key, value) for key, value in node.items()]
+    return ";" + "".join(sorted(properties))
 
 class SgfHandler:
     """
@@ -196,7 +186,7 @@ class SgfHandler:
 
     def on_node(self):
         branch = self._get_curr_branch()
-        self.curr_node = Node()
+        self.curr_node = {}
         branch.append(self.curr_node)
 
     def on_property(self, name, value):
@@ -307,7 +297,7 @@ def _makeSgfFromCursor(cursor):
     while not finished:
         variants_num = cursor.get_variants_num()
         node = cursor.get_node()
-        sgf += node.to_sgf()
+        sgf += node_to_sgf(node)
         if variants_num == 1:
             finished = not cursor.next()
         else:

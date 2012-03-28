@@ -142,6 +142,10 @@ def view_sgf(game_id):
     game = db.get_game(game_id)
     if not game:
         abort(404)
+    annotated_comments = [db.annotate(c) for c in db.get_comments_for_game(game_id)]
+    # this changes the game itself
+    # but that is fine since we don't intend to save it
+    game = db.patch_game_with_comments(game, annotated_comments)
     return sgf.makeSgf([game.nodes])
 
 @app.route("/view_game/<game_id>")

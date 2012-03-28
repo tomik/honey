@@ -156,6 +156,7 @@ def annotate(obj, recursive=False):
         obj["game"] = db_games.Game.find_one({"_id": ObjectId(obj["game_id"])})
         if recursive:
             annotate(obj["user"], recursive=True)
+    return obj
 
 def get_users():
     """
@@ -238,9 +239,8 @@ def patch_game_with_variant(game, full_path):
     """Adds variant to given game if it doesn't exist yet."""
     cursor = sgf.Cursor(game.nodes)
     for node_dict in full_path:
-        node = sgf.Node(node_dict)
         for variant in xrange(cursor.get_variants_num()):
-            if node.is_same_move(cursor.get_next(variant)):
+            if sgf.nodes_are_same_moves(node_dict, cursor.get_next(variant)):
                 cursor.next(variant)
                 break
         else:
@@ -248,6 +248,28 @@ def patch_game_with_variant(game, full_path):
             cursor.add_node(node)
             # and follow it
             cursor.next(cursor.get_variants_num() - 1)
+    return game
+
+def patch_game_with_comments(game, comments):
+    """
+    Adds all the comments to their corresponding nodes.
+
+    Changes the game object in place.
+    Expects comments to be annotated (with corresponding user objects).
+    """
+    for comment in comments:
+        cursor = sgf.Cursor(game.nodes)
+        for branch, jump in comment.path:
+            for i in xrange(jump):
+                cursor.next(branch)
+                # we branch only once
+                branch = 0
+            node = cursor.get_node()
+            if node:
+                cmt = node.get("C", "")
+                cmt += "On %s %s said:\n%s\n\n" % \
+                        (comment.date.strftime("%Y-%m-%d %H:%M:%S"), comment.user.username, comment.text)
+                node["C"] = cmt
     return game
 
 def create_comment(user_id, game_id, path, text):
@@ -271,9 +293,9 @@ def get_comment(id):
 
 def get_comments_for_game(game_id):
     """Fetches comments for given game."""
-    return db_comments.Comment.find({"game_id": game_id})
+    return db_comments.Comment.find({"game_id": ObjectId(game_id)})
 
 def get_comments_for_user(user_id):
     """Fetches all comments made by given user."""
-    return db_comments.Comment.find({"user_id": user_id})
+    return db_comments.Comment.find({"user_id": ObjectId(user_id)})
 
