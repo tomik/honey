@@ -71,7 +71,7 @@
     </div>
     {% endif %}
     {% if session.username %}
-    <div id="post_comment" style="display: none;">
+    <div id="post_comment" {% if not comment_form.comment.errors %} style="display: none;" {% endif %} >
         <form method="post" action="{{ url_for('post_comment') }}">
           {{ comment_form.game_id(value=game._id) }}
           {{ comment_form.short_path_json(value=null) }}
