@@ -112,11 +112,11 @@ def edit_game(game_id):
     user = db.get_user_by_username(session["username"])
     if not user:
         abort(500)
+    # protection
     if not game.is_owner(user):
         app.logger.warning("Unauthorized game edit: user(%s) game(%s)" % (user.username, game._id))
+        abort(500)
     form = forms.GameEditForm.form_factory(game.type)(request.form)
-    print dir(form)
-    print form.errors
     if form.validate_on_submit():
         form.update_game(game)
         return redirect(url_for("view_game", game_id=game._id))
