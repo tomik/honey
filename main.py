@@ -122,10 +122,13 @@ def edit_game(game_id):
         return redirect(url_for("view_game", game_id=game._id))
     return _view_game(game._id, [], game_edit_form=form)
 
-@app.route("/post_comment", methods=["POST"])
+@app.route("/post_comment/<game_id>", methods=["POST"])
 @login_required
-def post_comment():
+def post_comment(game_id):
     """Posts comment for given game and path. Requires login."""
+    game = db.get_game(game_id)
+    if not game:
+        abort(404)
     form = forms.CommentForm(request.form)
     if form.validate_on_submit():
         username = session["username"]
@@ -133,15 +136,11 @@ def post_comment():
         if not user:
             app.logger.warning("comment without user")
             abort(500)
-        comment = db.create_comment(user._id, form.game_id.data, form.short_path, form.comment.data)
-        game = form.game
+        comment = db.create_comment(user._id, game_id, form.short_path, form.comment.data)
         patched_game = db.patch_game_with_variant(game, form.full_path)
         db.update_game(patched_game)
         return redirect(url_for("view_comment", comment_id=comment._id))
-    if not form.game_id.data:
-        app.logger.warning("comment without game_id")
-        abort(500)
-    return _view_game(form.game_id.data, [], comment_form=form)
+    return _view_game(game_id, [], comment_form=form)
 
 @app.route("/view_sgf/<game_id>")
 def view_sgf(game_id):

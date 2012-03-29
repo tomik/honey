@@ -85,7 +85,6 @@ class CommentForm(Form):
     """
     comment = TextAreaField("Comment", [validators.Required()])
     # following fields are hidden
-    game_id = HiddenField("GameId", [validators.Required()])
     # path is encoded in JSON format as [[branch node], [branch node]]
     short_path_json = HiddenField("Short Path", [validators.Required()])
     # path is encoded in JSON format as [{"W": "bb"}, {"B": "dd"}]
@@ -95,7 +94,6 @@ class CommentForm(Form):
         Form.__init__(self, *a, **k)
         self.short_path = None
         self.full_path = None
-        self.game = None
 
     def validate(self):
         if not Form.validate(self):
@@ -120,10 +118,6 @@ class CommentForm(Form):
                not re.match(r"[a-z][a-z]", elem.values()[0]):
                 self.comment.errors.append("Server upload error")
                 return False
-        self.game = db.get_game(self.game_id.data)
-        if not self.game:
-            self.comment.errors.append("Server upload error")
-            return False
         return True
 
 class SignupForm(Form):
