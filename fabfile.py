@@ -7,6 +7,7 @@ def setup():
     Requires db server to be running.
     """
     import urllib
+    import socket
     import random
 
     from werkzeug import generate_password_hash
@@ -14,6 +15,8 @@ def setup():
     import db
     from core import app
 
+    # what if lg is down
+    socket.setdefaulttimeout(5)
     # clear the database
     db.reset()
     # setup users

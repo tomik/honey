@@ -3,7 +3,7 @@ import urllib
 import json
 import re
 
-from flaskext.wtf import Form, HiddenField, FileField, IntegerField, PasswordField, TextField, TextAreaField, validators
+from flaskext.wtf import Form, HiddenField, FileField, FloatField, IntegerField, PasswordField, TextField, TextAreaField, validators
 from werkzeug import check_password_hash
 
 import db
@@ -41,24 +41,40 @@ class SgfUploadForm(Form):
 
 class GameEditForm(Form):
     """Form for editing game metainformation (players, result, etc.)."""
-    player1 = TextField("Player1", [validators.Required()])
-    player2 = TextField("Player2", [validators.Required()])
     result = TextField("Result")
     event = TextField("Event")
-    game_id = HiddenField("GameId", [validators.Required()])
 
-    def __init__(self, *a, **k):
-        Form.__init__(self, *a, **k)
-        self.game = None
+    def update_game(self, game):
+        game.event = self.event.data
+        game.result = self.result.data
+        db.update_game(game)
 
-    def validate(self):
-        if not Form.validate(self):
-            return False
-        self.game = db.get_game(self.game_id.data)
-        if not self.game:
-            self.comment.errors.append("Server upload error")
-            return False
-        return True
+    @staticmethod
+    def form_factory(game_type):
+        return {"hex": HexGameEditForm,
+                "go" : GoGameEditForm}[game_type]
+
+class GoGameEditForm(GameEditForm):
+    """Form for editing game metainformation (players, result, etc.)."""
+    black = TextField("Black", [validators.Required()])
+    white = TextField("White", [validators.Required()])
+    komi = FloatField("Komi", [validators.Required()])
+
+    def update_game(self, game):
+        game.player1 = self.black.data
+        game.player2 = self.white.data
+        game.komi = self.komi.data
+        super(GoGameEditForm, self).update_game(game)
+
+class HexGameEditForm(GameEditForm):
+    """Form for editing game metainformation (players, result, etc.)."""
+    red = TextField("Red", [validators.Required()])
+    blue = TextField("Blue", [validators.Required()])
+
+    def update_game(self, game):
+        game.player1 = self.red.data
+        game.player2 = self.blue.data
+        super(HexGameEditForm, self).update_game(game)
 
 class CommentForm(Form):
     """

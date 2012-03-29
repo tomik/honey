@@ -17,6 +17,13 @@ from pagination import Pagination
 def now(format):
     return datetime.now().strftime(format)
 
+@app.template_filter()
+def form_has_errors(form):
+    for field in form._fields.values():
+        if field.errors:
+            return True
+    return form.errors
+
 def login_required(f):
     @wraps(f)
     def wrapper(*a, **k):
@@ -95,25 +102,25 @@ def upload_game():
             abort(500)
     return render_template("upload_game.html", menu_toggle_upload=True, form=form)
 
-@app.route("/edit_game", methods=["POST"])
+@app.route("/edit_game/<game_id>", methods=["POST"])
 @login_required
-def edit_game():
+def edit_game(game_id):
     """Edit game meta information."""
-    form = forms.GameEditForm(request.form)
-    if form.validate_on_submit():
-        user = db.get_user_by_username(session["username"])
-        if not user:
-            abort(500)
-        game = form.game
-        game.player1 = form.player1.data
-        game.player2 = form.player2.data
-        game.event = form.event.data
-        game.result = form.result.data
-        db.update_game(game)
-        return redirect(url_for("view_game", game_id=game._id))
-    if not form.game_id.data:
+    game = db.get_game(game_id)
+    if not game:
+        abort(404)
+    user = db.get_user_by_username(session["username"])
+    if not user:
         abort(500)
-    return _view_game(form.game_id.data, [], game_edit_form=form)
+    if not game.is_owner(user):
+        app.logger.warning("Unauthorized game edit: user(%s) game(%s)" % (user.username, game._id))
+    form = forms.GameEditForm.form_factory(game.type)(request.form)
+    print dir(form)
+    print form.errors
+    if form.validate_on_submit():
+        form.update_game(game)
+        return redirect(url_for("view_game", game_id=game._id))
+    return _view_game(game._id, [], game_edit_form=form)
 
 @app.route("/post_comment", methods=["POST"])
 @login_required
@@ -222,7 +229,7 @@ def _view_game(game_id, init_path, game_edit_form=None, comment_form=None):
         comment_form = forms.CommentForm()
     user = db.get_user_by_username(session.get("username", None))
     if user and game.is_owner(user) and not game_edit_form:
-        game_edit_form = forms.GameEditForm()
+        game_edit_form = forms.GameEditForm.form_factory(game.type)()
     return render_template("view_game.html",
         game=game,
         init_path=init_path,

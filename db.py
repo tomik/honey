@@ -25,7 +25,7 @@ class Game(mongokit.Document):
             "user_id": ObjectId,
             "date": datetime.datetime,
             # type of the game, valid values are "hex", "go", None (unknown)
-            "type": unicode,
+            "type": str,
             # parsed nodes from sgf
             # first node is the root with game meta information
             # example: [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
@@ -34,7 +34,7 @@ class Game(mongokit.Document):
             }
 
     # sgf GM to game type mapping
-    GAME_TYPES = {1: u"go", 11: u"hex"}
+    GAME_TYPES = {1: "go", 11: "hex"}
 
     def resolve_type(self):
         """
@@ -57,6 +57,11 @@ class Game(mongokit.Document):
                     self.type = game_type
                     return True
         return False
+
+    def save(self):
+        # hack, for some reason type is unicode here
+        self.type = str(self.type)
+        super(Game, self).save()
 
     @property
     def source(self):
@@ -101,6 +106,10 @@ class Game(mongokit.Document):
     @property
     def komi(self):
         return self.nodes[0].get("KM", None)
+
+    @komi.setter
+    def komi(self, value):
+        self.nodes[0]["KM"] = value
 
     def is_owner(self, user):
         return user._id == self.user_id
