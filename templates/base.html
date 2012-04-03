@@ -6,10 +6,9 @@
     {% block head %}
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Honey Hex Viewer</title>
+      <title>Sensei Crowd</title>
       <link href="/static/css/bootstrap.css" rel="stylesheet">
       <link href="/static/css/honey.css" rel="stylesheet"/>
-      <link rel="shortcut icon" href="/static/img/honey_small.gif"/>
       <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
       <script src="/static/js/ga.js" type="text/javascript"></script>
       <!-- protect my email address -->
@@ -27,7 +26,7 @@
     <div class="navbar">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="/">Honey Hex Viewer</a>
+          <div> <a class="brand" href="/">{{request.game_type|game_type_to_label()}} Sensei Crowd</a> </div>
           <div class="nav-collapse">
             <ul class="nav">
               <li {% if menu_toggle_games %} class="active" {% endif %}><a href="/">Games</a></li>

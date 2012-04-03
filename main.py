@@ -24,6 +24,10 @@ def form_has_errors(form):
             return True
     return form.errors
 
+@app.template_filter()
+def game_type_to_label(game_type):
+    return game_type.capitalize()
+
 def login_required(f):
     @wraps(f)
     def wrapper(*a, **k):
