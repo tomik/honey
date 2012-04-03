@@ -23,3 +23,9 @@ app.logger.addHandler(handler)
 handler.setLevel(logging.INFO)
 handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(pathname)s %(lineno)d: %(message)s'))
 
+def annotate_request_with_game_type():
+    from flask import request
+    # fixed for now - will be based on url resolution later
+    request.game_type = "go"
+
+app.before_request(annotate_request_with_game_type)
