@@ -98,8 +98,13 @@ def upload_game():
             user = db.get_user_by_username(username)
             if not user:
                 abort(500)
-            game = db.create_game(user._id, form.sgf)
+            game, err = db.create_game(user._id, form.sgf, request.game_type)
             if not game:
+                # attach the error to the form
+                if form.url.data:
+                    form.url.errors = (err,)
+                elif form.file.data:
+                    form.file.errors = (err,)
                 return render_template("upload_game.html", menu_toggle_upload=True, form=form)
             return redirect(url_for("view_game", game_id=game._id))
         else:

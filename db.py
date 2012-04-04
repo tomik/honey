@@ -14,8 +14,8 @@ import mongokit
 from core import app
 
 # helpers
-db_games = app.db_conn.games
-db_comments = app.db_conn.comments
+db_games = app.db_conn.go_games
+db_comments = app.db_conn.go_comments
 db_users = app.db_conn.users
 
 @app.conn.register
@@ -193,13 +193,13 @@ def create_user(username, email, passwd_hash):
     user.save()
     return user
 
-def create_game(user_id, sgf_str):
+def create_game(user_id, sgf_str, expected_game_type=None):
     """Parses and validates sgf and stores a game in the database."""
     try:
         sgf_coll = sgf.parseSgf(sgf_str)
     except sgf.SgfParseError, e:
         app.logger.warning("cannot parse sgf: error(%s) sgf(%s)" % (str(e), sgf_str))
-        return False
+        return False, "cannot parse sgf"
     # TODO validate sgf
     # TODO allow upload of multiple games
     sgf_game = sgf_coll[0]
@@ -214,10 +214,12 @@ def create_game(user_id, sgf_str):
     except KeyError:
         pass
     if not game.resolve_type():
-        return False
+        return False, "Cannot parse game type."
+    if expected_game_type and expected_game_type != game.type:
+        return False, "Game type mismatch. Expected %s, got %s." % (expected_game_type, game.type)
     game.save()
     game_id = game._id
-    return game
+    return game, None
 
 def update_game(game):
     """Updates game in the db."""
