@@ -274,9 +274,9 @@ class Commenter
 class Bridge
   constructor: (inputRaw, comments, initPath) ->
     @game = _game
-    @inputRaw = $.parseJSON(inputRaw)
-    @comments = $.parseJSON(comments)
-    @initPath = $.parseJSON(initPath)
+    @inputRaw = inputRaw
+    @comments = comments
+    @initPath = initPath
 
   getCurrNodeShortPath: () ->
     # Returns short path to current node in json format as [(branch, node), ...].

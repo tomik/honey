@@ -20,7 +20,7 @@
   <script src="/static/js/honey.js?now={{ "%H%M%S"|now }}" type="text/javascript"></script>
   <script src="/static/js/ga.js" type="text/javascript"></script>
   <script type="text/javascript">
-    _bridge = new Bridge('{{game.nodes|tojson|safe}}', '{{comment_paths|tojson|safe}}', '{{init_path|tojson|safe}}');
+    _bridge = new Bridge({{game.nodes|tojson|safe}}, {{comment_paths|tojson|safe}}, {{init_path|tojson|safe}});
     // Post click handler
     $(function() {
       $("#post_comment form input[value='Post']").click(function(e) {
