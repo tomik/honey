@@ -277,7 +277,9 @@ def _runParser(sgf, handler):
             prop_value = acc
             acc = ""
             state = LexState.NODE
-            handler.on_property(prop_name, prop_value)
+            # quick hack to avoid handling properties with multiple values
+            if prop_name:
+                handler.on_property(prop_name, prop_value)
         elif state == LexState.NODE or state == LexState.PROPERTY:
             acc += c
 
