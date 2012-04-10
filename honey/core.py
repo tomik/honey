@@ -18,10 +18,11 @@ app.config["db_name"] = "honey"
 app.conn = mongokit.Connection(app.config["db_host"], app.config["db_port"])
 app.db_conn = app.conn[app.config["db_name"]]
 # logging
-handler = RotatingFileHandler("honey.log")
-app.logger.addHandler(handler)
-handler.setLevel(logging.INFO)
-handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(pathname)s %(lineno)d: %(message)s'))
+# TODO disabled
+#handler = RotatingFileHandler("honey.log")
+#app.logger.addHandler(handler)
+#handler.setLevel(logging.INFO)
+#handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(pathname)s %(lineno)d: %(message)s'))
 
 def annotate_request_with_game_type():
     from flask import request

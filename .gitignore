@@ -1,3 +1,8 @@
+build
+dist
+*egg-info
+deploy.tgz
+honey/static/css/bootstrap.css
 honey/static/js/honey.js
 honey/static/js/bridge.js
 honey/static/js/hex.js
