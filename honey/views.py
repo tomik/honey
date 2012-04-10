@@ -251,7 +251,3 @@ def faq():
     """Show FAQ."""
     return render_template("faq.html", menu_toggle_faq=True)
 
-if __name__ == "__main__":
-    app.debug = True
-    app.run()
-

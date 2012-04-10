@@ -36,3 +36,8 @@ def setup():
         sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.sgf" % id).read()
         user_id = random.choice(list(db.get_users()))["_id"]
         game, err = db.create_game(user_id, sgf)
+
+def run():
+    """Runs development server."""
+    from honey import app
+    app.run(debug=True)
