@@ -1,0 +1,2 @@
+recursive-include honey/static *.*
+recursive-include honey/templates *.*

@@ -1,5 +1,63 @@
 
-def setup():
+from __future__ import with_statement
+import fabric.api as fab
+from fabric.contrib.console import confirm
+
+def run():
+    """Runs development server."""
+    from honey import app
+    app.run(debug=True)
+
+fab.env.hosts = ['tomik@zene.sk:2222']
+
+def compile():
+    """Compile .less and .coffee files and make sure that links are up to date."""
+    fab.local("lessc -c bootstrap/less/bootstrap.less > bootstrap/less/bootstrap.css")
+    for coffee in ["honey", "hex", "go"]:
+        fab.local("coffee -c honey/static/js/%s.coffee > honey/static/js/%s.js" % (coffee, coffee))
+    # setup links
+    fab.local("cd honey/static/css && ln -fs ../../../bootstrap/less/bootstrap.css")
+    fab.local("cd honey/static/img && ln -fs ../../../bootstrap/img/glyphicons-halflings.png")
+    fab.local("cd honey/static/img && ln -fs ../../../bootstrap/img/glyphicons-halflings-white.png")
+    fab.local("cd honey/static/js && ln -fs ../../../bootstrap/js/bootstrap-button.js")
+
+def pack():
+    # create a new source distribution as tarball
+    fab.local("python setup.py sdist --formats=gztar", capture=False)
+
+def deploy():
+    DEPLOY_DIR = "~/public/www/senseicrowd"
+    TMP_DIR = "~/tmp/honey-deploy"
+    # prepare tmp dir
+    fab.run("rm -rf %s 2>/dev/null" % TMP_DIR)
+    fab.run("mkdir %s" % TMP_DIR)
+    # upload
+    dist = fab.local("python setup.py --fullname", capture=True).strip()
+    fab.put("dist/%s.tar.gz" % dist, "%s/honey.tar.gz" % TMP_DIR)
+    # backup current deploy
+    fab.run("if [ ! -d %s.bak ]; then mv %s %s/senseicrowd.bak; fi" % (DEPLOY_DIR, DEPLOY_DIR, TMP_DIR))
+    fab.run("rm -rf %s 2>/dev/null" % DEPLOY_DIR)
+    fab.run("mkdir %s" % DEPLOY_DIR)
+    # copy the virtual env
+    fab.run("cp -r %s/senseicrowd.bak/env %s" % (TMP_DIR, DEPLOY_DIR))
+    # install the package
+    with fab.cd(DEPLOY_DIR):
+        fab.run("tar xzf %s/honey.tar.gz" % TMP_DIR)
+        with fab.cd(dist):
+            fab.run("%s/env/bin/python setup.py develop" % DEPLOY_DIR)
+    # update apache stuff
+    fab.local("tar -czf deploy.tgz deploy")
+    fab.put("deploy.tgz", "%s/deploy.tgz" % TMP_DIR)
+    with fab.cd(TMP_DIR):
+        fab.run("tar xzf deploy.tgz")
+        with fab.cd("deploy"):
+            # update_fcgi works with .htaccess
+            fab.run("mv htaccess .htaccess")
+            fab.run("python update_fcgi.py")
+            fab.run("mv .htaccess %s" % DEPLOY_DIR)
+            fab.run("mv *fcgi* %s" % DEPLOY_DIR)
+
+def setup_fixtures():
     """
     Setup simple fixtures.
 
@@ -36,3 +94,5 @@ def setup():
         sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.sgf" % id).read()
         user_id = random.choice(list(db.get_users()))["_id"]
         game, err = db.create_game(user_id, sgf)
+
+
