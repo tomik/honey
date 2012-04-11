@@ -191,9 +191,13 @@ class SgfHandler:
 
     def on_property(self, name, value):
         node = self._get_curr_node()
+        # multiple properties are arranged to the list
         if self.curr_node.has_key(name):
-            raise SgfParseError("Duplicate property.")
-        self.curr_node[name] = value
+            if not type(self.curr_node[name]) == list:
+                self.curr_node[name] = [self.curr_node[name]]
+            self.curr_node[name].append(value)
+        else:
+            self.curr_node[name] = value
 
     def on_branch_start(self):
         branch = self._get_curr_branch()
@@ -256,7 +260,9 @@ def _runParser(sgf, handler):
             handler.on_node()
             state = LexState.NODE
         elif state == LexState.NODE and c == "[":
-            prop_name = acc
+            # when one property has multiple values keep the old prop_name
+            if not prop_name or acc.strip():
+                prop_name = acc.strip()
             acc = ""
             state = LexState.PROPERTY
         elif (state == LexState.SEQ or state == LexState.NODE) and c == "(":
@@ -274,12 +280,11 @@ def _runParser(sgf, handler):
                 depth -= 1
                 state = LexState.SEQ
         elif state == LexState.PROPERTY and c == "]":
-            prop_value = acc
+            prop_value = acc.strip()
             acc = ""
             state = LexState.NODE
             # quick hack to avoid handling properties with multiple values
-            if prop_name:
-                handler.on_property(prop_name, prop_value)
+            handler.on_property(prop_name, prop_value)
         elif state == LexState.NODE or state == LexState.PROPERTY:
             acc += c
 
