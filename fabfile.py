@@ -57,6 +57,26 @@ def deploy():
             fab.run("mv .htaccess %s" % DEPLOY_DIR)
             fab.run("mv *fcgi* %s" % DEPLOY_DIR)
 
+def clear_db():
+    """
+    Creates vanilla db setup.
+
+    This includes:
+    - no games
+    - no comments
+    - users admin, tomik and slpwnd
+    """
+
+    from honey import db
+    from honey.core import app
+
+    db.reset()
+    # setup users
+    tp_hash = 'sha1$Pq4yk8OM$3081feca50438e33cfd3bacef83cb47bdb6cbb93'
+    db.create_user("admin", "admin@senseicrowd.com", tp_hash)
+    db.create_user("tomik", "tomas.kozelek@gmail.com", tp_hash)
+    db.create_user("slpwnd", "tomas.kozelek@gmail.com", tp_hash)
+
 def setup_fixtures():
     """
     Setup simple fixtures.
