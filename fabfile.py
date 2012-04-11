@@ -20,12 +20,13 @@ def compile():
     fab.local("cd honey/static/img && ln -fs ../../../bootstrap/img/glyphicons-halflings-white.png")
     fab.local("cd honey/static/js && ln -fs ../../../bootstrap/js/bootstrap-button.js")
 
+fab.env.hosts = ['tomik@zene.sk:2222']
+
 def pack():
     # create a new source distribution as tarball
     fab.local("python setup.py sdist --formats=gztar", capture=False)
 
 def deploy():
-    fab.env.hosts = ['tomik@zene.sk:2222']
     DEPLOY_DIR = "~/public/www/senseicrowd"
     TMP_DIR = "~/tmp/honey-deploy"
     # prepare tmp dir
@@ -38,6 +39,8 @@ def deploy():
     fab.run("if [ ! -d %s.bak ]; then mv %s %s/senseicrowd.bak; fi" % (DEPLOY_DIR, DEPLOY_DIR, TMP_DIR))
     fab.run("rm -rf %s 2>/dev/null" % DEPLOY_DIR)
     fab.run("mkdir %s" % DEPLOY_DIR)
+    # apache needs to write log files
+    fab.run("chmod o+w %s" % DEPLOY_DIR)
     # copy the virtual env
     fab.run("cp -r %s/senseicrowd.bak/env %s" % (TMP_DIR, DEPLOY_DIR))
     # install the package

@@ -1,2 +1,3 @@
 recursive-include honey/static *.*
 recursive-include honey/templates *.*
+include fabfile.py
