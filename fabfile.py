@@ -4,11 +4,10 @@ import fabric.api as fab
 from fabric.contrib.console import confirm
 
 def run():
-    """Runs development server."""
+    """Run the development server."""
     from honey import app
-    app.run(debug=True)
-
-fab.env.hosts = ['tomik@zene.sk:2222']
+    app.debug = True
+    app.run()
 
 def compile():
     """Compile .less and .coffee files and make sure that links are up to date."""
@@ -26,6 +25,7 @@ def pack():
     fab.local("python setup.py sdist --formats=gztar", capture=False)
 
 def deploy():
+    fab.env.hosts = ['tomik@zene.sk:2222']
     DEPLOY_DIR = "~/public/www/senseicrowd"
     TMP_DIR = "~/tmp/honey-deploy"
     # prepare tmp dir
@@ -70,8 +70,8 @@ def setup_fixtures():
 
     from werkzeug import generate_password_hash
 
-    import db
-    from core import app
+    from honey import db
+    from honey.core import app
 
     # what if lg is down
     socket.setdefaulttimeout(5)
@@ -94,5 +94,4 @@ def setup_fixtures():
         sgf = urllib.urlopen("http://www.littlegolem.net/servlet/sgf/%s/game.sgf" % id).read()
         user_id = random.choice(list(db.get_users()))["_id"]
         game, err = db.create_game(user_id, sgf)
-
 
