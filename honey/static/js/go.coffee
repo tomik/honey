@@ -57,8 +57,9 @@ class Move
       @color = Color.BLACK
       where = rawMove["B"]
     else
-      console.log(rawMove)
-      throw "Invalid node"
+      console.log("Move: no playable move in " + rawMove)
+      [@x, @y, @moveType] = [null, null, null]
+      return
     if where == "resign"
       @moveType = MoveType.RESIGN
     else if (where.length > 2)
@@ -67,6 +68,9 @@ class Move
       throw "invalid move definition #{where}"
     else
       [@x, @y, @moveType] = [x, y, MoveType.NORMAL]
+
+  applies: ->
+    return @x != null and @y != null and @moveType != null
 
   toStr: ->
     if @moveType == MoveType.RESIGN

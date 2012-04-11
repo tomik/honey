@@ -80,7 +80,8 @@ rawParseNodes = (nodes, handler) ->
         handler.onBranchStop()
     else
       move = new Move(node)
-      handler.onMove(move)
+      if move.applies()
+        handler.onMove(move)
 
 rawParse = (nodes, handler) ->
   if nodes.length <= 0
