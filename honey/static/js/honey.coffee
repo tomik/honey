@@ -146,7 +146,7 @@ class Game
 
   # shortcut for playing existing nodes
   playNode: (node, redraw) ->
-    @playMove(node.move, redraw)
+    return @playMove(node.move, redraw)
 
   # plays a move on the board and updates data structures
   playMove: (move, redraw=true) ->
@@ -156,11 +156,11 @@ class Game
     [x, y, color, moveType] = [move.x, move.y, move.color, move.moveType]
     # are we continuing in the existing branch ?
     newNode = findElem @currNode.children, ((e) -> e.move == move)
+    if not _model.isValidMove(move)
+      console.log("Game: invalid move #{move.toStr()}")
+      return false
     # new move
     if not newNode
-      if not _model.isValidMove(move)
-        console.log("Game: invalid move #{move.toStr()}")
-        return
       newNode = new Node(move, @currNode, false)
       newNode.father.children.push(newNode)
       _dispatcher.dispatch("onCreateNode", this, newNode)
@@ -168,6 +168,7 @@ class Game
     _dispatcher.dispatch("onPlayMove", this, newNode)
     if redraw
       _dispatcher.dispatch("onRedraw", this)
+    return true
 
   # removes last move from the board
   unplayMove: (redraw=true) ->
@@ -373,7 +374,8 @@ keydownHandler = (key) ->
     if _game.currNode.children.length
       _game.playNode(_game.currNode.children[0], not redraw)
       while _game.currNode.children.length and not _game.currNode.hasBranches()
-        _game.playNode(_game.currNode.children[0], not redraw)
+        if not _game.playNode(_game.currNode.children[0], not redraw)
+          break
       _dispatcher.dispatch("onRedraw", _game)
       return true
   else
