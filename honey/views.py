@@ -75,7 +75,7 @@ def main():
     page = int(queries.get("page", 1))
     per_page = app.config["games_per_page"]
     game_from, game_to = (page - 1) * per_page, page * per_page
-    games_cursor = db.get_games()
+    games_cursor = db.get_games(ordering="date")
     num_all_games = games_cursor.count()
     games = list(games_cursor[game_from:game_to])
     for game in games:

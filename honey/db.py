@@ -230,21 +230,33 @@ def get_game(id):
     """Fetches game for given id."""
     return db_games.Game.find_one({"_id": ObjectId(id)})
 
-# TODO ordering and reversed
-def get_games(ordering=None, reversed=False):
+def order(coll, ordering=None, ascending=False):
+    """
+    Orders collection according to given ordering.
+
+    @ordering one of the following:
+        "date" "activity" "player_strength" "popularity" "first_name" "second_name"
+    @ascending defines direction of ordering
+    @return games iterator
+    """
+    if not ordering:
+        return coll
+    direction = ascending and 1 or -1
+    mapping = {"date": "date"}
+    order_pairs = [(mapping[ordering], direction)]
+    return coll.sort(order_pairs)
+
+def get_games(ordering=None, ascending=False):
     """
     Fetches all the games based on given ordering.
 
-    @ordering one of the following:
-        "datetime" "activity" "player_strength" "popularity" "first_name" "second_name"
-    @return games iterator
     """
-    return db_games.Game.find()
+    return order(db_games.Game.find(), ordering, ascending)
 
 # TODO ordering and reversed
-def get_games_for_user(user_id, ordering=None, reversed=False):
+def get_games_for_user(user_id, ordering=None, ascending=False):
     """Same as get_games for a single user."""
-    return db_games.Game.find({"user_id": user_id})
+    return order(db_games.Game.find({"user_id": user_id}, ordering, ascending))
 
 def patch_game_with_variant(game, full_path):
     """Adds variant to given game if it doesn't exist yet."""
