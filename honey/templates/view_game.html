@@ -35,6 +35,20 @@
         e.preventDefault();
         $("#post_comment").toggle();
       });
+      $("#commit_toggle").click(function(e) {
+        e.preventDefault();
+        $.ajax({
+          type: "POST",
+          url: "{{url_for('post_update', game_id=game._id)}}",
+          data: {"update_data": JSON.stringify(_bridge.getNodes())}
+        }).done(function(reply) {
+          if("err" in reply && reply.err) {
+            alert(reply["err"]);
+          }
+          // TODO better
+          $("#commit_toggle").toggle();
+        });
+      });
       // toggle forms that have errors
       {% if comment_form|form_has_errors() %}
         $("#post_comment_toggle").click();
@@ -66,6 +80,10 @@
         edit game
       </a>
       {% endif %}
+      <a id="commit_toggle" href="" data-toggle="button" class="btn">
+        <i class="icon-cog"></i>
+        commit
+      </a>
     </p>
     {% if game_edit_form %}
     <div id="edit_game" style="display: none;">

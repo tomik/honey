@@ -258,6 +258,21 @@ def get_games_for_user(user_id, ordering=None, ascending=False):
     """Same as get_games for a single user."""
     return order(db_games.Game.find({"user_id": user_id}, ordering, ascending))
 
+def sync_game_update(game, update_data, user):
+    """
+    Syncing mechanism.
+
+    Whenever someone adds/removes node(s) or add/removes/changes properties of nodes, this is called.
+    Goes through update data and updates the game to match the update data.
+    Makes sure that user is allowed to perform the sync otherwise throws an exception.
+    """
+    # TODO verify that the user has the right to perform the update
+    new_nodes = update_data[:]
+    new_nodes.insert(0, game.nodes[0])
+    game.nodes = new_nodes
+    game.save()
+    return True
+
 def patch_game_with_variant(game, full_path):
     """Adds variant to given game if it doesn't exist yet."""
     cursor = sgf.Cursor(game.nodes)

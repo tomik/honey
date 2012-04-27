@@ -68,6 +68,10 @@ class Node
   toStr: () ->
     return "{id #{@id} move #{@move.toStr()}}"
 
+  export: () ->
+    # Export for update on the server.
+    @move.toRawDict()
+
 # ==>> RAW FORMAT PARSING AND OUTPUTTING
 
 rawParseNodes = (nodes, handler) ->
@@ -229,6 +233,26 @@ class Game
       node = node.father
     return path.reverse()
 
+  # returns a json object representing current node tree
+  # this is in the same format as input
+  # this can be directly used to replace game.nodes (starting after root)
+  exportNodes: (node) ->
+    nodes = []
+    nodes.push(node.export())
+    while true
+      if node.children.length > 1
+        variants = []
+        for child in node.children
+          variants.push(@exportNodes(child))
+        nodes.push(variants)
+        break
+      else if node.children.length == 1
+        nodes.push(node.children[0].export())
+        node = node.children[0]
+      else
+        break
+    return nodes
+
 # ==>> Logging
 
 class Logger
@@ -292,6 +316,10 @@ class Bridge
     # Example:
     # [{"W": "dd"}, {"B": "cc"}]
     return @game.getNodeFullPath(@game.currNode)
+
+  getNodes: () ->
+    # Returns full node tree without root.
+    return @game.exportNodes(@game.root)[1..]
 
 # ==>> GLOBALS
 

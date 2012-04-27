@@ -151,6 +151,24 @@ def post_comment(game_id):
         return redirect(url_for("view_comment", comment_id=comment._id))
     return _view_game(game_id, [], comment_form=form)
 
+@app.route("/post_update/<game_id>", methods=["POST"])
+@login_required
+def post_update(game_id):
+    """Posts game tree updates for given game. Requires login. Called via ajax."""
+    game = db.get_game(game_id)
+    if not game:
+        abort(404)
+    username = session["username"]
+    user = db.get_user_by_username(username)
+    try:
+        update_data = json.loads(request.form.get("update_data"))
+    except:
+        return jsonify(err="Invalid encoding.")
+    if not db.sync_game_update(game, update_data, user):
+        return jsonify(err="You don't have permission to perform this action.")
+    print jsonify(err=None)
+    return jsonify(err=None)
+
 @app.route("/view_sgf/<game_id>")
 def view_sgf(game_id):
     """Views sgf for game identified by game_id"""
