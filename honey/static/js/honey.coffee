@@ -144,6 +144,8 @@ class Game
   constructor: () ->
     @currNode = @root = new Node(new Move(), null, true)
     @properties = {}
+    @synced = null
+    @setSynced(true)
 
   jumpToRoot: () ->
     @currNode = @root
@@ -168,6 +170,7 @@ class Game
       newNode = new Node(move, @currNode, false)
       newNode.father.children.push(newNode)
       _dispatcher.dispatch("onCreateNode", this, newNode)
+      @setSynced(false)
     @currNode = newNode
     _dispatcher.dispatch("onPlayMove", this, newNode)
     if redraw
@@ -253,6 +256,18 @@ class Game
         break
     return nodes
 
+  # return whether the game is synced to the server data
+  isSynced: () ->
+    return synced
+
+  setSynced: (value) ->
+    if value != @synced
+      @synced = value
+      if @synced
+        _dispatcher.dispatch("onSynced", this)
+      else
+        _dispatcher.dispatch("onUnsynced", this)
+
 # ==>> Logging
 
 class Logger
@@ -273,6 +288,12 @@ class Logger
 
   onRedraw: (game) ->
     console.log("Logger: received onRedraw")
+
+  onSynced: (game) ->
+    console.log("Logger: received onSynced")
+
+  onUnsynced: (game) ->
+    console.log("Logger: received onUnsynced")
 
 # ==>> COMMENTS
 
@@ -298,11 +319,15 @@ class Commenter
 # ==>> COMMENTS
 
 class Bridge
-  constructor: (inputRaw, comments, initPath) ->
+  constructor: (inputRaw, comments, initPath, eventHandler) ->
     @game = _game
     @inputRaw = inputRaw
     @comments = comments
     @initPath = initPath
+    @eventHandler = eventHandler
+    # TODO this is ugly
+    # objects should be registered with _dispatched at one place
+    _dispatcher.register(@eventHandler)
 
   getCurrNodeShortPath: () ->
     # Returns short path to current node in json format as [(branch, node), ...].
@@ -321,13 +346,12 @@ class Bridge
     # Returns full node tree without root.
     return @game.exportNodes(@game.root)[1..]
 
+  syncGame: () ->
+    @game.setSynced(true)
+
 # ==>> GLOBALS
 
 _lastKey = 0
-# global so we can access this from the console
-@_game = _game = new Game
-# global this is accessed by the template
-@Bridge = Bridge
 _logger = new Logger()
 _dispatcher = new EventDispatcher()
 _model = new Model()
@@ -336,8 +360,13 @@ _dispatcher.register(_model)
 _dispatcher.register(new Commenter())
 _dispatcher.register(new Display(_model))
 _dispatcher.register(new Controller())
+# global so we can access this from the console
+@_game = _game = new Game
+# global this is accessed by the template
+@Bridge = Bridge
 
 # ==>> DOCUMENT FUNCTIONS
+
 
 # load position
 $ ->

@@ -18,9 +18,10 @@
     <!-- TODO This should not happen. -->
   {% endif %}
   <script src="/static/js/honey.js?now={{ "%H%M%S"|now }}" type="text/javascript"></script>
+  <script src="/static/js/ui.js?now={{ "%H%M%S"|now }}" type="text/javascript"></script>
   <script src="/static/js/ga.js" type="text/javascript"></script>
   <script type="text/javascript">
-    _bridge = new Bridge({{game.nodes|tojson|safe}}, {{comment_paths|tojson|safe}}, {{init_path|tojson|safe}});
+    _bridge = new Bridge({{game.nodes|tojson|safe}}, {{comment_paths|tojson|safe}}, {{init_path|tojson|safe}}, new UIHandler());
     // Post click handler
     $(function() {
       $("#post_comment form input[value='Post']").click(function(e) {
@@ -45,8 +46,8 @@
           if("err" in reply && reply.err) {
             alert(reply["err"]);
           }
-          // TODO better
-          $("#commit_toggle").toggle();
+          // now the game is in sync with the server again
+          _bridge.syncGame();
         });
       });
       // toggle forms that have errors
@@ -68,20 +69,21 @@
   <div class="span6">
     {% include "game_info.html" %}
     <p>
-      {% if session.username %}
-      <a id="post_comment_toggle" data-toggle="button" class="btn">
-        <i class="icon-comment"></i>
-        comment
-      </a>
-      {% endif %}
       {% if game_edit_form %}
       <a id="edit_game_toggle" href="" data-toggle="button" class="btn">
         <i class="icon-cog"></i>
         edit game
       </a>
       {% endif %}
-      <a id="commit_toggle" href="" data-toggle="button" class="btn">
-        <i class="icon-cog"></i>
+      {% if session.username %}
+      <a id="post_comment_toggle" data-toggle="button" class="btn">
+        <i class="icon-comment"></i>
+        comment
+      </a>
+      {% endif %}
+      <a id="commit_toggle" href="" data-toggle="button" class="btn" style="display:none"
+        title="Commit changes you made to the server.">
+        <i class="icon-refresh"></i>
         commit
       </a>
     </p>
