@@ -81,7 +81,7 @@ class Game(mongokit.Document):
 
     @property
     def player1(self):
-        return self.nodes[0].get("PB", "?")
+        return self.nodes[0].get("PB", "player1")
 
     @player1.setter
     def player1(self, value):
@@ -89,7 +89,7 @@ class Game(mongokit.Document):
 
     @property
     def player2(self):
-        return self.nodes[0].get("PW", "?")
+        return self.nodes[0].get("PW", "player2")
 
     @player2.setter
     def player2(self, value):
@@ -218,8 +218,19 @@ def create_game(user_id, sgf_str, expected_game_type=None):
     if expected_game_type and expected_game_type != game.type:
         return False, "Game type mismatch. Expected %s, got %s." % (expected_game_type, game.type)
     game.save()
-    game_id = game._id
     return game, None
+
+def create_new_game(user_id, game_type):
+    """Creates the new blank game without accompanying sgf."""
+    game = db_games.Game()
+    game.user_id = user_id
+    game.date = datetime.datetime.now()
+    game.nodes = []
+    # root node
+    game.nodes.append({})
+    game.type = game_type
+    game.save()
+    return game
 
 def update_game(game):
     """Updates game in the db."""

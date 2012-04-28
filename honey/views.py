@@ -131,6 +131,14 @@ def edit_game(game_id):
         return redirect(url_for("view_game", game_id=game._id))
     return _view_game(game._id, [], game_edit_form=form)
 
+@app.route("/create_game")
+@login_required
+def create_game():
+    """Creates new game and lets the user edit it."""
+    user = db.get_user_by_username(session["username"])
+    game = db.create_new_game(user._id, request.game_type)
+    return redirect(url_for("view_game", game_id = game._id))
+
 @app.route("/post_comment/<game_id>", methods=["POST"])
 @login_required
 def post_comment(game_id):
