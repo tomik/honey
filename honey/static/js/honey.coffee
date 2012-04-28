@@ -145,6 +145,7 @@ class Game
     @currNode = @root = new Node(new Move(), null, true)
     @properties = {}
     @synced = null
+    @pastebin = null
     @setSynced(true)
 
   jumpToRoot: () ->
@@ -267,6 +268,31 @@ class Game
         _dispatcher.dispatch("onSynced", this)
       else
         _dispatcher.dispatch("onUnsynced", this)
+
+  # only applicable if not in the root node
+  # unplays the current move and cuts the node with whole subtree
+  # stores the cut in the pastebin for later pasting
+  cut: () ->
+    if _game.currNode.father
+      previous = _game.currNode
+      @pastebin = _game.currNode
+      # redraw is done explicitly after the node is removed
+      # this is necessary to prevent i.e. child mark placing
+      redraw = false
+      _game.unplayMove(redraw)
+      idx = _game.currNode.children.indexOf(previous)
+      _game.currNode.children.splice(idx, 1)
+      @setSynced(false)
+      _dispatcher.dispatch("onRedraw", this)
+
+  # pastes the content of pastebin after current node
+  # creates a variation if necessary
+  paste: () ->
+    if @pastebin
+      _game.currNode.children.push(@pastebin)
+      @pastebin.father = _game.currNode
+      _dispatcher.dispatch("onRedraw", this)
+      @setSynced(false)
 
 # ==>> Logging
 
@@ -435,6 +461,12 @@ keydownHandler = (key) ->
           break
       _dispatcher.dispatch("onRedraw", _game)
       return true
+  # cut current node and its subtree
+  else if key == 88
+    _game.cut()
+  # paste after current node
+  else if key == 80
+    _game.paste()
   else
     console.log("pressed #{key}")
   _lastKey = key
