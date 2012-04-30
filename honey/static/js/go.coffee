@@ -46,7 +46,10 @@ coordToRaw = (coord) ->
 
 class Move
   constructor: (rawMove=0) ->
+    # this is the root
     if not rawMove
+      # root is white because first move is black
+      @color = Color.WHITE
       return
     @color = null
     where = null
