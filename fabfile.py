@@ -12,7 +12,7 @@ def run():
 def compile():
     """Compile .less and .coffee files and make sure that links are up to date."""
     fab.local("lessc -c bootstrap/less/bootstrap.less > bootstrap/less/bootstrap.css")
-    for coffee in ["honey", "hex", "go"]:
+    for coffee in ["honey", "hex", "go", "ui"]:
         fab.local("coffee -c honey/static/js/%s.coffee > honey/static/js/%s.js" % (coffee, coffee))
     # setup links
     fab.local("cd honey/static/css && ln -fs ../../../bootstrap/less/bootstrap.css")
