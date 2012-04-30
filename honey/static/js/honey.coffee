@@ -259,7 +259,7 @@ class Game
 
   # return whether the game is synced to the server data
   isSynced: () ->
-    return synced
+    return @synced
 
   setSynced: (value) ->
     if value != @synced
@@ -374,6 +374,9 @@ class Bridge
 
   syncGame: () ->
     @game.setSynced(true)
+
+  isGameSynced: () ->
+    return @game.isSynced()
 
 # ==>> GLOBALS
 

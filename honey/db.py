@@ -284,21 +284,6 @@ def sync_game_update(game, update_data, user):
     game.save()
     return True
 
-def patch_game_with_variant(game, full_path):
-    """Adds variant to given game if it doesn't exist yet."""
-    cursor = sgf.Cursor(game.nodes)
-    for node_dict in full_path:
-        for variant in xrange(cursor.get_variants_num()):
-            if sgf.nodes_are_same_moves(node_dict, cursor.get_next(variant)):
-                cursor.next(variant)
-                break
-        else:
-            # create new node (creates new variant as well)
-            cursor.add_node(node_dict)
-            # and follow it
-            cursor.next(cursor.get_variants_num() - 1)
-    return game
-
 def patch_game_with_comments(game, comments):
     """
     Adds all the comments to their corresponding nodes.

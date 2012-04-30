@@ -87,20 +87,16 @@ class CommentForm(Form):
     # following fields are hidden
     # path is encoded in JSON format as [[branch node], [branch node]]
     short_path_json = HiddenField("Short Path", [validators.Required()])
-    # path is encoded in JSON format as [{"W": "bb"}, {"B": "dd"}]
-    full_path_json = HiddenField("Full Path", [validators.Required()])
 
     def __init__(self, *a, **k):
         Form.__init__(self, *a, **k)
         self.short_path = None
-        self.full_path = None
 
     def validate(self):
         if not Form.validate(self):
             return False
         try:
             self.short_path = json.loads(self.short_path_json.data)
-            self.full_path = json.loads(self.full_path_json.data)
         except ValueError:
             # TODO logging
             self.comment.errors.append("Server upload error")
@@ -108,14 +104,6 @@ class CommentForm(Form):
         # sanity check for short path
         for elem in self.short_path:
             if type(elem) != list or len(elem) != 2:
-                self.comment.errors.append("Server upload error")
-                return False
-        # sanity check for full path
-        for elem in self.full_path:
-            if type(elem) != dict or \
-               len(elem) != 1 or \
-               elem.keys()[0] not in ["W", "B"] or \
-               not re.match(r"[a-z][a-z]", elem.values()[0]):
                 self.comment.errors.append("Server upload error")
                 return False
         return True

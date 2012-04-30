@@ -142,7 +142,7 @@ def create_game():
 @app.route("/post_comment/<game_id>", methods=["POST"])
 @login_required
 def post_comment(game_id):
-    """Posts comment for given game and path. Requires login."""
+    """Posts comment for given game and path. Requires login. Called via ajax."""
     game = db.get_game(game_id)
     if not game:
         abort(404)
@@ -154,10 +154,13 @@ def post_comment(game_id):
             app.logger.warning("comment without user")
             abort(500)
         comment = db.create_comment(user._id, game_id, form.short_path, form.comment.data)
-        patched_game = db.patch_game_with_variant(game, form.full_path)
-        db.update_game(patched_game)
-        return redirect(url_for("view_comment", comment_id=comment._id))
-    return _view_game(game_id, [], comment_form=form)
+        db.annotate(comment)
+        comment_template = app.jinja_env.from_string(
+            """
+            {% from 'macros.html' import render_comment_in_game %} {{ render_comment_in_game(comment) }}
+            """)
+        return jsonify(err=None, comment_html = comment_template.render(comment=comment))
+    return jsonify(err="Invalid comment.")
 
 @app.route("/post_update/<game_id>", methods=["POST"])
 @login_required
@@ -174,7 +177,6 @@ def post_update(game_id):
         return jsonify(err="Invalid encoding.")
     if not db.sync_game_update(game, update_data, user):
         return jsonify(err="You don't have permission to perform this action.")
-    print jsonify(err=None)
     return jsonify(err=None)
 
 @app.route("/view_sgf/<game_id>")

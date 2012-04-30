@@ -120,3 +120,20 @@
   });
   </script>
 {% endmacro %}
+
+{% macro render_comment_in_game(comment) %}
+  <p>
+    <div class="comment" id="comment_{{comment._id}}">
+      <div> <strong>Posted by {{ render_user_link(comment.user.username) }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</strong></div>
+      {{ comment.text }}
+    </div>
+  </p>
+{% endmacro %}
+
+{% macro foobar() %}
+  <p>
+    <div class="foo">
+      bar
+    </div>
+  </p>
+{% endmacro %}
