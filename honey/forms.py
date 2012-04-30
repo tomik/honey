@@ -59,11 +59,13 @@ class GoGameEditForm(GameEditForm):
     black = TextField("Black", [validators.Required()])
     white = TextField("White", [validators.Required()])
     komi = FloatField("Komi", [validators.Required()])
+    handicap = IntegerField("Handicap", [validators.Required()])
 
     def update_game(self, game):
         game.player1 = self.black.data
         game.player2 = self.white.data
         game.komi = self.komi.data
+        game.handicap = self.handicap.data
         super(GoGameEditForm, self).update_game(game)
 
 class HexGameEditForm(GameEditForm):

@@ -48,8 +48,6 @@ class Move
   constructor: (rawMove=0) ->
     # this is the root
     if not rawMove
-      # root is white because first move is black
-      @color = Color.WHITE
       return
     @color = null
     where = null
@@ -121,6 +119,7 @@ class Board
     @stones = (Field.EMPTY for i in [0...@size * @size])
     # if ko is captured we remember this(index) to prevent immediate recapturing
     @koCapture = null
+    @colorToPlay = Color.BLACK
 
   toStr: () ->
     res = ""
@@ -142,6 +141,7 @@ class Board
       @setField(index, diff.captured.field)
     # restore old koCapture value
     @koCapture = diff.koCapture
+    @colorToPlay = flipColor(@colorToPlay)
 
   playMove: (move) ->
     index = @getIndex(move)
@@ -178,6 +178,7 @@ class Board
       @koCapture = captured.stones[0]
     else
       @koCapture = null
+    @colorToPlay = flipColor(@colorToPlay)
     return [true, new BoardDiff(playedIndex, captured, diffKoCapture)]
 
   captureDragon: (startIndex) ->
@@ -256,6 +257,28 @@ class Model
     # stack of board diffs
     @diffs = []
 
+  getHandicapStones: (handicap) ->
+    if handicap < 2 or handicap > 9
+      return []
+    if handicap == 5
+      return @getHandicapStones(4).concat([[9, 9]])
+    if handicap == 7
+      return @getHandicapStones(6).concat([[9, 9]])
+    # this works for 2, 3, 4, 6, 8, 9
+    return [[15, 3], [3, 15], [15, 15], [3, 3],
+      [15, 9], [3, 9], [9, 3], [9, 15], [9, 9]][0...handicap]
+
+  onInit: (game) ->
+    # handle handicap if any
+    if "HA" of game.properties
+      handicap = game.properties["HA"]
+      for coord in @getHandicapStones(handicap)
+        move = new Move()
+        [move.x, move.y, move.color, move.moveType] = [coord[0], coord[1], Color.BLACK, MoveType.NORMAL]
+        # TODO use placeStone instead
+        @board.playMove(move)
+      @board.colorToPlay = Color.WHITE
+
   isValidMove: (move) ->
     return @board.isValidMove(move)
 
@@ -290,12 +313,12 @@ class Display
     $(".move").remove()
     $(".empty_field").remove()
     for field, i in @model.board.stones
-      y = Math.floor(i / @model.board.size)
       x = i % @model.board.size
+      y = Math.floor(i / @model.board.size)
       coord = {x: x, y: y}
       if field == Field.EMPTY
         # put empty field
-        Controller.setupEmptyField(game, coord)
+        Controller.setupEmptyField(game, coord, @model.board.colorToPlay)
       else
         # draw field
         src = if field == Field.BLACK then BLACK_STONE_IMG else WHITE_STONE_IMG
@@ -351,7 +374,7 @@ class Display
 # ==>> CONTROLLER
 
 class Controller
-  constructor: () ->
+  constructor: (@model) ->
     @game = null
 
   onInit: (game) ->
@@ -361,7 +384,7 @@ class Controller
     @setupEmptyFields()
 
   # creates empty field on the board
-  @setupEmptyField: (game, coord) ->
+  @setupEmptyField: (game, coord, colorToPlay) ->
     pos = coordToPosCenter(coord)
     elem = $("<area class='empty_field' id='empty_field_#{coord.x}_#{coord.y}'
               coords='#{pos.x},#{pos.y},#{FIELD_RADIUS}' shape='circle'/>")
@@ -369,20 +392,20 @@ class Controller
     elem.click((e) ->
         e.preventDefault()
         move = new Move()
-        # this is pretty much the only place that makes any assumptions about game object
-        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, flipColor(game.currNode.move.color), MoveType.NORMAL]
+        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, colorToPlay, MoveType.NORMAL]
         game.playMove(move))
 
   # setups all empty fields on board
   setupEmptyFields: () ->
-    for i in [0...BOARD_SIZE * BOARD_SIZE]
+    for field, i in @model.board.stones
       coord =
-        x: i % BOARD_SIZE
-        y: Math.floor(i / BOARD_SIZE)
-      Controller.setupEmptyField(@game, coord)
+        x: i % @model.board.size
+        y: Math.floor(i / @model.board.size)
+      if field == Field.EMPTY
+        Controller.setupEmptyField(@game, coord, @model.board.colorToPlay)
 
   onUnplayMove: (game, node) ->
-    Controller.setupEmptyField(@game, {x:node.move.x, y:node.move.y})
+    Controller.setupEmptyField(@game, {x:node.move.x, y:node.move.y}, @model.board.colorToPlay)
 
 # ==>> EXPORT
 

@@ -30,7 +30,7 @@ class EventDispatcher
   #
   # The events can be following:
   #
-  # onInit(game) - raised in the very beginning
+  # onInit(game) - raised after the root node (with game information) is loaded
   # onLoad(game) - raised when nodes were loaded but before the initial position is setup
   # onPlayMove(game, node) - raised after current node is updated forward
   # onUnplayMove(game, node) - raised after current node is updated backward
@@ -87,11 +87,12 @@ rawParseNodes = (nodes, handler) ->
       if move.applies()
         handler.onMove(move)
 
-rawParse = (nodes, handler) ->
+rawParse = (nodes, handler, initializer) ->
   if nodes.length <= 0
     return
   gameNode = nodes[0]
   handler.onGameProperty(propName, propValue) for propName, propValue of gameNode
+  initializer()
   rawParseNodes(nodes[1...nodes.length], handler)
 
 # parsing object
@@ -103,23 +104,7 @@ class RawParseHandler
 
   onGameProperty: (propName, propValue) ->
     console.log("game property #{propName}=#{propValue}")
-    if propName == "FF" and propValue != "4"
-      throw "invalid game type"
-    # TODO handle board size
-    # player names
-    else if propName == "PB"
-      @game.properties.red = propValue
-    else if propName == "PW"
-      @game.properties.blue = propValue
-    # other game properties
-    else if propName == "SZ"
-      @game.properties.size = propValue
-    else if propName == "SO"
-      @game.properties.source = propValue
-    else if propName == "GC"
-      @game.properties.gameComment = propValue
-    else if propName == "EV"
-      @game.properties.hexEvent = propValue
+    @game.properties[propName] = propValue
 
   onMove: (move) ->
     # create the node for the move
@@ -388,7 +373,7 @@ _dispatcher.register(_logger)
 _dispatcher.register(_model)
 _dispatcher.register(new Commenter())
 _dispatcher.register(new Display(_model))
-_dispatcher.register(new Controller())
+_dispatcher.register(new Controller(_model))
 # global so we can access this from the console
 @_game = _game = new Game
 # global this is accessed by the template
@@ -396,17 +381,21 @@ _dispatcher.register(new Controller())
 
 # ==>> DOCUMENT FUNCTIONS
 
-
 # load position
 $ ->
-  _dispatcher.dispatch("onInit", _game)
+  # onInit is run after the init node is loaded
+  initializer = () -> 
+    _dispatcher.dispatch("onInit", _game)
   # creates the node structure with moves
-  rawParse(_bridge.inputRaw, new RawParseHandler(_game))
+  rawParse(_bridge.inputRaw, new RawParseHandler(_game), initializer)
   _game.jumpToRoot()
   _dispatcher.dispatch("onLoad", _game)
-  # follow the init path
-  # this is the short path ([[branchId, jump], [branchId, jump], ...])
-  _game.followNodeShortPath(_bridge.initPath)
+  if _bridge.initPath.length > 0
+    # follow the init path
+    # this is the short path ([[branchId, jump], [branchId, jump], ...])
+    _game.followNodeShortPath(_bridge.initPath)
+  else
+    _dispatcher.dispatch("onRedraw", _game)
 
 # handle keydown including holding the key
 $(document).keydown((e) ->

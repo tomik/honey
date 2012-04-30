@@ -11,6 +11,7 @@
     {{ render_field(form.black, value=game.player1) }}
     {{ render_field(form.white, value=game.player2) }}
     {{ render_field(form.komi, value=game.komi) }}
+    {{ render_field(form.handicap, value=game.handicap) }}
   {% endif %}
     {{ render_field(form.event, value=game.event) }}
     {{ render_field(form.result, value=game.result) }}
