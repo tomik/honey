@@ -105,11 +105,11 @@ class Game(mongokit.Document):
 
     @property
     def komi(self):
-        return self.nodes[0].get("KM", None)
+        return "%.1f" % float(self.nodes[0].get("KM", 0.5))
 
     @komi.setter
     def komi(self, value):
-        self.nodes[0]["KM"] = value
+        self.nodes[0]["KM"] = "%.1f" % float(value)
 
     def is_owner(self, user):
         return user._id == self.user_id
