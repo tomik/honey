@@ -148,7 +148,7 @@ class Game
     [x, y, color, moveType] = [move.x, move.y, move.color, move.moveType]
     # are we continuing in the existing branch ?
     newNode = findElem @currNode.children, ((e) -> e.move == move)
-    if not _model.isValidMove(move)
+    if not _boardModel.isValidMove(move)
       console.log("Game: invalid move #{move.toStr()}")
       return false
     # new move
@@ -376,12 +376,12 @@ class Bridge
 _lastKey = 0
 _logger = new Logger()
 _dispatcher = new EventDispatcher()
-_model = new Model()
+_boardModel = new BoardModel()
 _dispatcher.register(_logger)
-_dispatcher.register(_model)
+_dispatcher.register(_boardModel)
 _dispatcher.register(new Commenter())
-_dispatcher.register(new Display(_model))
-_dispatcher.register(new Controller(_model))
+_dispatcher.register(new BoardView(_boardModel))
+_dispatcher.register(new BoardController(_boardModel))
 # global so we can access this from the console
 @_game = _game = new Game
 # global this is accessed by the template

@@ -102,7 +102,7 @@ coordToPosForText = (coord) ->
 
 # ==>> RULES
 
-class Model
+class BoardModel
   # hex is the game with simplest rules ever
   isValidMove: (move) ->
     # TODO check if the field is empty ?
@@ -186,11 +186,11 @@ removeLastMoveMark = ->
   if(last)
     last.hide()
 
-class Display
+class BoardView
   onInit: (game) ->
     # html board
     board = $("#board")
-    board.append($("<img alt='' class='boardimage' galleryimg='no' id='boardimage' src='/static/img/hex_board.gif' usemap='#empty_fields' border='0'/>"))
+    board.append($("<img alt='' class='boardimage' galleryimg='no'id='boardimage' src='/static/img/hex_board.gif' usemap='#empty_fields' border='0'/>"))
 
   onPlayMove: (game, node) ->
     if node.move.moveType == MoveType.RESIGN
@@ -202,7 +202,7 @@ class Display
 
 # ==>> CONTROLLER
 
-class Controller
+class BoardController
   constructor: () ->
     @game = null
 
@@ -218,14 +218,12 @@ class Controller
     elem = $("<area id='empty_field_#{coord.x}_#{coord.y}' href=''
               coords='#{pos.x},#{pos.y},#{FIELD_RADIUS}' shape='circle'/>")
     elem.appendTo("#empty_fields")
-    # cannot use @game directly in the event because of javascript quirkiness in this
-    game = @game
-    elem.click((e) ->
+    elem.click((e) =>
         e.preventDefault()
         move = new Move()
         # this is pretty much the only place that makes any assumptions about game object
-        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, flipColor(game.currNode.move.color), MoveType.Normal]
-        game.playMove(move))
+        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, flipColor(@game.currNode.move.color), MoveType.Normal]
+        @game.playMove(move))
 
   # setups all empty fields on board
   setupEmptyFields: () ->
@@ -240,8 +238,8 @@ class Controller
 
 # ==>> EXPORT
 
-@Display = Display
+@BoardView = BoardView
 @Move = Move
-@Model = Model
-@Controller = Controller
+@BoardModel = BoardModel
+@BoardController = BoardController
 

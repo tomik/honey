@@ -264,7 +264,7 @@ class Board
       visited[neighborIndex] = true
     return false
 
-class Model
+class BoardModel
   constructor: () ->
     @board = new Board(19)
     # stack of board diffs
@@ -298,9 +298,9 @@ class Model
   onPlayMove: (game, node) ->
     [valid, diff] = @board.playMove(node.move)
     if not valid
-      throw "Model: Invalid move #{node.move.toStr()}"
+      throw "BoardModel: Invalid move #{node.move.toStr()}"
     @diffs.push(diff)
-    console.log("Model::onPlayMove: \n" + @board.toStr())
+    console.log("BoardModel::onPlayMove: \n" + @board.toStr())
 
   onUnplayMove: (move) ->
     diff = @diffs.pop()
@@ -308,7 +308,8 @@ class Model
 
 # ==>> DISPLAY
 
-class Display
+# Handles proper board and its elements (stones, triangles, etc.) displaying according to the model.
+class BoardView
   constructor: (@model) ->
 
   onInit: (game) ->
@@ -318,7 +319,7 @@ class Display
 
   onRedraw: (game) ->
     @redrawBoard(game)
-    Display.updateBoardMarks(game.currNode)
+    BoardView.updateBoardMarks(game.currNode)
 
   # places move representing given node on board
   redrawBoard: (game) ->
@@ -351,13 +352,13 @@ class Display
   #updates move marks and board marks
   @updateBoardMarks: (placedNode) ->
     if placedNode.father
-      Display.updateLastMoveMark(placedNode.move.x, placedNode.move.y, placedNode.move.color)
+      BoardView.updateLastMoveMark(placedNode.move.x, placedNode.move.y, placedNode.move.color)
     else
-      Display.removeLastMoveMark()
-    Display.removeChildMarks()
+      BoardView.removeLastMoveMark()
+    BoardView.removeChildMarks()
     # TODO limit max number of marks
     if placedNode.children.length > 1
-      Display.putChildMarkOnBoard(child, i) for child, i in placedNode.children
+      BoardView.putChildMarkOnBoard(child, i) for child, i in placedNode.children
 
   # places mark for last move from the board
   @updateLastMoveMark: (x, y, color) ->
@@ -382,7 +383,8 @@ class Display
 
 # ==>> CONTROLLER
 
-class Controller
+# Handles user interaction with the board.
+class BoardController
   constructor: (@model) ->
     @game = null
 
@@ -404,8 +406,8 @@ class Controller
 
 # ==>> EXPORT
 
-@Display = Display
+@BoardView = BoardView
 @Move = Move
-@Controller = Controller
-@Model = Model
+@BoardController = BoardController
+@BoardModel = BoardModel
 
