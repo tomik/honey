@@ -103,6 +103,19 @@ coordToPosForText = (coord) ->
   pos.y -= FIELD_RADIUS + 2
   pos
 
+# position within FIELD_RADIUS is transformed to coord
+# if no coord corresponds to this than null is returned
+posToCoord = (pos) ->
+  raw_x = (pos.x - FIELD_FIRST.x) / FIELD_X_DIFF
+  raw_y = (pos.y - FIELD_FIRST.y) / FIELD_Y_DIFF
+  x = Math.round(raw_x)
+  y = Math.round(raw_y)
+  diff_x = Math.abs(x - raw_x)
+  diff_y = Math.abs(y - raw_y)
+  if diff_x > FIELD_RADIUS or diff_y > FIELD_RADIUS
+    return null
+  {x: x, y: y}
+
 # ==>> RULES
 
 class Group
@@ -301,7 +314,7 @@ class Display
   onInit: (game) ->
     # html board
     board = $("#board")
-    board.append($("<img alt='' style='width:500px;' class='boardimage' galleryimg='no' id='boardimage' src='" + BOARD_IMG + "' usemap='#empty_fields' border='0'/>"))
+    board.append($("<img alt='' style='width:500px;' class='boardimage' galleryimg='no' id='boardimage' src='" + BOARD_IMG + "' border='0'/>"))
 
   onRedraw: (game) ->
     @redrawBoard(game)
@@ -311,15 +324,11 @@ class Display
   redrawBoard: (game) ->
     # hardcore TODO change
     $(".move").remove()
-    $(".empty_field").remove()
     for field, i in @model.board.stones
       x = i % @model.board.size
       y = Math.floor(i / @model.board.size)
       coord = {x: x, y: y}
-      if field == Field.EMPTY
-        # put empty field
-        Controller.setupEmptyField(game, coord, @model.board.colorToPlay)
-      else
+      if field != Field.EMPTY
         # draw field
         src = if field == Field.BLACK then BLACK_STONE_IMG else WHITE_STONE_IMG
         pos = coordToPosTopLeft(coord)
@@ -380,32 +389,18 @@ class Controller
   onInit: (game) ->
     @game = game
     board = $("#board")
-    board.append($("<map id='empty_fields' name='empty_fields'>"))
-    @setupEmptyFields()
+    board.click((e) =>
+      x = e.pageX - $(e.target).offset().left
+      y = e.pageY - $(e.target).offset().top
+      coord = posToCoord({x: x, y: y})
+      @clickHandler(coord)
+      e.preventDefault()
+    )
 
-  # creates empty field on the board
-  @setupEmptyField: (game, coord, colorToPlay) ->
-    pos = coordToPosCenter(coord)
-    elem = $("<area class='empty_field' id='empty_field_#{coord.x}_#{coord.y}'
-              coords='#{pos.x},#{pos.y},#{FIELD_RADIUS}' shape='circle'/>")
-    elem.appendTo("#empty_fields")
-    elem.click((e) ->
-        e.preventDefault()
-        move = new Move()
-        [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, colorToPlay, MoveType.NORMAL]
-        game.playMove(move))
-
-  # setups all empty fields on board
-  setupEmptyFields: () ->
-    for field, i in @model.board.stones
-      coord =
-        x: i % @model.board.size
-        y: Math.floor(i / @model.board.size)
-      if field == Field.EMPTY
-        Controller.setupEmptyField(@game, coord, @model.board.colorToPlay)
-
-  onUnplayMove: (game, node) ->
-    Controller.setupEmptyField(@game, {x:node.move.x, y:node.move.y}, @model.board.colorToPlay)
+  clickHandler: (coord) ->
+    move = new Move()
+    [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, @model.board.colorToPlay, MoveType.NORMAL]
+    @game.playMove(move)
 
 # ==>> EXPORT
 
