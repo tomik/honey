@@ -44,6 +44,11 @@
   <div class="span6">
     {% include "game_info.html" %}
     <p>
+      <a id="focus_toggle" href="" data-toggle="button" class="btn"
+        title="Navigating the board with keyboard (arrows, 1-9, ...) requires this button to be toggled (focus is on).">
+        <i class="icon-eye-open"></i>
+        focus
+      </a>
       {% if game_edit_form %}
       <a id="edit_game_toggle" href="" data-toggle="button" class="btn">
         <i class="icon-cog"></i>

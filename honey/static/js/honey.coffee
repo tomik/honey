@@ -336,6 +336,8 @@ class Bridge
     @comments = comments
     @initPath = initPath
     @eventHandler = eventHandler
+    # whether the board key shortcuts apply
+    @focus = true
     # TODO this is ugly
     # objects should be registered with _dispatched at one place
     _dispatcher.register(@eventHandler)
@@ -362,6 +364,12 @@ class Bridge
 
   isGameSynced: () ->
     return @game.isSynced()
+
+  setFocus: (value) ->
+    @focus = value
+
+  hasFocus: () ->
+    @focus
 
 # ==>> GLOBALS
 
@@ -399,6 +407,8 @@ $ ->
 
 # handle keydown including holding the key
 $(document).keydown((e) ->
+  if not _bridge.hasFocus()
+    return
   if not keydownHandler(e.which)
     return
   # wait for a while before first timer is started
@@ -410,9 +420,9 @@ $(document).keydown((e) ->
 
 # release key timers
 $(document).keyup((e) ->
-    _lastKey = 0
-    $(document).stopTime("keydown_timer")
-    $(document).stopTime("keydown_timer_bootstrap"))
+ _lastKey = 0
+ $(document).stopTime("keydown_timer")
+ $(document).stopTime("keydown_timer_bootstrap"))
 
 # key handling logic
 keydownHandler = (key) ->

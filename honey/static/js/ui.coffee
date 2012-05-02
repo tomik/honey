@@ -33,6 +33,17 @@ sendSync = () ->
       _bridge.syncGame()
   )
 
+checkFocus = () ->
+  if $("#edit_game").is(":visible") or $("#post_comment").is(":visible")
+    _bridge.setFocus(false)
+  else
+    _bridge.setFocus(true)
+  # applyFocus
+  if _bridge.hasFocus()
+    $("#focus_toggle").addClass("active")
+  else
+    $("#focus_toggle").removeClass("active")
+
 # $ init
 $ ->
   # posting comments
@@ -55,21 +66,29 @@ $ ->
   # toggling
   $("#edit_game_toggle").click(
     (e) ->
-      e.preventDefault()
       $("#edit_game").toggle()
+      checkFocus()
+      e.preventDefault()
+  )
+  $("#focus_toggle").click(
+    (e) ->
+      _bridge.setFocus(not _bridge.hasFocus())
+      e.preventDefault()
   )
   $("#post_comment_toggle").click(
     (e) ->
-      e.preventDefault()
       $("#post_comment").toggle()
+      checkFocus()
+      e.preventDefault()
   )
   $("#commit_btn").click(
     (e) ->
       $("#commit_btn").button("loading")
-      e.preventDefault()
       sendSync()
+      e.preventDefault()
   )
   # toggle forms that have errors
   if (gameEditFormHasErrors)
     $("#edit_game_toggle").click()
+  checkFocus()
 
