@@ -57,6 +57,8 @@ class Node
     @id = Node.nextNodeId++
     @children = []
     @number = if @father then @father.number + 1 else 0
+    # mapping: markerType -> list of coords
+    @markers = {}
 
   getChildIndex: (node) ->
     return i for child, i in @children when child.id == node.id
@@ -131,6 +133,7 @@ class Game
     @properties = {}
     @synced = null
     @pastebin = null
+    @gameMode = GameMode.PLAY
     @setSynced(true)
 
   jumpToRoot: () ->
@@ -172,6 +175,35 @@ class Game
     _dispatcher.dispatch("onUnplayMove", this, node)
     if redraw
       _dispatcher.dispatch("onRedraw", this)
+
+  # Check whether there is a marker for the given marker type.
+  # If the markerType is null all markerTypes are checked.
+  hasMarker: (coord, markerType) ->
+    if markerType == null
+      for marker, coords of @currNode.markers
+        if ~markers.indexOf coord
+          return true
+    else if markerType of @currNode.markers
+      return ~@currNode.markers[markerType].indexOf coord
+    return false
+
+  # Places marker of given type (triangle, square, circle, label) on a given coord.
+  placeMarker: (coord, markerType) ->
+    if @hasMarker(coord, markerType)
+      throw "Already has a marker of type #{markerType} on coord #{coord}"
+    if not (markerType of @currNode.markers)
+      @currNode.markers[markerType] = []
+    @currNode.markers[markerType].push(coord)
+    _dispatcher.dispatch("onPlaceMarker", this, @currNode, coord)
+    _dispatcher.dispatch("onRedraw", this)
+
+  # Clears the given coord from markers.
+  clearMarker: (coord) ->
+    if not @hasMarker(coord, markerType)
+      throw "No marker of type #{markerType} on coord #{coord}"
+    @currNode.markers[markerType].splice(@currNode.markers[markerType].indexOf coord, 1)
+    _dispatcher.dispatch("onClearMarker", this, @currNode, coord)
+    _dispatcher.dispatch("onRedraw", this)
 
   # returns a json object representing current node short path
   # short path is in the form [(branch_index, node_index), (branch_index, node_index), ...]
@@ -279,6 +311,22 @@ class Game
       _dispatcher.dispatch("onRedraw", this)
       @setSynced(false)
 
+  changeMode: () ->
+    previous = null
+    first = null
+    for mode, value of GameMode
+      console.log(mode)
+      if not first
+        first = value
+      if previous == @gameMode
+        @gameMode = value
+        _dispatcher.dispatch("onChangeMode", @gameMode)
+        return
+      previous = value
+    if previous == @gameMode
+      @gameMode = first
+    _dispatcher.dispatch("onChangeMode", @gameMode)
+
 # ==>> Logging
 
 class Logger
@@ -297,8 +345,17 @@ class Logger
   onUnplayMove: (game, node) ->
     console.log("Logger: received onUnplayMove node #{node.toStr()}")
 
+  onPlaceMarker: (game, node, coord) ->
+    console.log("Logger: received onPlaceMarker node #{node.toStr()} coord #{coord}")
+
+  onClearMarker: (game, node, coord) ->
+    console.log("Logger: received onClearMarker node #{node.toStr()} coord #{coord}")
+
   onRedraw: (game) ->
     console.log("Logger: received onRedraw")
+
+  onChangeMode: (newMode) ->
+    console.log("Logger: received onChangeMode newMode #{newMode}")
 
   onSynced: (game) ->
     console.log("Logger: received onSynced")
@@ -469,8 +526,12 @@ keydownHandler = (key) ->
   # paste after current node
   else if key == 80
     _game.paste()
+  # mode change
+  else if key == 77
+    _game.changeMode()
   else
     console.log("pressed #{key}")
+
   _lastKey = key
   # most of the events are not repeatable
   false

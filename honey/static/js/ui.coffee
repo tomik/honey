@@ -16,6 +16,9 @@ class UIHandler
   onUnsynced: (game) ->
     $("#commit_btn").show()
 
+  onChangeMode: (newMode) ->
+    $("#mode_info").html("mode #{newMode}")
+
 @UIHandler = UIHandler
 
 @_bridge = new Bridge(nodes, commentPaths, initPath, new UIHandler())

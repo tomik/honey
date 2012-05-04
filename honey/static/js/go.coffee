@@ -16,6 +16,26 @@ BOARD_IMG  = "/static/img/go_board.png"
 
 # ==>> BASIC ENUMS
 
+# TODO move this into a common datastructure/utility functions module
+# that will be imported before particular games modules 
+GameMode = {
+  PLAY: "play",
+  # A, B, C, ...
+  LABEL: "label",
+  TRIANGLE: "triangle",
+  CIRCLE: "circle",
+  SQUARE: "square",
+  # can clear the labels, triangle, etc.
+  CLEAR: "clear",
+}
+
+MarkerType = {
+  LABEL: "label",
+  TRIANGLE: "triangle",
+  CIRCLE: "circle",
+  SQUARE: "square",
+}
+
 Color = {
   WHITE: "white",
   BLACK: "black"
@@ -264,6 +284,7 @@ class Board
       visited[neighborIndex] = true
     return false
 
+# Wrapper around the board datastructure fitting into the event system.
 class BoardModel
   constructor: () ->
     @board = new Board(19)
@@ -319,7 +340,7 @@ class BoardView
 
   onRedraw: (game) ->
     @redrawBoard(game)
-    BoardView.updateBoardMarks(game.currNode)
+    @updateBoardMarks(game.currNode)
 
   # places move representing given node on board
   redrawBoard: (game) ->
@@ -337,31 +358,51 @@ class BoardView
                   galleryimg='no' id='move_#{x}_#{y}' src='#{src}'>")
         elem.appendTo("#board")
 
-  # removes all old marks
-  @removeChildMarks: ->
-    $(".child_mark").remove()
-
   # create marks like 1 2 3 directly on board
-  @putChildMarkOnBoard: (node, childIndex) ->
-    pos = coordToPosForText({x:node.move.x, y:node.move.y})
+  putChildMarkOnBoard: (coord, childIndex) ->
+    pos = coordToPosForText({x:coord.x, y:coord.y})
     elem = $("<div class='child_mark' style='background-color: white; position: absolute; left: #{pos.x}px; top:#{pos.y}px;
               padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
-              id='child_mark_#{node.move.x}_#{node.move.y}'>#{childIndex + 1}</div>")
+              id='child_mark_#{coord.x}_#{coord.y}'>#{childIndex + 1}</div>")
+    elem.appendTo("#board")
+
+  # create marks like A, B, C, ..., triangle, square, circle
+  putMarkerOnBoard: (markerType, index, coord) ->
+    pos = coordToPosForText({x:coord.x, y:coord.y})
+    console.log "placing marker at #{coord.x} #{coord.y}"
+    if markerType == MarkerType.LABEL
+      s = ALPHABET[index % ALPHABET.length].toUpperCase()
+    else
+      mapping = {}
+      mapping[MarkerType.TRIANGLE] = "X"
+      mapping[MarkerType.SQUARE] = "S"
+      mapping[MarkerType.CIRCLE] = "O"
+      s = mapping[markerType]
+    elem = $("<div class='marker' style='position: absolute; left: #{pos.x}px; top:#{pos.y}px;
+              padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
+              id='marker_#{coord.x}_#{coord.y}'>#{s}</div>")
     elem.appendTo("#board")
 
   #updates move marks and board marks
-  @updateBoardMarks: (placedNode) ->
+  updateBoardMarks: (placedNode) ->
+    # last move mark
     if placedNode.father
-      BoardView.updateLastMoveMark(placedNode.move.x, placedNode.move.y, placedNode.move.color)
+      @updateLastMoveMark(placedNode.move.x, placedNode.move.y, placedNode.move.color)
     else
-      BoardView.removeLastMoveMark()
-    BoardView.removeChildMarks()
+      @removeLastMoveMark()
+    # child marks
+    $(".child_mark").remove()
     # TODO limit max number of marks
     if placedNode.children.length > 1
-      BoardView.putChildMarkOnBoard(child, i) for child, i in placedNode.children
+      @putChildMarkOnBoard(child.move, i) for child, i in placedNode.children
+    # markers
+    $(".marker").remove()
+    for marker, coords of placedNode.markers
+      for coord, index in coords
+        @putMarkerOnBoard(marker, index, coord)
 
   # places mark for last move from the board
-  @updateLastMoveMark: (x, y, color) ->
+  updateLastMoveMark: (x, y, color) ->
     # update last mark
     last = $("#last_stone")
     if(!last.length)
@@ -376,7 +417,7 @@ class BoardView
     last.show()
 
   # removes mark for last move from the board
-  @removeLastMoveMark: ->
+  removeLastMoveMark: ->
     last = $("#last_stone")
     if(last)
       last.hide()
@@ -400,9 +441,21 @@ class BoardController
     )
 
   clickHandler: (coord) ->
-    move = new Move()
-    [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, @model.board.colorToPlay, MoveType.NORMAL]
-    @game.playMove(move)
+    mode = @game.gameMode
+    if mode == GameMode.PLAY
+      move = new Move()
+      [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, @model.board.colorToPlay, MoveType.NORMAL]
+      @game.playMove(move)
+    else if mode == GameMode.TRIANGLE
+      @game.placeMarker(coord, MarkerType.TRIANGLE)
+    else if mode == GameMode.CIRCLE
+      @game.placeMarker(coord, MarkerType.CIRCLE)
+    else if mode == GameMode.SQUARE
+      @game.placeMarker(coord, MarkerType.SQUARE)
+    else if mode == GameMode.LABEL
+      @game.placeMarker(coord, MarkerType.LABEL)
+    else
+      alert("unknown mode")
 
 # ==>> EXPORT
 
@@ -410,4 +463,7 @@ class BoardController
 @Move = Move
 @BoardController = BoardController
 @BoardModel = BoardModel
+
+@GameMode = GameMode
+@MarkerType = MarkerType
 
