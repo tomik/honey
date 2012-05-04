@@ -16,6 +16,20 @@ findElem = (a, f) ->
   return e for e in a when f(e)
   null
 
+# finds elem in array satisfying f and returns its index
+# returns -1 if not present
+findElemIndex = (a, f) ->
+  return idx for e, idx in a when f(e)
+  -1
+
+# checks whether some elem satisfyies f
+someElem = (a, f) ->
+  return true for e in a when f(e)
+  false
+
+coordsEqual = (c1, c2) ->
+  return c1.x == c2.x and c1.y == c2.y
+
 randomPos = ->
  Math.floor(Math.random() * (BOARD_SIZE - 1))
 
@@ -178,13 +192,13 @@ class Game
 
   # Check whether there is a marker for the given marker type.
   # If the markerType is null all markerTypes are checked.
-  hasMarker: (coord, markerType) ->
+  hasMarker: (coord, markerType=null) ->
     if markerType == null
-      for marker, coords of @currNode.markers
-        if ~markers.indexOf coord
+      for markerType, coords of @currNode.markers
+        if someElem coords, ((c) -> coordsEqual(c, coord))
           return true
     else if markerType of @currNode.markers
-      return ~@currNode.markers[markerType].indexOf coord
+      return someElem @currNode.markers[markerType], ((c) -> coordsEqual(c, coord))
     return false
 
   # Places marker of given type (triangle, square, circle, label) on a given coord.
@@ -199,9 +213,13 @@ class Game
 
   # Clears the given coord from markers.
   clearMarker: (coord) ->
-    if not @hasMarker(coord, markerType)
-      throw "No marker of type #{markerType} on coord #{coord}"
-    @currNode.markers[markerType].splice(@currNode.markers[markerType].indexOf coord, 1)
+    if not @hasMarker(coord)
+      console.log "No marker on coord #{coord.x} #{coord.y}"
+    for markerType, coords of @currNode.markers
+      index = findElemIndex coords, ((c)-> coordsEqual(c, coord))
+      if ~index
+        coords.splice(index, 1)
+        break
     _dispatcher.dispatch("onClearMarker", this, @currNode, coord)
     _dispatcher.dispatch("onRedraw", this)
 
@@ -346,10 +364,10 @@ class Logger
     console.log("Logger: received onUnplayMove node #{node.toStr()}")
 
   onPlaceMarker: (game, node, coord) ->
-    console.log("Logger: received onPlaceMarker node #{node.toStr()} coord #{coord}")
+    console.log("Logger: received onPlaceMarker node #{node.toStr()} coord #{coord.x} #{coord.y}")
 
   onClearMarker: (game, node, coord) ->
-    console.log("Logger: received onClearMarker node #{node.toStr()} coord #{coord}")
+    console.log("Logger: received onClearMarker node #{node.toStr()} coord #{coord.x} #{coord.y}")
 
   onRedraw: (game) ->
     console.log("Logger: received onRedraw")

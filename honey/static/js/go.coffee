@@ -105,8 +105,8 @@ class Move
 
 # produces position with center of the field (i.e. for empty field)
 coordToPosCenter = (coord) ->
-  x = FIELD_FIRST.x + coord.x * FIELD_X_DIFF
-  y = FIELD_FIRST.y + coord.y * FIELD_Y_DIFF
+  x = FIELD_FIRST.x + coord.x * FIELD_X_DIFF - 2
+  y = FIELD_FIRST.y + coord.y * FIELD_Y_DIFF - 2
   {x:x, y:y}
 
 # produces position with top left of the field (i.e. for a stone pic)
@@ -337,13 +337,74 @@ class BoardView
     # html board
     board = $("#board")
     board.append($("<img alt='' style='width:500px;' class='boardimage' galleryimg='no' id='boardimage' src='" + BOARD_IMG + "' border='0'/>"))
+    board.css("z-index", "1")
+    # drawing canvas
+    topCanvas = $("<canvas id='topCanvas'></canvas>")
+    $("#boardContainer").append(topCanvas)
+    topCanvas.attr("width", "500")
+    topCanvas.attr("height", "500")
+    topCanvas.css("left", "0px")
+    topCanvas.css("top", "0px")
+    topCanvas.css("border", "1px solid")
+    topCanvas.css("position", "absolute")
+    topCanvas.css("z-index", "2")
+    @topContext = topCanvas.get(0).getContext("2d")
+    @topCanvas = topCanvas.get(0)
 
   onRedraw: (game) ->
     @redrawBoard(game)
-    @updateBoardMarks(game.currNode)
 
   # places move representing given node on board
   redrawBoard: (game) ->
+    @redrawStones()
+    @redrawBoardMarks(game.currNode)
+
+  # create marks like 1 2 3 directly on board
+  putChildMarkOnBoard: (coord, childIndex) ->
+    pos = coordToPosForText({x:coord.x, y:coord.y})
+    elem = $("<div class='child_mark' style='background-color: white; position: absolute; left: #{pos.x}px; top:#{pos.y}px;
+              padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
+              id='child_mark_#{coord.x}_#{coord.y}'>#{childIndex + 1}</div>")
+    elem.appendTo("#board")
+
+  # create marks like A, B, C, ..., triangle, square, circle
+  putMarkerOnBoard: (markerType, index, coord) ->
+    pos = coordToPosCenter({x:coord.x, y:coord.y})
+    console.log "placing marker at coord #{coord.x} #{coord.y}"
+    fillStyle = "#3ac6e5"
+    radius = 6
+    if markerType == MarkerType.LABEL
+      s = ALPHABET[index % ALPHABET.length].toUpperCase()
+      size = 20
+      pos.x -= 6
+      pos.y += 6
+      @topContext.font = "bold #{size}px monospace"
+      @topContext.fillStyle = fillStyle
+      @topContext.fillText(s, pos.x, pos.y)
+    else if markerType == MarkerType.SQUARE
+      @topContext.fillStyle = fillStyle
+      @topContext.fillRect(pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+    else if markerType == MarkerType.CIRCLE
+      radius = radius * 1.2
+      @topContext.beginPath()
+      @topContext.arc(pos.x, pos.y, radius, 2 * Math.PI, false);
+      @topContext.fillStyle = fillStyle
+      @topContext.fill()
+    else if markerType == MarkerType.TRIANGLE
+      radius = radius * 1.4
+      # TODO equilateral triangle
+      @topContext.beginPath()
+      @topContext.moveTo(pos.x - radius, pos.y + radius / 2);
+      @topContext.lineTo(pos.x + radius, pos.y + radius / 2);
+      @topContext.lineTo(pos.x, pos.y - radius);
+      @topContext.lineTo(pos.x - radius, pos.y + radius / 2);
+      @topContext.fillStyle = fillStyle
+      @topContext.fill()
+    else
+      console.log "cannot draw market type #{markerType}"
+
+  #updates move marks and board marks
+  redrawStones: () ->
     # hardcore TODO change
     $(".move").remove()
     for field, i in @model.board.stones
@@ -358,33 +419,8 @@ class BoardView
                   galleryimg='no' id='move_#{x}_#{y}' src='#{src}'>")
         elem.appendTo("#board")
 
-  # create marks like 1 2 3 directly on board
-  putChildMarkOnBoard: (coord, childIndex) ->
-    pos = coordToPosForText({x:coord.x, y:coord.y})
-    elem = $("<div class='child_mark' style='background-color: white; position: absolute; left: #{pos.x}px; top:#{pos.y}px;
-              padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
-              id='child_mark_#{coord.x}_#{coord.y}'>#{childIndex + 1}</div>")
-    elem.appendTo("#board")
-
-  # create marks like A, B, C, ..., triangle, square, circle
-  putMarkerOnBoard: (markerType, index, coord) ->
-    pos = coordToPosForText({x:coord.x, y:coord.y})
-    console.log "placing marker at #{coord.x} #{coord.y}"
-    if markerType == MarkerType.LABEL
-      s = ALPHABET[index % ALPHABET.length].toUpperCase()
-    else
-      mapping = {}
-      mapping[MarkerType.TRIANGLE] = "X"
-      mapping[MarkerType.SQUARE] = "S"
-      mapping[MarkerType.CIRCLE] = "O"
-      s = mapping[markerType]
-    elem = $("<div class='marker' style='position: absolute; left: #{pos.x}px; top:#{pos.y}px;
-              padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
-              id='marker_#{coord.x}_#{coord.y}'>#{s}</div>")
-    elem.appendTo("#board")
-
   #updates move marks and board marks
-  updateBoardMarks: (placedNode) ->
+  redrawBoardMarks: (placedNode) ->
     # last move mark
     if placedNode.father
       @updateLastMoveMark(placedNode.move.x, placedNode.move.y, placedNode.move.color)
@@ -396,7 +432,7 @@ class BoardView
     if placedNode.children.length > 1
       @putChildMarkOnBoard(child.move, i) for child, i in placedNode.children
     # markers
-    $(".marker").remove()
+    @topCanvas.width = @topCanvas.width
     for marker, coords of placedNode.markers
       for coord, index in coords
         @putMarkerOnBoard(marker, index, coord)
@@ -431,7 +467,7 @@ class BoardController
 
   onInit: (game) ->
     @game = game
-    board = $("#board")
+    board = $("#topCanvas")
     board.click((e) =>
       x = e.pageX - $(e.target).offset().left
       y = e.pageY - $(e.target).offset().top
@@ -446,16 +482,22 @@ class BoardController
       move = new Move()
       [move.x, move.y, move.color, move.moveType] = [coord.x, coord.y, @model.board.colorToPlay, MoveType.NORMAL]
       @game.playMove(move)
-    else if mode == GameMode.TRIANGLE
-      @game.placeMarker(coord, MarkerType.TRIANGLE)
-    else if mode == GameMode.CIRCLE
-      @game.placeMarker(coord, MarkerType.CIRCLE)
-    else if mode == GameMode.SQUARE
-      @game.placeMarker(coord, MarkerType.SQUARE)
-    else if mode == GameMode.LABEL
-      @game.placeMarker(coord, MarkerType.LABEL)
     else
-      alert("unknown mode")
+      # prevent markers overwriting
+      if @game.hasMarker(coord) and mode != GameMode.CLEAR
+        return
+      if mode == GameMode.TRIANGLE
+        @game.placeMarker(coord, MarkerType.TRIANGLE)
+      else if mode == GameMode.CIRCLE
+        @game.placeMarker(coord, MarkerType.CIRCLE)
+      else if mode == GameMode.SQUARE
+        @game.placeMarker(coord, MarkerType.SQUARE)
+      else if mode == GameMode.LABEL
+        @game.placeMarker(coord, MarkerType.LABEL)
+      else if mode == GameMode.CLEAR
+        @game.clearMarker(coord)
+      else
+        alert("unknown mode")
 
 # ==>> EXPORT
 
