@@ -262,16 +262,6 @@ class Game
         # branch only once
         branch = 0
 
-  # returns a json object representing current node full path
-  # full path is a list of nodes from the beginning to the current one
-  # full path can be used to insert new variants to the game tree
-  getNodeFullPath: (node) ->
-    path = []
-    while node.father != null
-      path.push(node.move.toRawDict())
-      node = node.father
-    return path.reverse()
-
   # returns a json object representing current node tree
   # this is in the same format as input
   # this can be directly used to replace game.nodes (starting after root)
@@ -423,12 +413,6 @@ class Bridge
     # [(0, 7), (1, 3)] means:
     # Move on 7th node in the main branch, then move to the 3rd node on the first branch
     return @game.getNodeShortPath(@game.currNode)
-
-  getCurrNodeFullPath: () ->
-    # Returns full path to current node in json format as [node, node, ...].
-    # Example:
-    # [{"W": "dd"}, {"B": "cc"}]
-    return @game.getNodeFullPath(@game.currNode)
 
   getNodes: () ->
     # Returns full node tree without root.
