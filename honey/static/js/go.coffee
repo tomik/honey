@@ -319,12 +319,13 @@ class BoardModel
     # handle handicap if any
     if "HA" of game.properties
       handicap = game.properties["HA"]
-      for coord in @getHandicapStones(handicap)
-        move = new Move()
-        [move.x, move.y, move.color, move.moveType] = [coord[0], coord[1], Color.BLACK, MoveType.NORMAL]
-        # TODO use placeStone instead
-        @board.playMove(move)
-      @board.colorToPlay = Color.WHITE
+      if handicap > 0
+        for coord in @getHandicapStones(handicap)
+          move = new Move()
+          [move.x, move.y, move.color, move.moveType] = [coord[0], coord[1], Color.BLACK, MoveType.NORMAL]
+          # TODO use placeStone instead
+          @board.playMove(move)
+        @board.colorToPlay = Color.WHITE
 
   isValidMove: (move) ->
     return @board.isValidMove(move)
