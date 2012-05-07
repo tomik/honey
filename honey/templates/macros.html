@@ -121,9 +121,14 @@
   </script>
 {% endmacro %}
 
-{% macro render_comment_in_game(comment) %}
+{% macro render_comment_in_game(comment, can_delete) %}
   <p>
     <div class="comment" id="comment_{{comment._id}}">
+      {% if can_delete %}
+      <div style="float: right;"> <a class="btn btn-mini delete_comment" id="delete_comment_{{comment._id}}" href="#">
+        <i class="icon-remove-sign"></i>
+          delete</a></div>
+      {% endif %}
       <div> <strong>Posted by {{ render_user_link(comment.user.username) }} on {{ comment.date.strftime("%Y-%m-%d %H:%M:%S")}}:</strong></div>
       {{ comment.text }}
     </div>

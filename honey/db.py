@@ -139,6 +139,8 @@ class Comment(mongokit.Document):
             "text": unicode,
             }
 
+    def is_owner(self, user):
+        return user._id == self.user_id
 
 @app.conn.register
 class User(mongokit.Document):
@@ -326,6 +328,14 @@ def create_comment(user_id, game_id, path, text):
     comment.save()
     comment_id = comment._id
     return comment
+
+def delete_comment(comment_id):
+    """Deletes comment identified by id."""
+    comment = get_comment(comment_id)
+    if comment:
+        comment.delete()
+        return True
+    return False
 
 def get_comment(id):
     """Fetches comment for given id."""

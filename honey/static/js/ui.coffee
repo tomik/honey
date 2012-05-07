@@ -5,6 +5,7 @@
 # initPath: short path where to start in the game
 # postUpdateURL: generated url for ajax updates posting
 # postCommentURL: generated url for ajax comments posting
+# deleteCommentURL: generated url for ajax comments posting
 #
 
 # ==>> COMMENTS
@@ -60,7 +61,7 @@ class UIHandler
 
   addComment: (comment_id, comment_path, commentHTML) ->
     @commentPaths.push([comment_id, comment_path])
-    $("#comments").append(commentHTML)
+    $("#comments").append($(commentHTML))
     @refreshComments(_bridge.getCurrNodeShortPath())
     @refreshCommentsStats()
 
@@ -116,6 +117,23 @@ $ ->
             alert(reply["err"])
           _uiHandler.addComment(reply.comment_id, reply.comment_path, reply.comment_html)
           $("#post_comment_toggle").click()
+        )
+  )
+  # deleting comments
+  # need delegate because injected code might be deleted immediately
+  $("body").delegate(".delete_comment", "click",
+    (e) ->
+      # parse the comment id
+      tokens = this.id.split("_")
+      id = tokens[tokens.length - 1]
+      e.preventDefault()
+      $.post(
+        deleteCommentURL,
+        {comment_id: id},
+        (reply) ->
+          if("err" of reply and reply.err)
+            alert(reply["err"])
+          _uiHandler.removeComment(reply.comment_id)
         )
   )
   # toggling

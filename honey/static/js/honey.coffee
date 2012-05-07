@@ -111,7 +111,7 @@ class Node
             console.log("invalid label string format #{rawStr}")
             continue
           coord = rawToCoord(rawStr[0...2])
-          index = labelLetterToIndex(rawStr[-1])
+          index = labelLetterToIndex(rawStr[rawStr.length - 1])
           labels.push([index, coord])
         labels.sort((a, b) -> a[0] - b[0])
         @markers[marker] = (labelPair[1] for labelPair in labels)

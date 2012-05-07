@@ -155,12 +155,34 @@ def post_comment(game_id):
             abort(500)
         comment = db.create_comment(user._id, game_id, form.short_path, form.comment.data)
         db.annotate(comment)
+        can_delete_comment = comment.is_owner(user)
         comment_template = app.jinja_env.from_string(
             """
-            {% from 'macros.html' import render_comment_in_game %} {{ render_comment_in_game(comment) }}
-            """)
+            {%% from 'macros.html' import render_comment_in_game %%} {{ render_comment_in_game(comment, %s) }}
+            """ % can_delete_comment)
         return jsonify(err=None, comment_id = str(comment["_id"]), comment_path=comment["path"], comment_html = comment_template.render(comment=comment))
     return jsonify(err="Invalid comment.")
+
+@app.route("/delete_comment", methods=["POST"])
+@login_required
+def delete_comment():
+    """Deletes comment identified by id in post data. Requires login. Called via ajax."""
+    username = session["username"]
+    user = db.get_user_by_username(username)
+    if not user:
+        app.logger.warning("comment without user")
+        abort(500)
+    comment_id = request.form.get("comment_id", None)
+    comment = db.get_comment(comment_id)
+    if not comment:
+        app.logger.warning("no comment for given id %s" % comment_id)
+        abort(500)
+    can_delete_comment = comment.is_owner(user)
+    if not can_delete_comment:
+        app.logger.warning("User %s tried to delete comment %s without permissions." % (user["_id"], comment["_id"]))
+        abort(500)
+    db.delete_comment(comment_id)
+    return jsonify(err=None, comment_id = comment_id)
 
 @app.route("/post_update/<game_id>", methods=["POST"])
 @login_required
