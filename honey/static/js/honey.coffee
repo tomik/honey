@@ -1,15 +1,6 @@
 
 # ==>> UTILITY FUNCTIONS
 
-pathCompare = (a, b) ->
-  if a.length != b.length
-    return false
-
-  for i in [0...a.length]
-    if a[i][0] != b[i][0] or a[i][1] != b[i][1]
-      return false
-  return true
-
 # finds element in array satisfying f and returns it
 # if not present returns null
 findElem = (a, f) ->
@@ -435,34 +426,13 @@ class Logger
   onUnsynced: (game) ->
     console.log("Logger: received onUnsynced")
 
-# ==>> COMMENTS
-
-class Commenter
-  onLoad: (game, node) ->
-    @updateComments(game)
-
-  onPlayMove: (game, node) ->
-    @updateComments(game)
-
-  onUnplayMove: (game, node) ->
-    @updateComments(game)
-
-  updateComments: (game) ->
-    currNode = game.currNode
-    path = game.getNodeShortPath(currNode)
-    currComments = (comment for comment in _bridge.comments when pathCompare(comment[1], path))
-    $("#comments .comment").hide()
-    for comment in currComments
-      elem = $("#comment_#{comment[0]}")
-      elem.show()
-
-# ==>> COMMENTS
+# ==>> BRIDGE
 
 class Bridge
-  constructor: (inputRaw, comments, initPath, eventHandler) ->
+  # This class handles communication with the UI eventHandler (view).
+  constructor: (inputRaw, initPath, eventHandler) ->
     @game = _game
     @inputRaw = inputRaw
-    @comments = comments
     @initPath = initPath
     @eventHandler = eventHandler
     # whether the board key shortcuts apply
@@ -502,7 +472,6 @@ _dispatcher = new EventDispatcher()
 _boardModel = new BoardModel()
 _dispatcher.register(_logger)
 _dispatcher.register(_boardModel)
-_dispatcher.register(new Commenter())
 _dispatcher.register(new BoardView(_boardModel))
 _dispatcher.register(new BoardController(_boardModel))
 # global so we can access this from the console

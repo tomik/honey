@@ -159,7 +159,7 @@ def post_comment(game_id):
             """
             {% from 'macros.html' import render_comment_in_game %} {{ render_comment_in_game(comment) }}
             """)
-        return jsonify(err=None, comment_html = comment_template.render(comment=comment))
+        return jsonify(err=None, comment_id = str(comment["_id"]), comment_path=comment["path"], comment_html = comment_template.render(comment=comment))
     return jsonify(err="Invalid comment.")
 
 @app.route("/post_update/<game_id>", methods=["POST"])

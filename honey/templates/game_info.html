@@ -36,11 +36,7 @@
     <dd>{{ render_user_link(game.user.username) }} on {{ render_date_time(game.date) }}</dd>
     <dt>comments:</dt>
     <dd>
-    {% if comments %}
-      {# comments are ordered according to date #}
-      {{ comments|length }} last on {{ render_date_time(comments[-1].date) }}
-    {% else %}
-      No comments yet.
-    {% endif %}
+    <span id="comments_stats">
+    </span>
   </dl>
 </div>
