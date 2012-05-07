@@ -41,7 +41,7 @@ class SgfUploadForm(Form):
 
 class GameEditForm(Form):
     """Form for editing game metainformation (players, result, etc.)."""
-    result = TextField("Result")
+    result = TextField("Result", [validators.Required()])
     event = TextField("Event")
 
     def update_game(self, game):
@@ -58,14 +58,16 @@ class GoGameEditForm(GameEditForm):
     """Form for editing game metainformation (players, result, etc.)."""
     black = TextField("Black", [validators.Required()])
     white = TextField("White", [validators.Required()])
-    komi = FloatField("Komi", [validators.Required()])
-    handicap = IntegerField("Handicap", [validators.Required()])
+    komi = FloatField("Komi")
+    handicap = IntegerField("Handicap")
 
     def update_game(self, game):
         game.player1 = self.black.data
         game.player2 = self.white.data
-        game.komi = self.komi.data
-        game.handicap = self.handicap.data
+        if self.komi.data is not None:
+            game.komi = self.komi.data
+        if self.handicap.data is not None:
+            game.handicap = self.handicap.data
         super(GoGameEditForm, self).update_game(game)
 
 class HexGameEditForm(GameEditForm):
