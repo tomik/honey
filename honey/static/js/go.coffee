@@ -118,8 +118,8 @@ class Move
 
 # produces position with center of the field (i.e. for empty field)
 coordToPosCenter = (coord) ->
-  x = FIELD_FIRST.x + coord.x * FIELD_X_DIFF - 2
-  y = FIELD_FIRST.y + coord.y * FIELD_Y_DIFF - 2
+  x = FIELD_FIRST.x + coord.x * FIELD_X_DIFF - 1
+  y = FIELD_FIRST.y + coord.y * FIELD_Y_DIFF - 1
   {x:x, y:y}
 
 # produces position with top left of the field (i.e. for a stone pic)
@@ -383,35 +383,38 @@ class BoardView
   putMarkerOnBoard: (markerType, index, coord) ->
     pos = coordToPosCenter({x:coord.x, y:coord.y})
     console.log "placing marker at coord #{coord.x} #{coord.y}"
-    fillStyle = "#3ac6e5"
-    radius = 6
+    color = "#5757ff"
+    @topContext.strokeStyle = color
+    @topContext.fillStyle = color
+    @topContext.lineWidth = 2
+    radius = 9
     if markerType == MarkerType.LABEL
       s = labelIndexToLetter(index)
-      size = 20
-      pos.x -= 6
-      pos.y += 6
+      size = 3 * radius
+      pos.x -= radius - 1
+      pos.y += radius - 1
       @topContext.font = "bold #{size}px monospace"
-      @topContext.fillStyle = fillStyle
       @topContext.fillText(s, pos.x, pos.y)
     else if markerType == MarkerType.SQUARE
-      @topContext.fillStyle = fillStyle
-      @topContext.fillRect(pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+      @topContext.strokeRect(pos.x - radius, pos.y - radius, radius * 2, radius * 2);
     else if markerType == MarkerType.CIRCLE
-      radius = radius * 1.2
+      radius = radius * 1.1
       @topContext.beginPath()
       @topContext.arc(pos.x, pos.y, radius, 2 * Math.PI, false);
-      @topContext.fillStyle = fillStyle
-      @topContext.fill()
+      @topContext.stroke()
     else if markerType == MarkerType.TRIANGLE
-      radius = radius * 1.4
+      radius = radius * 1.1
+      # correction in the horizontal axis
+      x_corr = radius
+      # correction in the vertical axis
+      y_corr = Math.sqrt(3) * radius / 2
       # TODO equilateral triangle
       @topContext.beginPath()
-      @topContext.moveTo(pos.x - radius, pos.y + radius / 2);
-      @topContext.lineTo(pos.x + radius, pos.y + radius / 2);
-      @topContext.lineTo(pos.x, pos.y - radius);
-      @topContext.lineTo(pos.x - radius, pos.y + radius / 2);
-      @topContext.fillStyle = fillStyle
-      @topContext.fill()
+      @topContext.moveTo(pos.x - x_corr, pos.y + y_corr);
+      @topContext.lineTo(pos.x + x_corr, pos.y + y_corr);
+      @topContext.lineTo(pos.x, pos.y - x_corr);
+      @topContext.lineTo(pos.x - x_corr, pos.y + y_corr);
+      @topContext.stroke()
     else
       console.log "cannot draw market type #{markerType}"
 
