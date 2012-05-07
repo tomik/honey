@@ -87,8 +87,8 @@ $ ->
   $("#commit_btn").click(
     (e) ->
       $("#commit_btn").button("loading")
-      sendSync()
       e.preventDefault()
+      sendSync()
   )
   # toggle forms that have errors
   if (gameEditFormHasErrors)

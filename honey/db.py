@@ -286,9 +286,7 @@ def sync_game_update(game, update_data, user):
     Makes sure that user is allowed to perform the sync otherwise throws an exception.
     """
     # TODO verify that the user has the right to perform the update
-    new_nodes = update_data[:]
-    new_nodes.insert(0, game.nodes[0])
-    game.nodes = new_nodes
+    game.nodes = update_data[:]
     game.save()
     return True
 

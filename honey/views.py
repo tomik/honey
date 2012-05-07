@@ -266,6 +266,7 @@ def _view_game(game_id, init_path, game_edit_form=None, comment_form=None):
     user = db.get_user_by_username(session.get("username", None))
     if user and game.is_owner(user) and not game_edit_form:
         game_edit_form = forms.GameEditForm.form_factory(game.type)()
+    print game.nodes
     return render_template("view_game.html",
         game=game,
         init_path=init_path,

@@ -67,12 +67,23 @@ class EventDispatcher
 
 class Node
   @nextNodeId: 0
-  constructor: (@move, @father, @committed=false) ->
+  constructor: (@move, @father) ->
     @id = Node.nextNodeId++
     @children = []
     @number = if @father then @father.number + 1 else 0
     # mapping: markerType -> list of coords
     @markers = {}
+
+  @fromMove: (move, father) ->
+    new Node(move, father)
+
+  @fromRaw: (raw, father) ->
+    move = new Move(raw)
+    #if not move.applies()
+      #return null
+    node = new Node(move, father)
+    node.importMarkers(raw)
+    node
 
   getChildIndex: (node) ->
     return i for child, i in @children when child.id == node.id
@@ -84,9 +95,61 @@ class Node
   toStr: () ->
     return "{id #{@id} move #{@move.toStr()}}"
 
+  @markerSGFMapping = [
+    [MarkerType.TRIANGLE, "tr"],
+    [MarkerType.CIRCLE, "cr"],
+    [MarkerType.SQUARE, "sq"],
+    [MarkerType.LABEL, "LB"]]
+
+  importMarkers: (rawNode) ->
+    # loads the markers from raw definition
+    for markerPair in Node.markerSGFMapping
+      [marker, sgf] = markerPair
+      if not (sgf of rawNode)
+        continue
+      if not (marker of @markers)
+        @markers[marker] = []
+      if marker == MarkerType.LABEL
+        # temporary list of pairs [index, coord] for board labels (A, B, C)
+        # after all the labels are processed they will be ordered based on this
+        labels = []
+        for rawStr in rawNode[sgf]
+          # rawStr format should be xx:Y
+          # where xx are coords and Y is a label
+          if not rawStr.match(/^[a-z][a-z]:[A-Z]$/)
+            console.log("invalid label string format #{rawStr}")
+            continue
+          coord = rawToCoord(rawStr[0...2])
+          index = labelLetterToIndex(rawStr[-1])
+          labels.push([index, coord])
+        labels.sort((a, b) -> a[0] - b[0])
+        @markers[marker] = (labelPair[1] for labelPair in labels)
+      else
+        for rawMarker in rawNode[sgf]
+          @markers[marker].push(rawToCoord(rawMarker))
+    return null
+
+  marker2SGF: (markerType) ->
+    # performs mapping from markerType to sgf
+    for markerPair in Node.markerSGFMapping
+      [marker, sgf] = markerPair
+      if markerType == marker
+        return sgf
+    return null
+
   export: () ->
-    # Export for update on the server.
-    @move.toRawDict()
+    # export node to raw format for update on the server
+    d = @move.toRawDict()
+    # annotate with markers
+    for marker, coords of @markers
+      markerSGF = @marker2SGF(marker)
+      if markerSGF
+        rawCoords = (coordToRaw(coord) for coord in coords)
+        if marker == MarkerType.LABEL
+          d[markerSGF] = ("#{rawCoord}:#{labelIndexToLetter(index)}" for rawCoord, index in rawCoords)
+        else
+          d[markerSGF] = rawCoords
+    d
 
 # ==>> RAW FORMAT PARSING AND OUTPUTTING
 
@@ -99,15 +162,14 @@ rawParseNodes = (nodes, handler) ->
         rawParseNodes(variant, handler)
         handler.onBranchStop()
     else
-      move = new Move(node)
-      if move.applies()
-        handler.onMove(move)
+      handler.onRawNode(node)
 
 rawParse = (nodes, handler, initializer) ->
   if nodes.length <= 0
     return
   gameNode = nodes[0]
   handler.onGameProperty(propName, propValue) for propName, propValue of gameNode
+  _game.root = _game.currNode = Node.fromRaw(gameNode, null)
   initializer()
   rawParseNodes(nodes[1...nodes.length], handler)
 
@@ -122,12 +184,13 @@ class RawParseHandler
     console.log("game property #{propName}=#{propValue}")
     @game.properties[propName] = propValue
 
-  onMove: (move) ->
+  onRawNode: (rawNode) ->
     # create the node for the move
     # we don't question node's validity as the model is not invoked at all
-    newNode = new Node(move, @game.currNode, true)
-    newNode.father.children.push(newNode)
-    @game.currNode = newNode
+    newNode = Node.fromRaw(rawNode, @game.currNode)
+    if newNode
+      newNode.father.children.push(newNode)
+      @game.currNode = newNode
 
   onBranchStart: ->
     @junctionStack.push(@game.currNode)
@@ -143,7 +206,7 @@ class RawParseHandler
 
 class Game
   constructor: () ->
-    @currNode = @root = new Node(new Move(), null, true)
+    @currNode = @root = null
     @properties = {}
     @synced = null
     @pastebin = null
@@ -170,7 +233,7 @@ class Game
       return false
     # new move
     if not newNode
-      newNode = new Node(move, @currNode, false)
+      newNode = new Node(move, @currNode)
       newNode.father.children.push(newNode)
       _dispatcher.dispatch("onCreateNode", this, newNode)
       @setSynced(false)
@@ -208,6 +271,7 @@ class Game
     if not (markerType of @currNode.markers)
       @currNode.markers[markerType] = []
     @currNode.markers[markerType].push(coord)
+    @setSynced(false)
     _dispatcher.dispatch("onPlaceMarker", this, @currNode, coord)
     _dispatcher.dispatch("onRedraw", this)
 
@@ -220,6 +284,7 @@ class Game
       if ~index
         coords.splice(index, 1)
         break
+    @setSynced(false)
     _dispatcher.dispatch("onClearMarker", this, @currNode, coord)
     _dispatcher.dispatch("onRedraw", this)
 
@@ -233,14 +298,8 @@ class Game
     while node.father != null
       if node.father.children.length > 0
         i = node.father.getChildIndex(node)
-        # ignore not committed siblings
-        # this makes an assumption that all the non-committed changes will be lost (no ajax)
-        committed = ((if c.committed then 1 else 0) for c in node.father.children)
-        committedSum = committed.reduce (a, b) -> a + b
-        i = Math.min i, committedSum
-        if i > 0
-          path.push([i, index + 1])
-          index = -1
+        path.push([i, index + 1])
+        index = -1
       node = node.father
       index += 1
     path.push([0, index])
@@ -267,7 +326,12 @@ class Game
   # this can be directly used to replace game.nodes (starting after root)
   exportNodes: (node) ->
     nodes = []
-    nodes.push(node.export())
+    raw = node.export()
+    # push game properties to root
+    if not node.father
+      for prop, value of @properties when not (prop of raw)
+        raw[prop] = value
+    nodes.push(raw)
     while true
       if node.children.length > 1
         variants = []
@@ -416,7 +480,7 @@ class Bridge
 
   getNodes: () ->
     # Returns full node tree without root.
-    return @game.exportNodes(@game.root)[1..]
+    @game.exportNodes(@game.root)
 
   syncGame: () ->
     @game.setSynced(true)

@@ -64,6 +64,19 @@ colorToRaw = (color) ->
 coordToRaw = (coord) ->
   ALPHABET[coord.x] + ALPHABET[coord.y]
 
+rawToCoord = (raw) ->
+  # Parses list of two characters to coords
+  [x, y] = [ALPHABET.indexOf(raw[0]), ALPHABET.indexOf(raw[1])]
+  if not ~x or not ~y
+    throw "invalid coord"
+  {x: x, y: y}
+
+labelIndexToLetter = (index) ->
+  ALPHABET[index % ALPHABET.length].toUpperCase()
+
+labelLetterToIndex = (letter) ->
+  ALPHABET.indexOf(letter)
+
 class Move
   constructor: (rawMove=0) ->
     # this is the root
@@ -85,10 +98,9 @@ class Move
       @moveType = MoveType.RESIGN
     else if (where.length > 2)
       throw "invalid move definition length #{where}"
-    else if (x = ALPHABET.indexOf(where[0])) == -1 or (y = ALPHABET.indexOf(where[1])) == -1
-      throw "invalid move definition #{where}"
     else
-      [@x, @y, @moveType] = [x, y, MoveType.NORMAL]
+      coord = rawToCoord(where)
+      [@x, @y, @moveType] = [coord.x, coord.y, MoveType.NORMAL]
 
   applies: ->
     return @x != null and @y != null and @moveType != null
@@ -100,7 +112,8 @@ class Move
 
   toRawDict: ->
     d = {}
-    d[colorToRaw(@color)] = coordToRaw({x: @x, y: @y})
+    if @applies()
+      d[colorToRaw(@color)] = coordToRaw({x: @x, y: @y})
     d
 
 # produces position with center of the field (i.e. for empty field)
@@ -345,7 +358,6 @@ class BoardView
     topCanvas.attr("height", "500")
     topCanvas.css("left", "0px")
     topCanvas.css("top", "0px")
-    topCanvas.css("border", "1px solid")
     topCanvas.css("position", "absolute")
     topCanvas.css("z-index", "2")
     @topContext = topCanvas.get(0).getContext("2d")
@@ -374,7 +386,7 @@ class BoardView
     fillStyle = "#3ac6e5"
     radius = 6
     if markerType == MarkerType.LABEL
-      s = ALPHABET[index % ALPHABET.length].toUpperCase()
+      s = labelIndexToLetter(index)
       size = 20
       pos.x -= 6
       pos.y += 6
@@ -508,4 +520,8 @@ class BoardController
 
 @GameMode = GameMode
 @MarkerType = MarkerType
+@coordToRaw = coordToRaw
+@rawToCoord = rawToCoord
+@labelIndexToLetter = labelIndexToLetter
+@labelLetterToIndex = labelLetterToIndex
 
