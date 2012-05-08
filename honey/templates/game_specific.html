@@ -9,7 +9,9 @@
     {{ render_field(form.blue, value=game.player2) }}
   {% elif game.type == "go" %}
     {{ render_field(form.black, value=game.player1) }}
+    {{ render_field(form.black_rank, value=game.player1_rank) }}
     {{ render_field(form.white, value=game.player2) }}
+    {{ render_field(form.white_rank, value=game.player2_rank) }}
     {{ render_field(form.komi, value=game.komi) }}
     {{ render_field(form.handicap, value=game.handicap) }}
   {% endif %}

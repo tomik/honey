@@ -74,19 +74,22 @@
     </div>
     </p>
     {% if game_edit_form %}
-    <div id="edit_game" style="display: none;">
-        <form method="post" action="{{ url_for('edit_game', game_id=game._id) }}">
+    <!-- -70px for margin-left is a small hack to position the form nicely below the buttons -->
+    <div id="edit_game" style="margin-left: -70px; margin-top: 30px; display: none;">
+        <form method="post" class="form-horizontal" action="{{ url_for('edit_game', game_id=game._id) }}">
           {{ render_game_edit_form_fields(game, game_edit_form) }}
-        <p><input type=submit value=Post></p>
+          <div class="form-actions" style="border: 0px; background-color: white;">
+            <input type=submit value=Post>
+          </div>
        </form>
     </div>
     {% endif %}
     {% if session.username %}
     <div id="post_comment" style="display: none;">
         <form method="post" action="{{ url_for('post_comment', game_id=game._id) }}">
+          <p><input type=submit value=Post></p>
           {{ comment_form.short_path_json(value=null) }}
           {{ render_field(comment_form.comment, rows=3, cols=90) }}
-          <p><input type=submit value=Post></p>
        </form>
     </div>
     {% endif %}

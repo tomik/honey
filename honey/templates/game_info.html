@@ -14,9 +14,9 @@
       <dd class="blue">{{ game.player2 }}</dd>
     {% elif game.type == "go" %}
       <dt>black:</dt>
-      <dd >{{ game.player1 }}</dd>
+      <dd >{{ game.player1 }} ({{game.player1_rank}})</dd>
       <dt>white:</dt>
-      <dd >{{ game.player2 }}</dd>
+      <dd >{{ game.player2 }} ({{game.player2_rank}})</dd>
       {% if game.komi %}
         <dt>komi:</dt>
         <dd >{{ game.komi }}</dd>

@@ -88,6 +88,22 @@ class Game(mongokit.Document):
         self.nodes[0]["PB"] = value
 
     @property
+    def player1_rank(self):
+        return self.nodes[0].get("BR", "?")
+
+    @player1_rank.setter
+    def player1_rank(self, value):
+        self.nodes[0]["BR"] = value
+
+    @property
+    def player2_rank(self):
+        return self.nodes[0].get("WR", "?")
+
+    @player2_rank.setter
+    def player2_rank(self, value):
+        self.nodes[0]["WR"] = value
+
+    @property
     def player2(self):
         return self.nodes[0].get("PW", "player2")
 

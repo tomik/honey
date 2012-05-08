@@ -60,6 +60,8 @@ class GoGameEditForm(GameEditForm):
     white = TextField("White", [validators.Required()])
     komi = FloatField("Komi")
     handicap = IntegerField("Handicap")
+    black_rank = TextField("Black Rank")
+    white_rank = TextField("White Rank")
 
     def update_game(self, game):
         game.player1 = self.black.data
@@ -68,6 +70,10 @@ class GoGameEditForm(GameEditForm):
             game.komi = self.komi.data
         if self.handicap.data is not None:
             game.handicap = self.handicap.data
+        if self.black_rank is not None:
+            game.player1_rank = self.black_rank.data
+        if self.white_rank is not None:
+            game.player2_rank = self.white_rank.data
         super(GoGameEditForm, self).update_game(game)
 
 class HexGameEditForm(GameEditForm):
