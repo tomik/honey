@@ -1,0 +1,17 @@
+
+{% extends "base.html" %}
+{% from "macros.html" import render_games %}
+{% from "macros.html" import render_date_time %}
+
+{% block thin_content %}
+
+<h2> Player {{ player.name }}({{ player.rank }}) </h2>
+
+<h3> Games </h3>
+{% if games %}
+  {{ render_games(games, games_pagination) }}
+{% else %}
+No games yet.
+{% endif %}
+
+{% endblock %}

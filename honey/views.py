@@ -268,6 +268,33 @@ def view_user(username):
         games_pagination=games_pagination,
         comments_pagination=comments_pagination)
 
+@app.route("/view_player/<player_id>")
+def view_player(player_id):
+    """
+    Views existing player based on his id.
+
+    Pagination is provided in query string via keys games_page.
+    """
+    player = db.get_player(player_id)
+    if not player:
+        abort(404)
+    queries = dict(urlparse.parse_qsl(request.query_string))
+    games_page = int(queries.get("games_page", 1))
+    # paginate games
+    games_per_page = app.config["games_per_page_in_player_view"]
+    games_from, games_to = (games_page - 1) * games_per_page, games_page * games_per_page
+    games_cursor = db.get_games_for_player(player._id)
+    num_all_games = games_cursor.count()
+    games = list(games_cursor)[games_from:games_to]
+    games_pagination = Pagination(games_per_page, games_page, num_all_games,
+            lambda page: url_for("view_player", player_id=player_id, games_page=page))
+    for game in games:
+        db.annotate(game)
+    return render_template("view_player.html",
+        player=player,
+        games=games,
+        games_pagination=games_pagination)
+
 def _view_game(game_id, init_path, game_edit_form=None, comment_form=None):
     """
     Views existing game on given (comment) path.

@@ -216,9 +216,9 @@ def get_player_by_name(name):
     """Returns player for given name."""
     return db_players.Player.find_one({"name": name})
 
-def get_player(id):
+def get_player(player_id):
     """Returns player for given id."""
-    return db_players.Player.find_one({"_id": id})
+    return db_players.Player.find_one({"_id": ObjectId(player_id)})
 
 def create_player(name, rank):
     """Creates player in the db."""
@@ -325,10 +325,13 @@ def get_games(ordering=None, ascending=False):
     """
     return order(db_games.Game.find(), ordering, ascending)
 
-# TODO ordering and reversed
 def get_games_for_user(user_id, ordering=None, ascending=False):
     """Same as get_games for a single user."""
     return order(db_games.Game.find({"user_id": user_id}, ordering, ascending))
+
+def get_games_for_player(player_id, ordering=None, ascending=False):
+    """Gets all the games played by given player."""
+    return order(db_games.Game.find({"$or": [{"player1_id": player_id}, {"player2_id": player_id}]}, ordering, ascending))
 
 def sync_game_update(game, update_data, user):
     """

@@ -9,14 +9,14 @@
   <dl class="dl-horizontal">
     {% if game.type == "hex" %}
       <dt>red:</dt>
-      <dd class="red">{{ game.player1.name }}</dd>
+      <dd><a href="{{url_for('view_player', player_id=game.player1._id)}}">{{ game.player1.name }}</a></dd>
       <dt>blue:</dt>
-      <dd class="blue">{{ game.player2.name }}</dd>
+      <dd><a href="{{url_for('view_player', player_id=game.player2._id)}}">{{ game.player2.name }}</a></dd>
     {% elif game.type == "go" %}
       <dt>black:</dt>
-      <dd >{{ game.player1.name }} ({{game.player1.rank}})</dd>
+      <dd><a href="{{url_for('view_player', player_id=game.player1._id)}}">{{ game.player1.name }} ({{game.player1.rank}})</a></dd>
       <dt>white:</dt>
-      <dd >{{ game.player2.name }} ({{game.player2.rank}})</dd>
+      <dd><a href="{{url_for('view_player', player_id=game.player2._id)}}">{{ game.player2.name }} ({{game.player2.rank}})</a></dd>
       {% if game.komi %}
         <dt>komi:</dt>
         <dd >{{ game.komi }}</dd>
