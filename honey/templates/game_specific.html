@@ -5,13 +5,13 @@
 
 {% macro render_game_edit_form_fields(game, form) %}
   {% if game.type == "hex" %}
-    {{ render_field(form.red, value=game.player1) }}
-    {{ render_field(form.blue, value=game.player2) }}
+    {{ render_field(form.red, value=game.player1.name) }}
+    {{ render_field(form.blue, value=game.player2.name) }}
   {% elif game.type == "go" %}
-    {{ render_field(form.black, value=game.player1) }}
-    {{ render_field(form.black_rank, value=game.player1_rank) }}
-    {{ render_field(form.white, value=game.player2) }}
-    {{ render_field(form.white_rank, value=game.player2_rank) }}
+    {{ render_field(form.black, value=game.player1.name) }}
+    {{ render_field(form.black_rank, value=game.player1.rank) }}
+    {{ render_field(form.white, value=game.player2.name) }}
+    {{ render_field(form.white_rank, value=game.player2.rank) }}
     {{ render_field(form.komi, value=game.komi) }}
     {{ render_field(form.handicap, value=game.handicap) }}
   {% endif %}

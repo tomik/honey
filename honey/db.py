@@ -16,7 +16,19 @@ from core import app
 # helpers
 db_games = app.db_conn.go_games
 db_comments = app.db_conn.go_comments
+db_players = app.db_conn.go_players
 db_users = app.db_conn.users
+# at the moment contains document describing db schema version
+# this is used in schema updates
+db_common = app.db_conn.common
+
+@app.conn.register
+class Version(mongokit.Document):
+    """Singleton object that holds the db version for keeping the schemas in sync."""
+    use_dot_notation = True
+    structure = {
+            "version": int
+            }
 
 @app.conn.register
 class Game(mongokit.Document):
@@ -28,9 +40,12 @@ class Game(mongokit.Document):
             "type": str,
             # parsed nodes from sgf
             # first node is the root with game meta information
-            # example: [{"FF": 4, "PB": "black", "PW", "white"}, {"W": "aa", "C": "hi gg"},
+            # example: [{"FF": 4}, {"W": "aa", "C": "hi gg"},
             #   [[{"B": "bb"}], [{"B": "dd"}]}, {"W": "cc"}]]]
             "nodes": list,
+            # references to player objects
+            "player1_id": ObjectId,
+            "player2_id": ObjectId
             }
 
     # sgf GM to game type mapping
@@ -61,7 +76,39 @@ class Game(mongokit.Document):
     def save(self):
         # hack, for some reason type is unicode here
         self.type = str(self.type)
+        root = self.nodes[0]
+        # create players if necessary
+        if self.player1_id is None:
+            self.set_player1(root.get("PB", None), root("RB", None))
+        if self.player2_id is None:
+            self.set_player2(root.get("PW", None), root("RW", None))
         super(Game, self).save()
+
+    def export(self):
+        """Exports the nodes, computes some values on the fly."""
+        self.nodes[0]["PB"] = "?"
+        self.nodes[0]["PW"] = "?"
+        self.nodes[0]["RB"] = "?"
+        self.nodes[0]["RW"] = "?"
+        return self.nodes()
+
+    def set_player1(self, name, rank):
+        player = get_player_by_name(name)
+        if player:
+            player.rank = str(rank)
+            player.save()
+        else:
+            player = create_player(name, rank)
+        self.player1_id = player["_id"]
+
+    def set_player2(self, name, rank):
+        player = get_player_by_name(name)
+        if player:
+            player.rank = str(rank)
+            player.save()
+        else:
+            player = create_player(name, rank)
+        self.player2_id = player["_id"]
 
     @property
     def source(self):
@@ -78,38 +125,6 @@ class Game(mongokit.Document):
     @result.setter
     def result(self, value):
         self.nodes[0]["RE"] = value
-
-    @property
-    def player1(self):
-        return self.nodes[0].get("PB", "player1")
-
-    @player1.setter
-    def player1(self, value):
-        self.nodes[0]["PB"] = value
-
-    @property
-    def player1_rank(self):
-        return self.nodes[0].get("BR", "?")
-
-    @player1_rank.setter
-    def player1_rank(self, value):
-        self.nodes[0]["BR"] = value
-
-    @property
-    def player2_rank(self):
-        return self.nodes[0].get("WR", "?")
-
-    @player2_rank.setter
-    def player2_rank(self, value):
-        self.nodes[0]["WR"] = value
-
-    @property
-    def player2(self):
-        return self.nodes[0].get("PW", "player2")
-
-    @player2.setter
-    def player2(self, value):
-        self.nodes[0]["PW"] = value
 
     @property
     def event(self):
@@ -141,7 +156,6 @@ class Game(mongokit.Document):
     def is_from_little_golem(self):
         return self.source == "http://www.littlegolem.com"
 
-
 @app.conn.register
 class Comment(mongokit.Document):
     use_dot_notation = True
@@ -159,6 +173,15 @@ class Comment(mongokit.Document):
         return user._id == self.user_id
 
 @app.conn.register
+class Player(mongokit.Document):
+    use_dot_notation = True
+    structure = {
+            "name" : unicode,
+            # TODO use rank progression
+            "rank" : str
+            }
+
+@app.conn.register
 class User(mongokit.Document):
     use_dot_notation = True
     structure = {
@@ -167,7 +190,6 @@ class User(mongokit.Document):
             "passwd": str,
             "joined_date": datetime.datetime,
             }
-
 
 def reset():
     """
@@ -183,15 +205,28 @@ def annotate(obj, recursive=False):
     """
     Transforms mongodb ids into objects.
     """
-    if "user_id" in obj:
-        obj["user"] = db_users.User.find_one({"_id": ObjectId(obj["user_id"])})
+    for attr, cls in {"user": db_users.User, "game": db_games.Game, "player1": db_players.Player, "player2": db_players.Player}.items():
+        if attr + "_id" in obj:
+            obj[attr] = cls.find_one({"_id": ObjectId(obj[attr + "_id"])})
         if recursive:
-            annotate(obj["user"], recursive=True)
-    if "game_id" in obj:
-        obj["game"] = db_games.Game.find_one({"_id": ObjectId(obj["game_id"])})
-        if recursive:
-            annotate(obj["user"], recursive=True)
+            annotate(obj[attr], recursive=True)
     return obj
+
+def get_player_by_name(name):
+    """Returns player for given name."""
+    return db_players.Player.find_one({"name": name})
+
+def get_player(id):
+    """Returns player for given id."""
+    return db_players.Player.find_one({"_id": id})
+
+def create_player(name, rank):
+    """Creates player in the db."""
+    player = db_players.Player()
+    player.name = unicode(name)
+    player.rank = str(rank)
+    player.save()
+    return player
 
 def get_users():
     """

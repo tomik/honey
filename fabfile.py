@@ -118,3 +118,38 @@ def setup_fixtures():
         user_id = random.choice(list(db.get_users()))["_id"]
         game, err = db.create_game(user_id, sgf)
 
+def db_migrate(required_version):
+    """Migrates the db by performing all the migration scripts in between current and required versions."""
+    required_version = int(required_version)
+    from honey import db
+    from honey import db_migrate as migrate
+    print "Migrating the db to required version %s" % required_version
+    versions = list(db.db_common.Version.find())
+    assert(len(versions) <= 1)
+    if len(versions):
+        version_obj = versions[0]
+    else:
+        version_obj = db.db_common.Version()
+        version_obj.version = 0
+        version_obj.save()
+    version = version_obj.version
+    if version >= required_version:
+        print "Db is currently on version %s. Migration not necessary." % version
+        return
+    for i in range(version + 1, required_version + 1):
+        f = getattr(migrate, "migrate_" + str(i))
+        f()
+    version_obj.version = required_version
+    version_obj.save()
+
+def set_db_version(version):
+    """Overwrites the current db version with given version."""
+    from honey import db
+    versions = list(db.db_common.Version.find())
+    assert(len(versions) <= 1)
+    if len(versions):
+        version_obj = versions[0]
+    else:
+        version_obj = db.db_common.Version()
+    version_obj.version = int(version)
+    version_obj.save()

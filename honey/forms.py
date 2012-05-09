@@ -64,16 +64,12 @@ class GoGameEditForm(GameEditForm):
     white_rank = TextField("White Rank")
 
     def update_game(self, game):
-        game.player1 = self.black.data
-        game.player2 = self.white.data
+        game.set_player1(self.black.data, self.black_rank.data)
+        game.set_player2(self.white.data, self.white_rank.data)
         if self.komi.data is not None:
             game.komi = self.komi.data
         if self.handicap.data is not None:
             game.handicap = self.handicap.data
-        if self.black_rank is not None:
-            game.player1_rank = self.black_rank.data
-        if self.white_rank is not None:
-            game.player2_rank = self.white_rank.data
         super(GoGameEditForm, self).update_game(game)
 
 class HexGameEditForm(GameEditForm):
@@ -82,8 +78,8 @@ class HexGameEditForm(GameEditForm):
     blue = TextField("Blue", [validators.Required()])
 
     def update_game(self, game):
-        game.player1 = self.red.data
-        game.player2 = self.blue.data
+        game.set_player1(self.red.data, None)
+        game.set_player2(self.blue.data, None)
         super(HexGameEditForm, self).update_game(game)
 
 class CommentForm(Form):

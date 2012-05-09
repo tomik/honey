@@ -9,14 +9,14 @@
   <dl class="dl-horizontal">
     {% if game.type == "hex" %}
       <dt>red:</dt>
-      <dd class="red">{{ game.player1 }}</dd>
+      <dd class="red">{{ game.player1.name }}</dd>
       <dt>blue:</dt>
-      <dd class="blue">{{ game.player2 }}</dd>
+      <dd class="blue">{{ game.player2.name }}</dd>
     {% elif game.type == "go" %}
       <dt>black:</dt>
-      <dd >{{ game.player1 }} ({{game.player1_rank}})</dd>
+      <dd >{{ game.player1.name }} ({{game.player1.rank}})</dd>
       <dt>white:</dt>
-      <dd >{{ game.player2 }} ({{game.player2_rank}})</dd>
+      <dd >{{ game.player2.name }} ({{game.player2.rank}})</dd>
       {% if game.komi %}
         <dt>komi:</dt>
         <dd >{{ game.komi }}</dd>

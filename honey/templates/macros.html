@@ -71,8 +71,8 @@
         <tr>
             <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
             <td>{{ render_date_time(game.date) }}</td>
-            <td>{{ game.player1 }}</td>
-            <td>{{ game.player2 }}</td>
+            <td>{{ game.player1.name }}</td>
+            <td>{{ game.player2.name }}</td>
             <td>{{ game.result }}</td>
             <td>{{ render_user_link(game.user.username) }}</td>
         </tr>

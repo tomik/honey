@@ -211,7 +211,7 @@ def view_sgf(game_id):
     # this changes the game itself
     # but that is fine since we don't intend to save it
     game = db.patch_game_with_comments(game, annotated_comments)
-    response = make_response(sgf.makeSgf([game.nodes]))
+    response = make_response(sgf.makeSgf([game.export()]))
     response.headers["Content-type"] = "text/plain"
     return response
 
