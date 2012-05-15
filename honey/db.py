@@ -337,6 +337,30 @@ def get_games_for_player(player_id, ordering=None, ascending=False):
     """Gets all the games played by given player."""
     return order(db_games.Game.find({"$or": [{"player1_id": player_id}, {"player2_id": player_id}]}, ordering, ascending))
 
+def get_games_for_search(query, ordering=None, ascending=False):
+    """
+    Fetches all the games for given query.
+
+    Search spots are player names, game events and game date.
+    Searching algorithm is quite naive. Tokenize and give points for
+    token appearence in search spots.
+    """
+    result = []
+    for game in (db_games.Game.find()):
+        game = annotate(game)
+        points = 0
+        for token in query.split():
+            for elem in [game.player1.name, game.player2.name, game.event, str(game.date)]:
+                if elem.find(token) != -1:
+                    points += len(token) / float(len(elem))
+        if points > 0:
+            result.append((game, points))
+
+    result.sort(key=lambda elem: elem[1], reverse=True)
+    if len(result):
+        result = zip(*result)[0]
+    return result
+
 def sync_game_update(game, update_data, user):
     """
     Syncing mechanism.

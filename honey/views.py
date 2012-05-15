@@ -71,16 +71,26 @@ def main():
 
     Pagination is provided in query string via key page.
     """
+    games_cursor = db.get_games(ordering="date")
+    url_maker = lambda page: url_for("main", page=page)
+    return _view_games(list(games_cursor), url_maker)
+
+@app.route("/search")
+def search():
+    """Searches for games in player names, dates, events."""
+    query = dict(urlparse.parse_qsl(request.query_string))["query"]
+    games = db.get_games_for_search(query)
+    url_maker = lambda page: url_for("search", query=query, page=page)
+    return _view_games(games, url_maker)
+
+def _view_games(games, url_maker):
     queries = dict(urlparse.parse_qsl(request.query_string))
     page = int(queries.get("page", 1))
     per_page = app.config["games_per_page"]
+    num_all_games = len(games)
     game_from, game_to = (page - 1) * per_page, page * per_page
-    games_cursor = db.get_games(ordering="date")
-    num_all_games = games_cursor.count()
-    games = list(games_cursor[game_from:game_to])
-    for game in games:
-        db.annotate(game)
-    pagination = Pagination(per_page, page, num_all_games, lambda page: url_for("main", page=page))
+    games = [db.annotate(game) for game in (games[game_from:game_to])]
+    pagination = Pagination(per_page, page, num_all_games, url_maker)
     return render_template("index.html", menu_toggle_games=True, games=games, pagination=pagination)
 
 @app.route("/upload_game", methods=["GET", "POST"])
