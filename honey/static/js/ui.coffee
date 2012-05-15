@@ -6,6 +6,7 @@
 # postUpdateURL: generated url for ajax updates posting
 # postCommentURL: generated url for ajax comments posting
 # deleteCommentURL: generated url for ajax comments posting
+# typeaheadPlayers: mapping player_name -> rank for typeahaed
 #
 
 # ==>> COMMENTS
@@ -45,7 +46,7 @@ class UIHandler
     @refreshComments(_bridge.getCurrNodeShortPath())
 
   refreshComments: (path) ->
-    # Makes sure only comments for given tree path are visible. 
+    # Makes sure only comments for given tree path are visible.
     currComments = (comment for comment in @commentPaths when pathCompare(comment[1], path))
     $("#comments .comment").hide()
     for comment in currComments
@@ -164,4 +165,13 @@ $ ->
   if (gameEditFormHasErrors)
     $("#edit_game_toggle").click()
   checkFocus()
+  # handle typeahead on the game edit form
+  $(".typeahead_player").typeahead(source:(name for name, _ of typeaheadPlayers))
+  $(".typeahead_player").change((e) ->
+    value = @.value
+    if value of typeaheadPlayers
+      rankElem = $("#" + @.id + "_rank")
+      rankElem.val(typeaheadPlayers[value])
+      rankElem.change()
+  )
 

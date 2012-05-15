@@ -220,6 +220,10 @@ def get_player(player_id):
     """Returns player for given id."""
     return db_players.Player.find_one({"_id": ObjectId(player_id)})
 
+def get_players():
+    """Fetches all the players."""
+    return db_players.Player.find()
+
 def create_player(name, rank):
     """Creates player in the db."""
     player = db_players.Player()
@@ -230,7 +234,7 @@ def create_player(name, rank):
 
 def get_users():
     """
-    Fetches all the users based on given ordering.
+    Fetches all the users.
 
     @return users iterator
     """

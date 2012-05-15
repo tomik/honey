@@ -19,6 +19,7 @@ def compile():
     fab.local("cd honey/static/img && ln -fs ../../../bootstrap/img/glyphicons-halflings.png")
     fab.local("cd honey/static/img && ln -fs ../../../bootstrap/img/glyphicons-halflings-white.png")
     fab.local("cd honey/static/js && ln -fs ../../../bootstrap/js/bootstrap-button.js")
+    fab.local("cd honey/static/js && ln -fs ../../../bootstrap/js/bootstrap-typeahead.js")
 
 fab.env.hosts = ['tomik@zene.sk:2222']
 

@@ -313,8 +313,11 @@ def _view_game(game_id, init_path, game_edit_form=None, comment_form=None):
     if not comment_form:
         comment_form = forms.CommentForm()
     user = db.get_user_by_username(session.get("username", None))
+    typeahead_players = []
     if user and game.is_owner(user) and not game_edit_form:
         game_edit_form = forms.GameEditForm.form_factory(game.type)()
+        # hint for inputting players names
+        typeahead_players = dict([(player.name, player.rank) for player in db.get_players()])
     print game.nodes
     return render_template("view_game.html",
         game=game,
@@ -322,6 +325,7 @@ def _view_game(game_id, init_path, game_edit_form=None, comment_form=None):
         comments=comments,
         comment_paths=[(str(c["_id"]), c["path"]) for c in comments],
         comment_form=comment_form,
+        typeahead_players=typeahead_players,
         game_edit_form=game_edit_form)
 
 @app.route("/faq")
