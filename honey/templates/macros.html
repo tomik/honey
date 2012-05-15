@@ -65,15 +65,17 @@
             <td><strong>black</strong></td>
             <td><strong>white</strong></td>
             <td><strong>result</strong></td>
+            <td><strong>event</strong></td>
             <td><strong>uploaded by</strong></td>
         </thead>
       {% for game in games %}
         <tr>
             <td style="display:none;"> <a href='{{ url_for("view_game", game_id=game._id) }}' style="display:none;"></a> </td>
             <td>{{ render_date_time(game.date) }}</td>
-            <td><a href="{{url_for('view_player', player_id=game.player1._id)}}">{{ game.player1.name }}</a></td>
-            <td><a href="{{url_for('view_player', player_id=game.player2._id)}}">{{ game.player2.name }}</a></td>
+            <td><a href="{{url_for('view_player', player_id=game.player1._id)}}">{{ game.player1.name }} ({{ game.player1.rank }})</a></td>
+            <td><a href="{{url_for('view_player', player_id=game.player2._id)}}">{{ game.player2.name }} ({{ game.player2.rank }})</a></td>
             <td>{{ game.result }}</td>
+            <td>{{ game.event }}</td>
             <td>{{ render_user_link(game.user.username) }}</td>
         </tr>
       {% endfor %}
