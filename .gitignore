@@ -9,7 +9,7 @@ honey/static/js/ui.js
 honey/static/js/hex.js
 honey/static/js/go.js
 honey/static/js/bootstrap*
-honey/static/img/glyphicons*
+honey/static/img/glyphicons-*
 env
 *pyc
 TODO.txt

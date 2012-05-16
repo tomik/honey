@@ -7,16 +7,33 @@
 <h1> Welcome! </h1>
 
 <p>
-<h2>Upload games.</h2>
+<h3> On this site you can: </h3>
 </p>
 
 <p>
-<h2>Share knowledge.</h2>
+<h2>
+  <i style="background-image: url(/static/img/glyphicons_201_upload.png); background-position: 0px 2px; background-repeat: no-repeat; width: 25px; height: 30px; vertical-align: text-top; display: inline-block;"> </i>
+  Upload your Go games.
+  </h2>
 </p>
 
 <p>
-<h2>Get better.</h2>
+<h2> 
+  <i style="background-image: url(/static/img/glyphicons_244_conversation.png); background-position: 0px 5px; background-repeat: no-repeat; width: 25px; height: 25px; vertical-align: text-top; display: inline-block;"> </i>
+  Share the knowledge.</h2>
 </p>
+
+<p>
+<h2>
+  <i style="background-image: url(/static/img/glyphicons_150_check.png); background-position: 0px 5px; background-repeat: no-repeat; width: 25px; height: 25px; vertical-align: text-top; display: inline-block;"> </i>
+  Get better.</h2>
+</p>
+
+<p>
+<a href="{{ url_for('faq') }}" class="btn btn-primary btn-large"> Learn more </a>
+<a href="{{ url_for('signup') }}" class="btn btn-primary btn-large"> Signup </a>
+</p>
+
 </div>
 
 {% endblock %}

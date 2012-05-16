@@ -9,8 +9,8 @@ app.secret_key = "'\x16\xae\x100^H\xc8\x18\xe6\x11\x7f\x12B]\xa7"
 app.config["CSRF_ENABLED"] = False
 # paging
 app.config["games_per_page"] = 10
-app.config["games_per_page_in_user_view"] = 5
-app.config["games_per_page_in_player_view"] = 5
+app.config["games_per_page_in_user_view"] = 10
+app.config["games_per_page_in_player_view"] = 10
 app.config["comments_per_page_in_user_view"] = 10
 # db
 app.config["db_host"] = "localhost"

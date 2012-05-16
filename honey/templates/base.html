@@ -6,7 +6,7 @@
     {% block head %}
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Sensei Crowd</title>
+      <title>Dusty Boards</title>
       <link href="/static/css/bootstrap.css" rel="stylesheet">
       <link href="/static/css/honey.css" rel="stylesheet"/>
       <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
@@ -26,7 +26,7 @@
     <div class="navbar">
       <div class="navbar-inner">
         <div class="container">
-          <div> <a class="brand" href="/">{{request.game_type|game_type_to_label()}} Sensei Crowd</a> </div>
+          <div> <a class="brand" href="/">{{request.game_type|game_type_to_label()}} @ Dusty Boards</a> </div>
           <div class="nav-collapse">
             <ul class="nav">
               <li {% if menu_toggle_games %} class="active" {% endif %}><a href="{{url_for('view_games')}}">Games</a></li>
