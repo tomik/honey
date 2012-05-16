@@ -6,20 +6,20 @@
 
 {% block thin_content %}
 
-<h2> User {{ user.username }} </h2>
+<h1> User {{ user.username }} </h1>
 
 <p>
 Joined on {{ render_date_time(user.joined_date) }}
 </p>
 
-<h3> Uploaded Games </h3>
+<h2> Uploaded Games </h2>
 {% if games %}
   {{ render_games(games, games_pagination) }}
 {% else %}
 No games yet.
 {% endif %}
 
-<h3> Comments </h3>
+<h2> Comments </h2>
 {% if comments %}
   {{ render_comments(comments, comments_pagination) }}
 {% else %}

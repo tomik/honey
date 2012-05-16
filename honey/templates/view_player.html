@@ -5,9 +5,9 @@
 
 {% block thin_content %}
 
-<h2> Player {{ player.name }}({{ player.rank }}) </h2>
+<h1> Player {{ player.name }}({{ player.rank }}) </h1>
 
-<h3> Games </h3>
+<h2> Games </h2>
 {% if games %}
   {{ render_games(games, games_pagination) }}
 {% else %}
