@@ -350,7 +350,9 @@ def get_games_for_search(query, ordering=None, ascending=False):
         game = annotate(game)
         points = 0
         for token in query.split():
+            token = token.lower()
             for elem in [game.player1.name, game.player2.name, game.event, str(game.date)]:
+                elem = elem.lower()
                 if elem.find(token) != -1:
                     points += len(token) / float(len(elem))
         if points > 0:
