@@ -1,0 +1,16 @@
+
+{% extends "base.html" %}
+{% from "macros.html" import render_date_time %}
+{% from "macros.html" import render_games %}
+
+{% block thin_content %}
+
+  <form method="get" action="{{url_for('search')}}" class="form-search" style="float: right;">
+    <input type="text" class="input-medium search-query" name="query">
+    <button type="submit" class="btn">Search</button>
+  </form>
+
+  <h3> Games </h3>
+  {{ render_games(games, pagination) }}
+{% endblock %}
+

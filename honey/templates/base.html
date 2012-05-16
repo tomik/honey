@@ -29,7 +29,7 @@
           <div> <a class="brand" href="/">{{request.game_type|game_type_to_label()}} Sensei Crowd</a> </div>
           <div class="nav-collapse">
             <ul class="nav">
-              <li {% if menu_toggle_games %} class="active" {% endif %}><a href="/">Games</a></li>
+              <li {% if menu_toggle_games %} class="active" {% endif %}><a href="{{url_for('view_games')}}">Games</a></li>
               <li {% if menu_toggle_upload %} class="active" {% endif %}><a href="{{url_for ('upload_game')}}">Upload</a></li>
               <li {% if menu_toggle_faq %} class="active" {% endif %}><a href="{{url_for ('faq')}}">FAQ</a></li>
             </ul>

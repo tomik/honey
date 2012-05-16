@@ -55,7 +55,7 @@ def login():
     if form.validate_on_submit():
         session["username"] = form.user.username
         flash("You were logged in.")
-        return redirect(url_for("main"))
+        return redirect(url_for("view_games"))
     return render_template("login.html", form=form, menu_toggle_login=True)
 
 @app.route("/logout")
@@ -67,12 +67,19 @@ def logout():
 @app.route("/")
 def main():
     """
+    Homepage.
+    """
+    return render_template("index.html")
+
+@app.route("/games")
+def view_games():
+    """
     Views all games.
 
     Pagination is provided in query string via key page.
     """
     games_cursor = db.get_games(ordering="date")
-    url_maker = lambda page: url_for("main", page=page)
+    url_maker = lambda page: url_for("view_games", page=page)
     return _view_games(list(games_cursor), url_maker)
 
 @app.route("/search")
@@ -91,7 +98,7 @@ def _view_games(games, url_maker):
     game_from, game_to = (page - 1) * per_page, page * per_page
     games = [db.annotate(game) for game in (games[game_from:game_to])]
     pagination = Pagination(per_page, page, num_all_games, url_maker)
-    return render_template("index.html", menu_toggle_games=True, games=games, pagination=pagination)
+    return render_template("games_list.html", menu_toggle_games=True, games=games, pagination=pagination)
 
 @app.route("/upload_game", methods=["GET", "POST"])
 @login_required
