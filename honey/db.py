@@ -90,7 +90,7 @@ class Game(mongokit.Document):
         self.nodes[0]["PW"] = "?"
         self.nodes[0]["RB"] = "?"
         self.nodes[0]["RW"] = "?"
-        return self.nodes()
+        return self.nodes
 
     def set_player1(self, name, rank):
         player = get_player_by_name(name)
