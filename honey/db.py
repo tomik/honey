@@ -86,10 +86,18 @@ class Game(mongokit.Document):
 
     def export(self):
         """Exports the nodes, computes some values on the fly."""
-        self.nodes[0]["PB"] = "?"
-        self.nodes[0]["PW"] = "?"
-        self.nodes[0]["RB"] = "?"
-        self.nodes[0]["RW"] = "?"
+        self = annotate(self)
+        if self.player1:
+            self.nodes[0]["PB"] = self.player1.name
+            self.nodes[0]["PW"] = self.player2.name
+        if self.player2:
+            self.nodes[0]["RB"] = self.player2.rank
+            self.nodes[0]["RW"] = self.player2.rank
+        # export the game type
+        for index, game_type in self.GAME_TYPES.items():
+            if game_type == self.type:
+                self.nodes[0]["GM"] = index
+                break
         return self.nodes
 
     def set_player1(self, name, rank):
