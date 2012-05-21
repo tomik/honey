@@ -152,7 +152,15 @@ def nodes_are_same_moves(fst, snd):
 
 def node_to_sgf(node):
     """Returns sgf representation of the node. Properties are sorted alphabetically."""
-    properties = ["%s[%s]" % (key, value) for key, value in node.items()]
+    properties = []
+    for key, values in node.items():
+        if type(values) != list:
+            values = [values]
+        if not len(values):
+            continue
+        prop = "%s" % key
+        prop += "".join(["[%s]" % value for value in values])
+        properties.append(prop)
     return ";" + "".join(sorted(properties))
 
 class SgfHandler:

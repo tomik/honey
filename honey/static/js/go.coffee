@@ -68,7 +68,7 @@ rawToCoord = (raw) ->
   # Parses list of two characters to coords
   [x, y] = [ALPHABET.indexOf(raw[0]), ALPHABET.indexOf(raw[1])]
   if not ~x or not ~y
-    throw "invalid coord"
+    throw "invalid coord, raw #{raw}"
   {x: x, y: y}
 
 labelIndexToLetter = (index) ->
