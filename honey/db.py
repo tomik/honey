@@ -385,17 +385,20 @@ def patch_game_with_comments(game, comments):
     """
     for comment in comments:
         cursor = sgf.Cursor(game.nodes)
-        for branch, jump in comment.path:
-            for i in xrange(jump):
-                cursor.next(branch)
-                # we branch only once
-                branch = 0
-            node = cursor.get_node()
-            if node:
-                cmt = node.get("C", "")
-                cmt += "On %s %s said:\n%s\n\n" % \
-                        (comment.date.strftime("%Y-%m-%d %H:%M:%S"), comment.user.username, comment.text)
-                node["C"] = cmt
+        try:
+            for branch, jump in comment.path:
+                for i in xrange(jump):
+                    cursor.next(branch)
+                    # we branch only once
+                    branch = 0
+                node = cursor.get_node()
+                if node:
+                    cmt = node.get("C", "")
+                    cmt += "On %s %s said:\n%s\n\n" % \
+                            (comment.date.strftime("%Y-%m-%d %H:%M:%S"), comment.user.username, comment.text)
+                    node["C"] = cmt
+        except sgf.CursorError as e:
+            app.logger.info("Cannot follow comment path: error(%s) comment_id(%s)." % (str(e), comment._id))
     return game
 
 def create_comment(user_id, game_id, path, text):
