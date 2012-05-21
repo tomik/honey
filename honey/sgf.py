@@ -197,6 +197,9 @@ class SgfHandler:
         self.curr_node = {}
         branch.append(self.curr_node)
 
+    # some properties are inherently lists
+    LIST_PROPERTIES = set(["tr", "sq", "lb", "cr"])
+
     def on_property(self, name, value):
         node = self._get_curr_node()
         # multiple properties are arranged to the list
@@ -205,7 +208,10 @@ class SgfHandler:
                 self.curr_node[name] = [self.curr_node[name]]
             self.curr_node[name].append(value)
         else:
-            self.curr_node[name] = value
+            if name in self.LIST_PROPERTIES:
+                self.curr_node[name] = [value]
+            else:
+                self.curr_node[name] = value
 
     def on_branch_start(self):
         branch = self._get_curr_branch()

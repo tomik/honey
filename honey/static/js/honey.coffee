@@ -90,7 +90,7 @@ class Node
     [MarkerType.TRIANGLE, "tr"],
     [MarkerType.CIRCLE, "cr"],
     [MarkerType.SQUARE, "sq"],
-    [MarkerType.LABEL, "LB"]]
+    [MarkerType.LABEL, "lb"]]
 
   importMarkers: (rawNode) ->
     # loads the markers from raw definition
