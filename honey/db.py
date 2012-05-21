@@ -79,9 +79,9 @@ class Game(mongokit.Document):
         root = self.nodes[0]
         # create players if necessary
         if self.player1_id is None:
-            self.set_player1(root.get("PB", None), root("RB", None))
+            self.set_player1(root.get("PB", None), root.get("RB", None))
         if self.player2_id is None:
-            self.set_player2(root.get("PW", None), root("RW", None))
+            self.set_player2(root.get("PW", None), root.get("RW", None))
         super(Game, self).save()
 
     def export(self):
