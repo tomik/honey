@@ -369,42 +369,43 @@ class BoardView
 
   # places move representing given node on board
   redrawBoard: (game) ->
+    @topContext.clearRect(0, 0, @topCanvas.width, @topCanvas.height)
     @redrawStones()
     @redrawBoardMarks(game.currNode)
 
   # create marks like 1 2 3 directly on board
   putChildMarkOnBoard: (coord, childIndex) ->
-    pos = coordToPosForText({x:coord.x, y:coord.y})
-    elem = $("<div class='child_mark' style='background-color: white; position: absolute; left: #{pos.x}px; top:#{pos.y}px;
-              padding-left: 3px; padding-right: 3px; padding-top: 2px; padding-bottom: 2px;'
-              id='child_mark_#{coord.x}_#{coord.y}'>#{childIndex + 1}</div>")
-    elem.appendTo("#board")
+    @putMarkerOnBoard(MarkerType.LABEL, coord, {text: childIndex + 1})
 
   # create marks like A, B, C, ..., triangle, square, circle
-  putMarkerOnBoard: (markerType, index, coord) ->
+  putMarkerOnBoard: (markerType, coord, extra) ->
     pos = coordToPosCenter({x:coord.x, y:coord.y})
     console.log "placing marker at coord #{coord.x} #{coord.y}"
-    color = "#5757ff"
+    color = "white"
+    # invert the color if there is a white stone
+    field = @model.board.getField(@model.board.getIndex(coord))
+    if field == Field.WHITE
+      color = "black"
     @topContext.strokeStyle = color
     @topContext.fillStyle = color
     @topContext.lineWidth = 2
-    radius = 9
+    radius = FIELD_RADIUS - 1
     if markerType == MarkerType.LABEL
-      s = labelIndexToLetter(index)
-      size = 3 * radius
-      pos.x -= radius - 1
-      pos.y += radius - 1
+      size = 2.7 * radius
+      pos.x -= radius - 3
+      pos.y += radius - 3
       @topContext.font = "bold #{size}px monospace"
-      @topContext.fillText(s, pos.x, pos.y)
+      @topContext.fillText(extra.text, pos.x, pos.y)
     else if markerType == MarkerType.SQUARE
+      radius = radius * 0.9
       @topContext.strokeRect(pos.x - radius, pos.y - radius, radius * 2, radius * 2);
     else if markerType == MarkerType.CIRCLE
-      radius = radius * 1.1
+      radius = radius * 0.9
       @topContext.beginPath()
       @topContext.arc(pos.x, pos.y, radius, 2 * Math.PI, false);
       @topContext.stroke()
     else if markerType == MarkerType.TRIANGLE
-      radius = radius * 1.1
+      radius = radius * 0.9
       # correction in the horizontal axis
       x_corr = radius
       # correction in the vertical axis
@@ -428,53 +429,44 @@ class BoardView
       y = Math.floor(i / @model.board.size)
       coord = {x: x, y: y}
       if field != Field.EMPTY
+        pos = coordToPosCenter(coord)
         # draw field
-        src = if field == Field.BLACK then BLACK_STONE_IMG else WHITE_STONE_IMG
-        pos = coordToPosTopLeft(coord)
-        elem = $("<img alt='' class='move' style='position: absolute; left: #{pos.x}px; top:#{pos.y}px;'
-                  galleryimg='no' id='move_#{x}_#{y}' src='#{src}'>")
-        elem.appendTo("#board")
+        beginColor =  if field == Field.BLACK then "#4C4646" else "#FFFFFF"
+        endColor =  if field == Field.BLACK then "#000000" else "#DDDDDD"
+        radius = FIELD_RADIUS + 2
+        grd = @topContext.createRadialGradient(pos.x - radius / 2, pos.y - radius / 2, 2, pos.x - radius / 2, pos.y - radius / 2, radius)
+        grd.addColorStop(0, beginColor)
+        grd.addColorStop(1, endColor)
+        @topContext.fillStyle = grd
+        @topContext.strokeStyle = "black"
+        @topContext.shadowColor = "#000"
+        @topContext.shadowBlur = 2
+        @topContext.shadowX = 1
+        @topContext.shadowY = 1
+        @topContext.strokeWidth = 1
+        @topContext.beginPath()
+        @topContext.arc(pos.x, pos.y, radius, 2 * Math.PI, false);
+        @topContext.fill()
 
   #updates move marks and board marks
   redrawBoardMarks: (placedNode) ->
     # last move mark
     if placedNode.father
       @updateLastMoveMark(placedNode.move.x, placedNode.move.y, placedNode.move.color)
-    else
-      @removeLastMoveMark()
-    # child marks
-    $(".child_mark").remove()
     # TODO limit max number of marks
     if placedNode.children.length > 1
       @putChildMarkOnBoard(child.move, i) for child, i in placedNode.children
     # markers
-    @topCanvas.width = @topCanvas.width
     for marker, coords of placedNode.markers
       for coord, index in coords
-        @putMarkerOnBoard(marker, index, coord)
+        extra = if marker == MarkerType.LABEL then {text: labelIndexToLetter(index)} else {}
+        @putMarkerOnBoard(marker, coord, extra)
 
   # places mark for last move from the board
   updateLastMoveMark: (x, y, color) ->
-    # update last mark
-    last = $("#last_stone")
-    if(!last.length)
-      last = $("<img alt='' style='z-index: 1; position: absolute;
-                left: #{x}px ; top : #{y}px ;' galleryimg='no' id='last_stone'>")
-      last.appendTo("#board")
-    src = if color == Color.BLACK then LAST_BLACK_IMG else LAST_WHITE_IMG
-    last.attr("src", src)
-    pos = coordToPosTopLeft({x:x, y:y})
-    last.css("left", pos.x)
-    last.css("top", pos.y)
-    last.show()
+    @putMarkerOnBoard(MarkerType.CIRCLE, {x:x, y:y}, {})
 
-  # removes mark for last move from the board
-  removeLastMoveMark: ->
-    last = $("#last_stone")
-    if(last)
-      last.hide()
-
-# ==>> CONTROLLER
+  # ==>> CONTROLLER
 
 # Handles user interaction with the board.
 class BoardController
