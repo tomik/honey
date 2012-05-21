@@ -1,13 +1,13 @@
 AddHandler fastcgi-script .fcgi
 Options +ExecCGI
 
-# RewriteBase /senseicrowd
+# RewriteBase /dustyboards
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f [NC]
-RewriteCond %{HTTP_HOST} ^senseicrowd.kozelek.cz$ [NC]
+RewriteCond %{HTTP_HOST} ^dustyboards.kozelek.cz$ [NC]
 RewriteRule ^(.*)$ /honey.fcgi/$1 [QSA,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f [NC]
-RewriteCond %{HTTP_HOST} !^senseicrowd.kozelek.cz$ [NC]
-RewriteRule ^(.*)$ http://senseicrowd.kozelek.cz/$1 [R=301,L]
+RewriteCond %{HTTP_HOST} !^dustyboards.kozelek.cz$ [NC]
+RewriteRule ^(.*)$ http://dustyboards.kozelek.cz/$1 [R=301,L]
 

@@ -3,7 +3,7 @@
 import os
 os.environ["PATH"] = "/bin"
 
-activate_this = '/home/tomik/public/www/senseicrowd/env/bin/activate_this.py'
+activate_this = '/home/tomik/public/www/dustyboards/env/bin/activate_this.py'
 execfile(activate_this, dict(__file__=activate_this))
 
 from flup.server.fcgi import WSGIServer

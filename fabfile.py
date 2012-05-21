@@ -28,7 +28,7 @@ def pack():
     fab.local("python setup.py sdist --formats=gztar", capture=False)
 
 def deploy():
-    DEPLOY_DIR = "~/public/www/senseicrowd"
+    DEPLOY_DIR = "~/public/www/dustyboards"
     TMP_DIR = "~/tmp/honey-deploy"
     # prepare tmp dir
     fab.run("rm -rf %s 2>/dev/null" % TMP_DIR)
@@ -37,13 +37,13 @@ def deploy():
     dist = fab.local("python setup.py --fullname", capture=True).strip()
     fab.put("dist/%s.tar.gz" % dist, "%s/honey.tar.gz" % TMP_DIR)
     # backup current deploy
-    fab.run("if [ ! -d %s.bak ]; then mv %s %s/senseicrowd.bak; fi" % (DEPLOY_DIR, DEPLOY_DIR, TMP_DIR))
+    fab.run("if [ ! -d %s.bak ]; then mv %s %s/dustyboards.bak; fi" % (TMP_DIR, DEPLOY_DIR, TMP_DIR))
     fab.run("rm -rf %s 2>/dev/null" % DEPLOY_DIR)
     fab.run("mkdir %s" % DEPLOY_DIR)
     # apache needs to write log files
     fab.run("chmod o+w %s" % DEPLOY_DIR)
     # copy the virtual env
-    fab.run("cp -r %s/senseicrowd.bak/env %s" % (TMP_DIR, DEPLOY_DIR))
+    fab.run("cp -r %s/dustyboards.bak/env %s" % (TMP_DIR, DEPLOY_DIR))
     # install the package
     with fab.cd(DEPLOY_DIR):
         fab.run("tar xzf %s/honey.tar.gz" % TMP_DIR)
@@ -77,7 +77,7 @@ def clear_db():
     db.reset()
     # setup users
     tp_hash = 'sha1$Pq4yk8OM$3081feca50438e33cfd3bacef83cb47bdb6cbb93'
-    db.create_user("admin", "admin@senseicrowd.com", tp_hash)
+    db.create_user("admin", "admin@dustyboards.com", tp_hash)
     db.create_user("tomik", "tomas.kozelek@gmail.com", tp_hash)
     db.create_user("slpwnd", "tomas.kozelek@gmail.com", tp_hash)
 
