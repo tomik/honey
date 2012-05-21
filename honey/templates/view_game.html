@@ -91,9 +91,9 @@
     {% if session.username %}
     <div id="post_comment" style="display: none;">
         <form method="post" action="{{ url_for('post_comment', game_id=game._id) }}">
-          <p><input type=submit value=Post></p>
           {{ comment_form.short_path_json(value=null) }}
           {{ render_field(comment_form.comment, rows=3, cols=90) }}
+          <p><input type=submit value=Post></p>
        </form>
     </div>
     {% endif %}
