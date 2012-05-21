@@ -87,10 +87,10 @@ class Node
     return "{id #{@id} move #{@move.toStr()}}"
 
   @markerSGFMapping = [
-    [MarkerType.TRIANGLE, "tr"],
-    [MarkerType.CIRCLE, "cr"],
-    [MarkerType.SQUARE, "sq"],
-    [MarkerType.LABEL, "lb"]]
+    [MarkerType.TRIANGLE, "TR"],
+    [MarkerType.CIRCLE, "CR"],
+    [MarkerType.SQUARE, "SQ"],
+    [MarkerType.LABEL, "LB"]]
 
   importMarkers: (rawNode) ->
     # loads the markers from raw definition
